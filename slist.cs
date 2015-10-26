@@ -109,448 +109,448 @@ public class MainForm : System.Windows.Forms.Form
 	----------------------------------------------------------------------------*/
 	private void InitializeComponent()
 	{
-        this.components = new System.ComponentModel.Container();
-        this.m_lv = new System.Windows.Forms.ListView();
-        this.m_cxtListView = new System.Windows.Forms.ContextMenu();
-        this.menuItem1 = new System.Windows.Forms.MenuItem();
-        this.menuItem2 = new System.Windows.Forms.MenuItem();
-        this.menuItem3 = new System.Windows.Forms.MenuItem();
-        this.m_ebSearchPath = new System.Windows.Forms.TextBox();
-        this.m_pbSearch = new System.Windows.Forms.Button();
-        this.m_lblSearch = new System.Windows.Forms.Label();
-        this.m_cbRecurse = new System.Windows.Forms.CheckBox();
-        this.m_pbDuplicates = new System.Windows.Forms.Button();
-        this.m_lblFilterBanner = new System.Windows.Forms.Label();
-        this.m_lblSearchCriteria = new System.Windows.Forms.Label();
-        this.m_cbCompareFiles = new System.Windows.Forms.CheckBox();
-        this.m_stb = new System.Windows.Forms.StatusBar();
-        this.m_stbpMainStatus = new System.Windows.Forms.StatusBarPanel();
-        this.m_stbpFilterStatus = new System.Windows.Forms.StatusBarPanel();
-        this.m_stbpSearch = new System.Windows.Forms.StatusBarPanel();
-        this.m_prbar = new System.Windows.Forms.ProgressBar();
-        this.m_lblActions = new System.Windows.Forms.Label();
-        this.m_ebRegEx = new System.Windows.Forms.TextBox();
-        this.m_lblRegEx = new System.Windows.Forms.Label();
-        this.m_pbMove = new System.Windows.Forms.Button();
-        this.m_pbDelete = new System.Windows.Forms.Button();
-        this.m_pbToggle = new System.Windows.Forms.Button();
-        this.m_pbClear = new System.Windows.Forms.Button();
-        this.m_lblMoveTo = new System.Windows.Forms.Label();
-        this.m_ebMovePath = new System.Windows.Forms.TextBox();
-        this.m_pbMatchRegex = new System.Windows.Forms.Button();
-        this.m_pbRemoveRegex = new System.Windows.Forms.Button();
-        this.m_pbCheckRegex = new System.Windows.Forms.Button();
-        this.m_prbarOverall = new System.Windows.Forms.ProgressBar();
-        this.m_pbSmartMatch = new System.Windows.Forms.Button();
-        this.m_tmr = new System.Windows.Forms.Timer(this.components);
-        this.m_lbPrefPath = new System.Windows.Forms.ListBox();
-        this.label1 = new System.Windows.Forms.Label();
-        this.m_pbRemove = new System.Windows.Forms.Button();
-        this.m_pbAddPath = new System.Windows.Forms.Button();
-        this.m_cbMarkFavored = new System.Windows.Forms.CheckBox();
-        this.menuItem4 = new System.Windows.Forms.MenuItem();
-        this.menuItem5 = new System.Windows.Forms.MenuItem();
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
-        this.SuspendLayout();
-        // 
-        // m_lv
-        // 
-        this.m_lv.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                    | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_lv.CheckBoxes = true;
-        this.m_lv.ContextMenu = this.m_cxtListView;
-        this.m_lv.Location = new System.Drawing.Point(16, 280);
-        this.m_lv.Name = "m_lv";
-        this.m_lv.Size = new System.Drawing.Size(592, 496);
-        this.m_lv.TabIndex = 20;
-        this.m_lv.UseCompatibleStateImageBehavior = false;
-        this.m_lv.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.EH_HandleEdit);
-        // 
-        // m_cxtListView
-        // 
-        this.m_cxtListView.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.components = new System.ComponentModel.Container();
+            this.m_lv = new System.Windows.Forms.ListView();
+            this.m_cxtListView = new System.Windows.Forms.ContextMenu();
+            this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuItem3 = new System.Windows.Forms.MenuItem();
+            this.menuItem4 = new System.Windows.Forms.MenuItem();
+            this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.m_ebSearchPath = new System.Windows.Forms.TextBox();
+            this.m_pbSearch = new System.Windows.Forms.Button();
+            this.m_lblSearch = new System.Windows.Forms.Label();
+            this.m_cbRecurse = new System.Windows.Forms.CheckBox();
+            this.m_pbDuplicates = new System.Windows.Forms.Button();
+            this.m_lblFilterBanner = new System.Windows.Forms.Label();
+            this.m_lblSearchCriteria = new System.Windows.Forms.Label();
+            this.m_cbCompareFiles = new System.Windows.Forms.CheckBox();
+            this.m_stb = new System.Windows.Forms.StatusBar();
+            this.m_stbpMainStatus = new System.Windows.Forms.StatusBarPanel();
+            this.m_stbpFilterStatus = new System.Windows.Forms.StatusBarPanel();
+            this.m_stbpSearch = new System.Windows.Forms.StatusBarPanel();
+            this.m_prbar = new System.Windows.Forms.ProgressBar();
+            this.m_lblActions = new System.Windows.Forms.Label();
+            this.m_ebRegEx = new System.Windows.Forms.TextBox();
+            this.m_lblRegEx = new System.Windows.Forms.Label();
+            this.m_pbMove = new System.Windows.Forms.Button();
+            this.m_pbDelete = new System.Windows.Forms.Button();
+            this.m_pbToggle = new System.Windows.Forms.Button();
+            this.m_pbClear = new System.Windows.Forms.Button();
+            this.m_lblMoveTo = new System.Windows.Forms.Label();
+            this.m_ebMovePath = new System.Windows.Forms.TextBox();
+            this.m_pbMatchRegex = new System.Windows.Forms.Button();
+            this.m_pbRemoveRegex = new System.Windows.Forms.Button();
+            this.m_pbCheckRegex = new System.Windows.Forms.Button();
+            this.m_prbarOverall = new System.Windows.Forms.ProgressBar();
+            this.m_pbSmartMatch = new System.Windows.Forms.Button();
+            this.m_tmr = new System.Windows.Forms.Timer(this.components);
+            this.m_lbPrefPath = new System.Windows.Forms.ListBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.m_pbRemove = new System.Windows.Forms.Button();
+            this.m_pbAddPath = new System.Windows.Forms.Button();
+            this.m_cbMarkFavored = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // m_lv
+            // 
+            this.m_lv.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_lv.CheckBoxes = true;
+            this.m_lv.ContextMenu = this.m_cxtListView;
+            this.m_lv.Location = new System.Drawing.Point(16, 280);
+            this.m_lv.Name = "m_lv";
+            this.m_lv.Size = new System.Drawing.Size(592, 496);
+            this.m_lv.TabIndex = 20;
+            this.m_lv.UseCompatibleStateImageBehavior = false;
+            this.m_lv.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.EH_HandleEdit);
+            // 
+            // m_cxtListView
+            // 
+            this.m_cxtListView.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem1,
             this.menuItem2,
             this.menuItem4,
             this.menuItem5});
-        this.m_cxtListView.Popup += new System.EventHandler(this.EH_DoContextPopup);
-        // 
-        // menuItem1
-        // 
-        this.menuItem1.Index = 0;
-        this.menuItem1.Text = "Execute";
-        this.menuItem1.Click += new System.EventHandler(this.EH_HandleExecuteMenu);
-        // 
-        // menuItem2
-        // 
-        this.menuItem2.Index = 1;
-        this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.m_cxtListView.Popup += new System.EventHandler(this.EH_DoContextPopup);
+            // 
+            // menuItem1
+            // 
+            this.menuItem1.Index = 0;
+            this.menuItem1.Text = "Execute";
+            this.menuItem1.Click += new System.EventHandler(this.EH_HandleExecuteMenu);
+            // 
+            // menuItem2
+            // 
+            this.menuItem2.Index = 1;
+            this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem3});
-        this.menuItem2.Text = "Add Preferred Path";
-        // 
-        // menuItem3
-        // 
-        this.menuItem3.Index = 0;
-        this.menuItem3.Text = "Placeholder";
-        // 
-        // m_ebSearchPath
-        // 
-        this.m_ebSearchPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_ebSearchPath.Location = new System.Drawing.Point(107, 36);
-        this.m_ebSearchPath.Name = "m_ebSearchPath";
-        this.m_ebSearchPath.Size = new System.Drawing.Size(344, 20);
-        this.m_ebSearchPath.TabIndex = 2;
-        this.m_ebSearchPath.Text = "c:\\temp";
-        // 
-        // m_pbSearch
-        // 
-        this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbSearch.Location = new System.Drawing.Point(536, 32);
-        this.m_pbSearch.Name = "m_pbSearch";
-        this.m_pbSearch.Size = new System.Drawing.Size(72, 24);
-        this.m_pbSearch.TabIndex = 4;
-        this.m_pbSearch.Text = "Search";
-        this.m_pbSearch.Click += new System.EventHandler(this.EH_DoSearch);
-        // 
-        // m_lblSearch
-        // 
-        this.m_lblSearch.Location = new System.Drawing.Point(16, 40);
-        this.m_lblSearch.Name = "m_lblSearch";
-        this.m_lblSearch.Size = new System.Drawing.Size(72, 16);
-        this.m_lblSearch.TabIndex = 1;
-        this.m_lblSearch.Text = "Search Spec";
-        // 
-        // m_cbRecurse
-        // 
-        this.m_cbRecurse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_cbRecurse.Checked = true;
-        this.m_cbRecurse.CheckState = System.Windows.Forms.CheckState.Checked;
-        this.m_cbRecurse.Location = new System.Drawing.Point(456, 39);
-        this.m_cbRecurse.Name = "m_cbRecurse";
-        this.m_cbRecurse.Size = new System.Drawing.Size(72, 16);
-        this.m_cbRecurse.TabIndex = 3;
-        this.m_cbRecurse.Text = "Recurse";
-        // 
-        // m_pbDuplicates
-        // 
-        this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbDuplicates.Location = new System.Drawing.Point(536, 168);
-        this.m_pbDuplicates.Name = "m_pbDuplicates";
-        this.m_pbDuplicates.Size = new System.Drawing.Size(72, 24);
-        this.m_pbDuplicates.TabIndex = 9;
-        this.m_pbDuplicates.Text = "Duplicates";
-        this.m_pbDuplicates.Click += new System.EventHandler(this.EH_FindDuplicates);
-        // 
-        // m_lblFilterBanner
-        // 
-        this.m_lblFilterBanner.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_lblFilterBanner.Location = new System.Drawing.Point(8, 152);
-        this.m_lblFilterBanner.Name = "m_lblFilterBanner";
-        this.m_lblFilterBanner.Size = new System.Drawing.Size(608, 16);
-        this.m_lblFilterBanner.TabIndex = 5;
-        this.m_lblFilterBanner.Tag = "Filter files";
-        this.m_lblFilterBanner.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
-        // 
-        // m_lblSearchCriteria
-        // 
-        this.m_lblSearchCriteria.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_lblSearchCriteria.Location = new System.Drawing.Point(8, 16);
-        this.m_lblSearchCriteria.Name = "m_lblSearchCriteria";
-        this.m_lblSearchCriteria.Size = new System.Drawing.Size(608, 16);
-        this.m_lblSearchCriteria.TabIndex = 0;
-        this.m_lblSearchCriteria.Tag = "Perform search";
-        this.m_lblSearchCriteria.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
-        // 
-        // m_cbCompareFiles
-        // 
-        this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_cbCompareFiles.Location = new System.Drawing.Point(384, 176);
-        this.m_cbCompareFiles.Name = "m_cbCompareFiles";
-        this.m_cbCompareFiles.Size = new System.Drawing.Size(152, 16);
-        this.m_cbCompareFiles.TabIndex = 8;
-        this.m_cbCompareFiles.Text = "Real Duplicate Checking";
-        // 
-        // m_stb
-        // 
-        this.m_stb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_stb.Dock = System.Windows.Forms.DockStyle.None;
-        this.m_stb.Location = new System.Drawing.Point(0, 784);
-        this.m_stb.Name = "m_stb";
-        this.m_stb.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
+            this.menuItem2.Text = "Add Preferred Path";
+            // 
+            // menuItem3
+            // 
+            this.menuItem3.Index = 0;
+            this.menuItem3.Text = "Placeholder";
+            // 
+            // menuItem4
+            // 
+            this.menuItem4.Index = 2;
+            this.menuItem4.Text = "Select previous duplicate";
+            this.menuItem4.Click += new System.EventHandler(this.EH_SelectPrevDupe);
+            // 
+            // menuItem5
+            // 
+            this.menuItem5.Index = 3;
+            this.menuItem5.Text = "Select next duplicate";
+            this.menuItem5.Click += new System.EventHandler(this.EH_SelectNextDupe);
+            // 
+            // m_ebSearchPath
+            // 
+            this.m_ebSearchPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_ebSearchPath.Location = new System.Drawing.Point(107, 36);
+            this.m_ebSearchPath.Name = "m_ebSearchPath";
+            this.m_ebSearchPath.Size = new System.Drawing.Size(344, 20);
+            this.m_ebSearchPath.TabIndex = 2;
+            this.m_ebSearchPath.Text = "c:\\temp";
+            // 
+            // m_pbSearch
+            // 
+            this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbSearch.Location = new System.Drawing.Point(536, 32);
+            this.m_pbSearch.Name = "m_pbSearch";
+            this.m_pbSearch.Size = new System.Drawing.Size(72, 24);
+            this.m_pbSearch.TabIndex = 4;
+            this.m_pbSearch.Text = "Search";
+            this.m_pbSearch.Click += new System.EventHandler(this.EH_DoSearch);
+            // 
+            // m_lblSearch
+            // 
+            this.m_lblSearch.Location = new System.Drawing.Point(16, 40);
+            this.m_lblSearch.Name = "m_lblSearch";
+            this.m_lblSearch.Size = new System.Drawing.Size(72, 16);
+            this.m_lblSearch.TabIndex = 1;
+            this.m_lblSearch.Text = "Search Spec";
+            // 
+            // m_cbRecurse
+            // 
+            this.m_cbRecurse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_cbRecurse.Checked = true;
+            this.m_cbRecurse.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.m_cbRecurse.Location = new System.Drawing.Point(456, 39);
+            this.m_cbRecurse.Name = "m_cbRecurse";
+            this.m_cbRecurse.Size = new System.Drawing.Size(72, 16);
+            this.m_cbRecurse.TabIndex = 3;
+            this.m_cbRecurse.Text = "Recurse";
+            // 
+            // m_pbDuplicates
+            // 
+            this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbDuplicates.Location = new System.Drawing.Point(536, 168);
+            this.m_pbDuplicates.Name = "m_pbDuplicates";
+            this.m_pbDuplicates.Size = new System.Drawing.Size(72, 24);
+            this.m_pbDuplicates.TabIndex = 9;
+            this.m_pbDuplicates.Text = "Uniquify";
+            this.m_pbDuplicates.Click += new System.EventHandler(this.EH_Uniquify);
+            // 
+            // m_lblFilterBanner
+            // 
+            this.m_lblFilterBanner.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_lblFilterBanner.Location = new System.Drawing.Point(8, 152);
+            this.m_lblFilterBanner.Name = "m_lblFilterBanner";
+            this.m_lblFilterBanner.Size = new System.Drawing.Size(608, 16);
+            this.m_lblFilterBanner.TabIndex = 5;
+            this.m_lblFilterBanner.Tag = "Filter files";
+            this.m_lblFilterBanner.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
+            // 
+            // m_lblSearchCriteria
+            // 
+            this.m_lblSearchCriteria.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_lblSearchCriteria.Location = new System.Drawing.Point(8, 16);
+            this.m_lblSearchCriteria.Name = "m_lblSearchCriteria";
+            this.m_lblSearchCriteria.Size = new System.Drawing.Size(608, 16);
+            this.m_lblSearchCriteria.TabIndex = 0;
+            this.m_lblSearchCriteria.Tag = "Perform search";
+            this.m_lblSearchCriteria.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
+            // 
+            // m_cbCompareFiles
+            // 
+            this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_cbCompareFiles.Location = new System.Drawing.Point(384, 176);
+            this.m_cbCompareFiles.Name = "m_cbCompareFiles";
+            this.m_cbCompareFiles.Size = new System.Drawing.Size(152, 16);
+            this.m_cbCompareFiles.TabIndex = 8;
+            this.m_cbCompareFiles.Text = "Real Duplicate Checking";
+            // 
+            // m_stb
+            // 
+            this.m_stb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_stb.Dock = System.Windows.Forms.DockStyle.None;
+            this.m_stb.Location = new System.Drawing.Point(0, 784);
+            this.m_stb.Name = "m_stb";
+            this.m_stb.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
             this.m_stbpMainStatus,
             this.m_stbpFilterStatus,
             this.m_stbpSearch});
-        this.m_stb.ShowPanels = true;
-        this.m_stb.Size = new System.Drawing.Size(624, 24);
-        this.m_stb.TabIndex = 9;
-        // 
-        // m_stbpMainStatus
-        // 
-        this.m_stbpMainStatus.Name = "m_stbpMainStatus";
-        this.m_stbpMainStatus.Width = 300;
-        // 
-        // m_stbpFilterStatus
-        // 
-        this.m_stbpFilterStatus.Name = "m_stbpFilterStatus";
-        this.m_stbpFilterStatus.Width = 200;
-        // 
-        // m_stbpSearch
-        // 
-        this.m_stbpSearch.Name = "m_stbpSearch";
-        this.m_stbpSearch.Width = 200;
-        // 
-        // m_prbar
-        // 
-        this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-        this.m_prbar.Location = new System.Drawing.Point(112, 788);
-        this.m_prbar.Name = "m_prbar";
-        this.m_prbar.Size = new System.Drawing.Size(190, 15);
-        this.m_prbar.TabIndex = 10;
-        this.m_prbar.Visible = false;
-        // 
-        // m_lblActions
-        // 
-        this.m_lblActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_lblActions.Location = new System.Drawing.Point(8, 232);
-        this.m_lblActions.Name = "m_lblActions";
-        this.m_lblActions.Size = new System.Drawing.Size(608, 16);
-        this.m_lblActions.TabIndex = 15;
-        this.m_lblActions.Tag = "Perform actions";
-        this.m_lblActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
-        // 
-        // m_ebRegEx
-        // 
-        this.m_ebRegEx.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_ebRegEx.Location = new System.Drawing.Point(96, 172);
-        this.m_ebRegEx.Name = "m_ebRegEx";
-        this.m_ebRegEx.Size = new System.Drawing.Size(272, 20);
-        this.m_ebRegEx.TabIndex = 7;
-        // 
-        // m_lblRegEx
-        // 
-        this.m_lblRegEx.Location = new System.Drawing.Point(16, 176);
-        this.m_lblRegEx.Name = "m_lblRegEx";
-        this.m_lblRegEx.Size = new System.Drawing.Size(72, 40);
-        this.m_lblRegEx.TabIndex = 6;
-        this.m_lblRegEx.Text = "Regular Expressions";
-        // 
-        // m_pbMove
-        // 
-        this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbMove.Location = new System.Drawing.Point(456, 248);
-        this.m_pbMove.Name = "m_pbMove";
-        this.m_pbMove.Size = new System.Drawing.Size(72, 24);
-        this.m_pbMove.TabIndex = 18;
-        this.m_pbMove.Text = "Move";
-        this.m_pbMove.Click += new System.EventHandler(this.EH_DoMove);
-        // 
-        // m_pbDelete
-        // 
-        this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbDelete.Location = new System.Drawing.Point(536, 248);
-        this.m_pbDelete.Name = "m_pbDelete";
-        this.m_pbDelete.Size = new System.Drawing.Size(72, 24);
-        this.m_pbDelete.TabIndex = 19;
-        this.m_pbDelete.Text = "Delete";
-        this.m_pbDelete.Click += new System.EventHandler(this.EH_DoDelete);
-        // 
-        // m_pbToggle
-        // 
-        this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbToggle.Location = new System.Drawing.Point(536, 200);
-        this.m_pbToggle.Name = "m_pbToggle";
-        this.m_pbToggle.Size = new System.Drawing.Size(72, 24);
-        this.m_pbToggle.TabIndex = 14;
-        this.m_pbToggle.Text = "Toggle All";
-        this.m_pbToggle.Click += new System.EventHandler(this.EH_ToggleAll);
-        // 
-        // m_pbClear
-        // 
-        this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbClear.Location = new System.Drawing.Point(456, 200);
-        this.m_pbClear.Name = "m_pbClear";
-        this.m_pbClear.Size = new System.Drawing.Size(72, 24);
-        this.m_pbClear.TabIndex = 13;
-        this.m_pbClear.Text = "Clear All";
-        this.m_pbClear.Click += new System.EventHandler(this.EH_ClearAll);
-        // 
-        // m_lblMoveTo
-        // 
-        this.m_lblMoveTo.Location = new System.Drawing.Point(16, 256);
-        this.m_lblMoveTo.Name = "m_lblMoveTo";
-        this.m_lblMoveTo.Size = new System.Drawing.Size(56, 16);
-        this.m_lblMoveTo.TabIndex = 16;
-        this.m_lblMoveTo.Text = "Move to";
-        // 
-        // m_ebMovePath
-        // 
-        this.m_ebMovePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_ebMovePath.Location = new System.Drawing.Point(96, 252);
-        this.m_ebMovePath.Name = "m_ebMovePath";
-        this.m_ebMovePath.Size = new System.Drawing.Size(344, 20);
-        this.m_ebMovePath.TabIndex = 17;
-        // 
-        // m_pbMatchRegex
-        // 
-        this.m_pbMatchRegex.Location = new System.Drawing.Point(96, 200);
-        this.m_pbMatchRegex.Name = "m_pbMatchRegex";
-        this.m_pbMatchRegex.Size = new System.Drawing.Size(80, 24);
-        this.m_pbMatchRegex.TabIndex = 10;
-        this.m_pbMatchRegex.Text = "Match Regex";
-        this.m_pbMatchRegex.Click += new System.EventHandler(this.EH_MatchRegex);
-        // 
-        // m_pbRemoveRegex
-        // 
-        this.m_pbRemoveRegex.Location = new System.Drawing.Point(176, 200);
-        this.m_pbRemoveRegex.Name = "m_pbRemoveRegex";
-        this.m_pbRemoveRegex.Size = new System.Drawing.Size(80, 24);
-        this.m_pbRemoveRegex.TabIndex = 11;
-        this.m_pbRemoveRegex.Text = "Filter Regex";
-        this.m_pbRemoveRegex.Click += new System.EventHandler(this.EH_FilterRegex);
-        // 
-        // m_pbCheckRegex
-        // 
-        this.m_pbCheckRegex.Location = new System.Drawing.Point(256, 200);
-        this.m_pbCheckRegex.Name = "m_pbCheckRegex";
-        this.m_pbCheckRegex.Size = new System.Drawing.Size(80, 24);
-        this.m_pbCheckRegex.TabIndex = 12;
-        this.m_pbCheckRegex.Text = "Check Regex";
-        this.m_pbCheckRegex.Click += new System.EventHandler(this.EH_CheckRegex);
-        // 
-        // m_prbarOverall
-        // 
-        this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-        this.m_prbarOverall.Location = new System.Drawing.Point(305, 788);
-        this.m_prbarOverall.Maximum = 1000;
-        this.m_prbarOverall.Name = "m_prbarOverall";
-        this.m_prbarOverall.Size = new System.Drawing.Size(190, 15);
-        this.m_prbarOverall.TabIndex = 23;
-        this.m_prbarOverall.Visible = false;
-        // 
-        // m_pbSmartMatch
-        // 
-        this.m_pbSmartMatch.Location = new System.Drawing.Point(336, 200);
-        this.m_pbSmartMatch.Name = "m_pbSmartMatch";
-        this.m_pbSmartMatch.Size = new System.Drawing.Size(80, 24);
-        this.m_pbSmartMatch.TabIndex = 24;
-        this.m_pbSmartMatch.Text = "SmartMatch";
-        this.m_pbSmartMatch.Click += new System.EventHandler(this.EH_SmartMatchClick);
-        // 
-        // m_tmr
-        // 
-        this.m_tmr.Tick += new System.EventHandler(this.EH_Idle);
-        // 
-        // m_lbPrefPath
-        // 
-        this.m_lbPrefPath.FormattingEnabled = true;
-        this.m_lbPrefPath.Location = new System.Drawing.Point(107, 62);
-        this.m_lbPrefPath.Name = "m_lbPrefPath";
-        this.m_lbPrefPath.Size = new System.Drawing.Size(413, 69);
-        this.m_lbPrefPath.TabIndex = 25;
-        // 
-        // label1
-        // 
-        this.label1.Location = new System.Drawing.Point(16, 62);
-        this.label1.Name = "label1";
-        this.label1.Size = new System.Drawing.Size(85, 17);
-        this.label1.TabIndex = 26;
-        this.label1.Text = "Preferred Paths";
-        // 
-        // m_pbRemove
-        // 
-        this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbRemove.Location = new System.Drawing.Point(536, 107);
-        this.m_pbRemove.Name = "m_pbRemove";
-        this.m_pbRemove.Size = new System.Drawing.Size(72, 24);
-        this.m_pbRemove.TabIndex = 27;
-        this.m_pbRemove.Text = "Remove";
-        // 
-        // m_pbAddPath
-        // 
-        this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.m_pbAddPath.Location = new System.Drawing.Point(536, 78);
-        this.m_pbAddPath.Name = "m_pbAddPath";
-        this.m_pbAddPath.Size = new System.Drawing.Size(72, 24);
-        this.m_pbAddPath.TabIndex = 28;
-        this.m_pbAddPath.Text = "Add Path";
-        // 
-        // m_cbMarkFavored
-        // 
-        this.m_cbMarkFavored.AutoSize = true;
-        this.m_cbMarkFavored.Location = new System.Drawing.Point(9, 107);
-        this.m_cbMarkFavored.Name = "m_cbMarkFavored";
-        this.m_cbMarkFavored.Size = new System.Drawing.Size(92, 17);
-        this.m_cbMarkFavored.TabIndex = 29;
-        this.m_cbMarkFavored.Text = "Mark Favored";
-        this.m_cbMarkFavored.UseVisualStyleBackColor = true;
-        // 
-        // menuItem4
-        // 
-        this.menuItem4.Index = 2;
-        this.menuItem4.Text = "Select previous duplicate";
-        this.menuItem4.Click += new System.EventHandler(this.EH_SelectPrevDupe);
-        // 
-        // menuItem5
-        // 
-        this.menuItem5.Index = 3;
-        this.menuItem5.Text = "Select next duplicate";
-        this.menuItem5.Click += new System.EventHandler(this.EH_SelectNextDupe);
-        // 
-        // MainForm
-        // 
-        this.AllowDrop = true;
-        this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-        this.ClientSize = new System.Drawing.Size(624, 806);
-        this.Controls.Add(this.m_cbMarkFavored);
-        this.Controls.Add(this.m_pbAddPath);
-        this.Controls.Add(this.m_pbRemove);
-        this.Controls.Add(this.label1);
-        this.Controls.Add(this.m_lbPrefPath);
-        this.Controls.Add(this.m_pbSmartMatch);
-        this.Controls.Add(this.m_prbarOverall);
-        this.Controls.Add(this.m_pbCheckRegex);
-        this.Controls.Add(this.m_pbRemoveRegex);
-        this.Controls.Add(this.m_pbMatchRegex);
-        this.Controls.Add(this.m_lblMoveTo);
-        this.Controls.Add(this.m_ebMovePath);
-        this.Controls.Add(this.m_pbClear);
-        this.Controls.Add(this.m_pbToggle);
-        this.Controls.Add(this.m_pbDelete);
-        this.Controls.Add(this.m_pbMove);
-        this.Controls.Add(this.m_lblRegEx);
-        this.Controls.Add(this.m_ebRegEx);
-        this.Controls.Add(this.m_lblActions);
-        this.Controls.Add(this.m_prbar);
-        this.Controls.Add(this.m_stb);
-        this.Controls.Add(this.m_cbCompareFiles);
-        this.Controls.Add(this.m_lblSearchCriteria);
-        this.Controls.Add(this.m_lblFilterBanner);
-        this.Controls.Add(this.m_pbDuplicates);
-        this.Controls.Add(this.m_cbRecurse);
-        this.Controls.Add(this.m_lblSearch);
-        this.Controls.Add(this.m_pbSearch);
-        this.Controls.Add(this.m_ebSearchPath);
-        this.Controls.Add(this.m_lv);
-        this.Name = "MainForm";
-        this.Text = "MainForm";
-        this.DragLeave += new System.EventHandler(this.HandleDragLeave);
-        this.DragDrop += new System.Windows.Forms.DragEventHandler(this.HandleDrop);
-        this.DragEnter += new System.Windows.Forms.DragEventHandler(this.HandleDragEnter);
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
-        this.ResumeLayout(false);
-        this.PerformLayout();
+            this.m_stb.ShowPanels = true;
+            this.m_stb.Size = new System.Drawing.Size(624, 24);
+            this.m_stb.TabIndex = 9;
+            // 
+            // m_stbpMainStatus
+            // 
+            this.m_stbpMainStatus.Name = "m_stbpMainStatus";
+            this.m_stbpMainStatus.Width = 300;
+            // 
+            // m_stbpFilterStatus
+            // 
+            this.m_stbpFilterStatus.Name = "m_stbpFilterStatus";
+            this.m_stbpFilterStatus.Width = 200;
+            // 
+            // m_stbpSearch
+            // 
+            this.m_stbpSearch.Name = "m_stbpSearch";
+            this.m_stbpSearch.Width = 200;
+            // 
+            // m_prbar
+            // 
+            this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.m_prbar.Location = new System.Drawing.Point(112, 788);
+            this.m_prbar.Name = "m_prbar";
+            this.m_prbar.Size = new System.Drawing.Size(190, 15);
+            this.m_prbar.TabIndex = 10;
+            this.m_prbar.Visible = false;
+            // 
+            // m_lblActions
+            // 
+            this.m_lblActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_lblActions.Location = new System.Drawing.Point(8, 232);
+            this.m_lblActions.Name = "m_lblActions";
+            this.m_lblActions.Size = new System.Drawing.Size(608, 16);
+            this.m_lblActions.TabIndex = 15;
+            this.m_lblActions.Tag = "Perform actions";
+            this.m_lblActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
+            // 
+            // m_ebRegEx
+            // 
+            this.m_ebRegEx.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_ebRegEx.Location = new System.Drawing.Point(96, 172);
+            this.m_ebRegEx.Name = "m_ebRegEx";
+            this.m_ebRegEx.Size = new System.Drawing.Size(272, 20);
+            this.m_ebRegEx.TabIndex = 7;
+            // 
+            // m_lblRegEx
+            // 
+            this.m_lblRegEx.Location = new System.Drawing.Point(16, 176);
+            this.m_lblRegEx.Name = "m_lblRegEx";
+            this.m_lblRegEx.Size = new System.Drawing.Size(72, 40);
+            this.m_lblRegEx.TabIndex = 6;
+            this.m_lblRegEx.Text = "Regular Expressions";
+            // 
+            // m_pbMove
+            // 
+            this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbMove.Location = new System.Drawing.Point(456, 248);
+            this.m_pbMove.Name = "m_pbMove";
+            this.m_pbMove.Size = new System.Drawing.Size(72, 24);
+            this.m_pbMove.TabIndex = 18;
+            this.m_pbMove.Text = "Move";
+            this.m_pbMove.Click += new System.EventHandler(this.EH_DoMove);
+            // 
+            // m_pbDelete
+            // 
+            this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbDelete.Location = new System.Drawing.Point(536, 248);
+            this.m_pbDelete.Name = "m_pbDelete";
+            this.m_pbDelete.Size = new System.Drawing.Size(72, 24);
+            this.m_pbDelete.TabIndex = 19;
+            this.m_pbDelete.Text = "Delete";
+            this.m_pbDelete.Click += new System.EventHandler(this.EH_DoDelete);
+            // 
+            // m_pbToggle
+            // 
+            this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbToggle.Location = new System.Drawing.Point(536, 200);
+            this.m_pbToggle.Name = "m_pbToggle";
+            this.m_pbToggle.Size = new System.Drawing.Size(72, 24);
+            this.m_pbToggle.TabIndex = 14;
+            this.m_pbToggle.Text = "Toggle All";
+            this.m_pbToggle.Click += new System.EventHandler(this.EH_ToggleAll);
+            // 
+            // m_pbClear
+            // 
+            this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbClear.Location = new System.Drawing.Point(456, 200);
+            this.m_pbClear.Name = "m_pbClear";
+            this.m_pbClear.Size = new System.Drawing.Size(72, 24);
+            this.m_pbClear.TabIndex = 13;
+            this.m_pbClear.Text = "Clear All";
+            this.m_pbClear.Click += new System.EventHandler(this.EH_ClearAll);
+            // 
+            // m_lblMoveTo
+            // 
+            this.m_lblMoveTo.Location = new System.Drawing.Point(16, 256);
+            this.m_lblMoveTo.Name = "m_lblMoveTo";
+            this.m_lblMoveTo.Size = new System.Drawing.Size(56, 16);
+            this.m_lblMoveTo.TabIndex = 16;
+            this.m_lblMoveTo.Text = "Move to";
+            // 
+            // m_ebMovePath
+            // 
+            this.m_ebMovePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_ebMovePath.Location = new System.Drawing.Point(96, 252);
+            this.m_ebMovePath.Name = "m_ebMovePath";
+            this.m_ebMovePath.Size = new System.Drawing.Size(344, 20);
+            this.m_ebMovePath.TabIndex = 17;
+            // 
+            // m_pbMatchRegex
+            // 
+            this.m_pbMatchRegex.Location = new System.Drawing.Point(96, 200);
+            this.m_pbMatchRegex.Name = "m_pbMatchRegex";
+            this.m_pbMatchRegex.Size = new System.Drawing.Size(80, 24);
+            this.m_pbMatchRegex.TabIndex = 10;
+            this.m_pbMatchRegex.Text = "Match Regex";
+            this.m_pbMatchRegex.Click += new System.EventHandler(this.EH_MatchRegex);
+            // 
+            // m_pbRemoveRegex
+            // 
+            this.m_pbRemoveRegex.Location = new System.Drawing.Point(176, 200);
+            this.m_pbRemoveRegex.Name = "m_pbRemoveRegex";
+            this.m_pbRemoveRegex.Size = new System.Drawing.Size(80, 24);
+            this.m_pbRemoveRegex.TabIndex = 11;
+            this.m_pbRemoveRegex.Text = "Filter Regex";
+            this.m_pbRemoveRegex.Click += new System.EventHandler(this.EH_FilterRegex);
+            // 
+            // m_pbCheckRegex
+            // 
+            this.m_pbCheckRegex.Location = new System.Drawing.Point(256, 200);
+            this.m_pbCheckRegex.Name = "m_pbCheckRegex";
+            this.m_pbCheckRegex.Size = new System.Drawing.Size(80, 24);
+            this.m_pbCheckRegex.TabIndex = 12;
+            this.m_pbCheckRegex.Text = "Check Regex";
+            this.m_pbCheckRegex.Click += new System.EventHandler(this.EH_CheckRegex);
+            // 
+            // m_prbarOverall
+            // 
+            this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.m_prbarOverall.Location = new System.Drawing.Point(305, 788);
+            this.m_prbarOverall.Maximum = 1000;
+            this.m_prbarOverall.Name = "m_prbarOverall";
+            this.m_prbarOverall.Size = new System.Drawing.Size(190, 15);
+            this.m_prbarOverall.TabIndex = 23;
+            this.m_prbarOverall.Visible = false;
+            // 
+            // m_pbSmartMatch
+            // 
+            this.m_pbSmartMatch.Location = new System.Drawing.Point(336, 200);
+            this.m_pbSmartMatch.Name = "m_pbSmartMatch";
+            this.m_pbSmartMatch.Size = new System.Drawing.Size(80, 24);
+            this.m_pbSmartMatch.TabIndex = 24;
+            this.m_pbSmartMatch.Text = "SmartMatch";
+            this.m_pbSmartMatch.Click += new System.EventHandler(this.EH_SmartMatchClick);
+            // 
+            // m_tmr
+            // 
+            this.m_tmr.Tick += new System.EventHandler(this.EH_Idle);
+            // 
+            // m_lbPrefPath
+            // 
+            this.m_lbPrefPath.FormattingEnabled = true;
+            this.m_lbPrefPath.Location = new System.Drawing.Point(107, 62);
+            this.m_lbPrefPath.Name = "m_lbPrefPath";
+            this.m_lbPrefPath.Size = new System.Drawing.Size(413, 69);
+            this.m_lbPrefPath.TabIndex = 25;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(16, 62);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(85, 17);
+            this.label1.TabIndex = 26;
+            this.label1.Text = "Preferred Paths";
+            // 
+            // m_pbRemove
+            // 
+            this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbRemove.Location = new System.Drawing.Point(536, 107);
+            this.m_pbRemove.Name = "m_pbRemove";
+            this.m_pbRemove.Size = new System.Drawing.Size(72, 24);
+            this.m_pbRemove.TabIndex = 27;
+            this.m_pbRemove.Text = "Remove";
+            // 
+            // m_pbAddPath
+            // 
+            this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbAddPath.Location = new System.Drawing.Point(536, 78);
+            this.m_pbAddPath.Name = "m_pbAddPath";
+            this.m_pbAddPath.Size = new System.Drawing.Size(72, 24);
+            this.m_pbAddPath.TabIndex = 28;
+            this.m_pbAddPath.Text = "Add Path";
+            // 
+            // m_cbMarkFavored
+            // 
+            this.m_cbMarkFavored.AutoSize = true;
+            this.m_cbMarkFavored.Location = new System.Drawing.Point(9, 107);
+            this.m_cbMarkFavored.Name = "m_cbMarkFavored";
+            this.m_cbMarkFavored.Size = new System.Drawing.Size(92, 17);
+            this.m_cbMarkFavored.TabIndex = 29;
+            this.m_cbMarkFavored.Text = "Mark Favored";
+            this.m_cbMarkFavored.UseVisualStyleBackColor = true;
+            // 
+            // MainForm
+            // 
+            this.AllowDrop = true;
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+            this.ClientSize = new System.Drawing.Size(624, 806);
+            this.Controls.Add(this.m_cbMarkFavored);
+            this.Controls.Add(this.m_pbAddPath);
+            this.Controls.Add(this.m_pbRemove);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.m_lbPrefPath);
+            this.Controls.Add(this.m_pbSmartMatch);
+            this.Controls.Add(this.m_prbarOverall);
+            this.Controls.Add(this.m_pbCheckRegex);
+            this.Controls.Add(this.m_pbRemoveRegex);
+            this.Controls.Add(this.m_pbMatchRegex);
+            this.Controls.Add(this.m_lblMoveTo);
+            this.Controls.Add(this.m_ebMovePath);
+            this.Controls.Add(this.m_pbClear);
+            this.Controls.Add(this.m_pbToggle);
+            this.Controls.Add(this.m_pbDelete);
+            this.Controls.Add(this.m_pbMove);
+            this.Controls.Add(this.m_lblRegEx);
+            this.Controls.Add(this.m_ebRegEx);
+            this.Controls.Add(this.m_lblActions);
+            this.Controls.Add(this.m_prbar);
+            this.Controls.Add(this.m_stb);
+            this.Controls.Add(this.m_cbCompareFiles);
+            this.Controls.Add(this.m_lblSearchCriteria);
+            this.Controls.Add(this.m_lblFilterBanner);
+            this.Controls.Add(this.m_pbDuplicates);
+            this.Controls.Add(this.m_cbRecurse);
+            this.Controls.Add(this.m_lblSearch);
+            this.Controls.Add(this.m_pbSearch);
+            this.Controls.Add(this.m_ebSearchPath);
+            this.Controls.Add(this.m_lv);
+            this.Name = "MainForm";
+            this.Text = "MainForm";
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.HandleDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.HandleDragEnter);
+            this.DragLeave += new System.EventHandler(this.HandleDragLeave);
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 	}
 	#endregion
@@ -882,12 +882,12 @@ public class MainForm : System.Windows.Forms.Form
 
 	/* E  H  _ F I N D  D U P L I C A T E S */
 	/*----------------------------------------------------------------------------
-		%%Function: EH_FindDuplicates
-		%%Qualified: SList.MainForm.EH_FindDuplicates
+		%%Function: EH_Uniquify
+		%%Qualified: SList.MainForm.EH_Uniquify
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
-	private void EH_FindDuplicates(object sender, System.EventArgs e)
+	private void EH_Uniquify(object sender, System.EventArgs e)
 	{
 		SLItem []rgsli = new SLItem[m_lv.Items.Count];
 		int start, end, sum = 0;
@@ -939,41 +939,48 @@ public class MainForm : System.Windows.Forms.Form
 				if (rgsli[iDupe].m_fMarked == true)
 					continue;
 
-				if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
-					{
-					// do more extensive check here...for now, the size and the name is enough
-					if (m_cbCompareFiles.Checked)
-						{
-						c++;
-						if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
-							{
-							if (rgsli[i].m_fMarked == false)
-								AddSliToListView(rgsli[i], m_lv, true);
-								
-							if (rgsli[iDupe].m_fMarked == false)
-								AddSliToListView(rgsli[iDupe], m_lv);
-							
-							rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
-							rgsli[i].AddDupeToChain(rgsli[iDupe]);
-							}
-						}
-					else
-						{
-						if (rgsli[i].m_sName == rgsli[iDupe].m_sName)
-							{
-							if (rgsli[i].m_fMarked == false)
-								AddSliToListView(rgsli[i], m_lv);
-							
-							if (rgsli[iDupe].m_fMarked == false)
-								AddSliToListView(rgsli[iDupe], m_lv);
-							
-							rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
-							rgsli[i].AddDupeToChain(rgsli[iDupe]);
-							}
-						}
-					}
-				else
-					break; // no reason to continue if the lengths changed; we sorted by length
+				    if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
+				    {
+				        // do more extensive check here...for now, the size and the name is enough
+				        if (m_cbCompareFiles.Checked)
+				        {
+				            c++;
+				            if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
+				            {
+				                if (rgsli[i].m_fMarked == false)
+				                    AddSliToListView(rgsli[i], m_lv, true);
+
+				                if (rgsli[iDupe].m_fMarked == false)
+				                    AddSliToListView(rgsli[iDupe], m_lv);
+
+				                rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
+				                rgsli[i].AddDupeToChain(rgsli[iDupe]);
+				            }
+				        }
+				        else
+				        {
+				            if (rgsli[i].m_sName == rgsli[iDupe].m_sName)
+				            {
+				                if (rgsli[i].m_fMarked == false)
+				                    AddSliToListView(rgsli[i], m_lv);
+
+				                if (rgsli[iDupe].m_fMarked == false)
+				                    AddSliToListView(rgsli[iDupe], m_lv);
+
+				                rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
+				                rgsli[i].AddDupeToChain(rgsli[iDupe]);
+				            }
+				        }
+				    }
+				    else
+				    {
+				        if (rgsli[i].m_fMarked == false)
+				            // this was unique...
+				            AddSliToListView(rgsli[i], m_lv, true);
+
+				        break; // no reason to continue if the lengths changed; we sorted by length
+				    }
+				    
 				}
 			}
 		m_prbar.Hide();
