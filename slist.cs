@@ -11,17 +11,34 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Media;
 using System.Resources;
+using System.Text;
+using System.Xml;
+using NUnit.Framework;
+using TCore.UI;
 
 namespace SList
 {
-    public partial class MainForm : System.Windows.Forms.Form
+    public partial class SListApp : System.Windows.Forms.Form
     {
         private byte[] m_rgb1;
         private byte[] m_rgb2;
+        private IgnoreList m_ign;
 
-        public const int lcbMax = 4 * 1024 * 1024;
+        public const int lcbMax = 4*1024*1024;
+        public static string s_sRegRoot = "Software\\Thetasoft\\SList";
+
+        ListView LvCur
+        {
+            get { return SlisCur.Lv; }
+        }
+
+        SLISet SlisCur
+        {
+            get { return m_rgslis[m_islisCur]; }
+        }
 
         #region Designer definitions
+
         private System.Windows.Forms.ListView m_lv;
         private System.Windows.Forms.TextBox m_ebSearchPath;
         private System.Windows.Forms.Button m_pbSearch;
@@ -71,10 +88,16 @@ namespace SList
         private ComboBox m_cbxIgnoreList;
         private Label label3;
         private CheckBox m_cbAddToIgnoreList;
+        private Button m_pbSaveList;
+        private Button m_pbLoadFromFile;
+        private Button m_pbSaveFileList;
         private System.ComponentModel.IContainer components;
+
         #endregion
 
-        public MainForm()
+        #region AppHost
+
+        public SListApp()
         {
             //
             // Required for Windows Form Designer support
@@ -87,11 +110,129 @@ namespace SList
             InitializeListViews();
             InitializeListView(s_ilvSource);
             InitializeListView(s_ilvDest);
+            InitIgnoreLists();
             ShowListView(s_ilvSource);
             //
             // TODO: Add any constructor code after InitializeComponent call
             //
         }
+
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.Run(new SListApp());
+        }
+
+        #endregion
+
+        #region Initialization
+
+        void InitIgnoreLists()
+        {
+            m_ign = new IgnoreList();
+            m_ign.LoadIgnoreListNames(s_sRegRoot);
+
+            m_cbxIgnoreList.Items.Add("<Create List...>");
+            m_cbxIgnoreList.Items.Add("<Copy current list...>");
+            foreach (string s in m_ign.IgnoreLists)
+                {
+                m_cbxIgnoreList.Items.Add(s);
+                }
+        }
+
+        // the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
+        // for all the list views in the designer and still have our switchable list views
+        void InitializeListViews()
+        {
+            m_rgslis = new SLISet[s_clvMax];
+
+            m_rgslis[s_ilvSource] = new SLISet();
+            m_rgslis[s_ilvSource].Lv = m_lv;
+            m_lv = null;
+
+            for (int ilv = 0; ilv < s_clvMax; ilv++)
+                {
+                if (ilv == s_ilvSource)
+                    continue; // skip, this is already initialized
+
+                ListView lv = new System.Windows.Forms.ListView();
+                lv.Anchor = m_rgslis[s_ilvSource].Lv.Anchor;
+                lv.CheckBoxes = m_rgslis[s_ilvSource].Lv.CheckBoxes;
+
+                lv.ContextMenu = m_rgslis[s_ilvSource].Lv.ContextMenu;
+                lv.Location = m_rgslis[s_ilvSource].Lv.Location;
+                lv.Name = String.Format("m_rglv{0}", ilv);
+                lv.Size = m_rgslis[s_ilvSource].Lv.Size;
+                lv.TabIndex = m_rgslis[s_ilvSource].Lv.TabIndex;
+                lv.UseCompatibleStateImageBehavior = m_rgslis[s_ilvSource].Lv.UseCompatibleStateImageBehavior;
+                //m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
+                lv.Visible = false;
+                this.Controls.Add(lv);
+                m_rgslis[ilv] = new SLISet();
+                m_rgslis[ilv].Lv = lv;
+                }
+        }
+
+        private void InitializeListView(int ilv)
+        {
+            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+            m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
+            m_rgslis[ilv].Lv.Columns[0].Width = 146;
+
+            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+            m_rgslis[ilv].Lv.Columns[1].Text = "Size";
+            m_rgslis[ilv].Lv.Columns[1].Width = 52;
+            m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Right;
+
+            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+            m_rgslis[ilv].Lv.Columns[2].Text = "Location";
+            m_rgslis[ilv].Lv.Columns[2].Width = 128;
+
+            m_rgslis[ilv].Lv.FullRowSelect = true;
+            m_rgslis[ilv].Lv.MultiSelect = false;
+            m_rgslis[ilv].Lv.View = View.Details;
+            m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(1);
+            m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
+            m_rgslis[ilv].Lv.LabelEdit = true;
+        }
+
+        private int m_islisCur = -1;
+
+        void ShowListView(int ilv)
+        {
+            if (m_islisCur != -1)
+                m_rgslis[m_islisCur].PathSpec = m_ebSearchPath.Text;
+
+            for (int i = 0; i < s_clvMax; i++)
+                {
+                m_rgslis[i].Lv.Visible = (i == ilv);
+                }
+            m_islisCur = ilv;
+
+            SyncSearchTargetUI(ilv);
+            m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
+        }
+
+        /* S Y N C  S E A R C H  T A R G E T */
+        /*----------------------------------------------------------------------------
+        	%%Function: SyncSearchTargetUI
+        	%%Qualified: SList.SListApp.SyncSearchTargetUI
+        	%%Contact: rlittle
+        	
+            make the UI reflect what we want the sync target to be. Typically used
+            on initialization
+        ----------------------------------------------------------------------------*/
+        void SyncSearchTargetUI(int ilv)
+        {
+            m_cbxSearchTarget.SelectedIndex = ilv;
+        }
+
+        #endregion
+
+        #region Destruction
 
         /// <summary>
         /// Clean up any resources being used.
@@ -108,6 +249,8 @@ namespace SList
             base.Dispose(disposing);
         }
 
+        #endregion
+
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -117,7 +260,7 @@ namespace SList
         /* I N I T I A L I Z E  C O M P O N E N T */
         /*----------------------------------------------------------------------------
 		%%Function: InitializeComponent
-		%%Qualified: SList.MainForm.InitializeComponent
+		%%Qualified: SList.SListApp.InitializeComponent
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
@@ -172,6 +315,9 @@ namespace SList
             this.m_cbxIgnoreList = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.m_cbAddToIgnoreList = new System.Windows.Forms.CheckBox();
+            this.m_pbSaveList = new System.Windows.Forms.Button();
+            this.m_pbLoadFromFile = new System.Windows.Forms.Button();
+            this.m_pbSaveFileList = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -235,14 +381,14 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_ebSearchPath.Location = new System.Drawing.Point(107, 36);
             this.m_ebSearchPath.Name = "m_ebSearchPath";
-            this.m_ebSearchPath.Size = new System.Drawing.Size(424, 20);
+            this.m_ebSearchPath.Size = new System.Drawing.Size(314, 20);
             this.m_ebSearchPath.TabIndex = 2;
             this.m_ebSearchPath.Text = "c:\\temp";
             // 
             // m_pbSearch
             // 
             this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbSearch.Location = new System.Drawing.Point(616, 32);
+            this.m_pbSearch.Location = new System.Drawing.Point(733, 32);
             this.m_pbSearch.Name = "m_pbSearch";
             this.m_pbSearch.Size = new System.Drawing.Size(72, 24);
             this.m_pbSearch.TabIndex = 4;
@@ -262,7 +408,7 @@ namespace SList
             this.m_cbRecurse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.m_cbRecurse.Checked = true;
             this.m_cbRecurse.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.m_cbRecurse.Location = new System.Drawing.Point(536, 39);
+            this.m_cbRecurse.Location = new System.Drawing.Point(427, 39);
             this.m_cbRecurse.Name = "m_cbRecurse";
             this.m_cbRecurse.Size = new System.Drawing.Size(72, 16);
             this.m_cbRecurse.TabIndex = 3;
@@ -271,7 +417,7 @@ namespace SList
             // m_pbDuplicates
             // 
             this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbDuplicates.Location = new System.Drawing.Point(621, 201);
+            this.m_pbDuplicates.Location = new System.Drawing.Point(738, 201);
             this.m_pbDuplicates.Name = "m_pbDuplicates";
             this.m_pbDuplicates.Size = new System.Drawing.Size(72, 24);
             this.m_pbDuplicates.TabIndex = 9;
@@ -284,7 +430,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_lblFilterBanner.Location = new System.Drawing.Point(13, 186);
             this.m_lblFilterBanner.Name = "m_lblFilterBanner";
-            this.m_lblFilterBanner.Size = new System.Drawing.Size(688, 16);
+            this.m_lblFilterBanner.Size = new System.Drawing.Size(805, 16);
             this.m_lblFilterBanner.TabIndex = 5;
             this.m_lblFilterBanner.Tag = "Filter files";
             this.m_lblFilterBanner.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
@@ -295,15 +441,15 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_lblSearchCriteria.Location = new System.Drawing.Point(8, 16);
             this.m_lblSearchCriteria.Name = "m_lblSearchCriteria";
-            this.m_lblSearchCriteria.Size = new System.Drawing.Size(688, 16);
+            this.m_lblSearchCriteria.Size = new System.Drawing.Size(805, 16);
             this.m_lblSearchCriteria.TabIndex = 0;
-            this.m_lblSearchCriteria.Tag = "Perform search";
+            this.m_lblSearchCriteria.Tag = "Populate file lists";
             this.m_lblSearchCriteria.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
             // 
             // m_cbCompareFiles
             // 
             this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_cbCompareFiles.Location = new System.Drawing.Point(396, 209);
+            this.m_cbCompareFiles.Location = new System.Drawing.Point(513, 209);
             this.m_cbCompareFiles.Name = "m_cbCompareFiles";
             this.m_cbCompareFiles.Size = new System.Drawing.Size(152, 16);
             this.m_cbCompareFiles.TabIndex = 8;
@@ -314,14 +460,14 @@ namespace SList
             this.m_stb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_stb.Dock = System.Windows.Forms.DockStyle.None;
-            this.m_stb.Location = new System.Drawing.Point(0, 671);
+            this.m_stb.Location = new System.Drawing.Point(0, 717);
             this.m_stb.Name = "m_stb";
             this.m_stb.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
             this.m_stbpMainStatus,
             this.m_stbpFilterStatus,
             this.m_stbpSearch});
             this.m_stb.ShowPanels = true;
-            this.m_stb.Size = new System.Drawing.Size(704, 24);
+            this.m_stb.Size = new System.Drawing.Size(821, 24);
             this.m_stb.TabIndex = 9;
             // 
             // m_stbpMainStatus
@@ -342,7 +488,7 @@ namespace SList
             // m_prbar
             // 
             this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.m_prbar.Location = new System.Drawing.Point(112, 675);
+            this.m_prbar.Location = new System.Drawing.Point(112, 721);
             this.m_prbar.Name = "m_prbar";
             this.m_prbar.Size = new System.Drawing.Size(190, 15);
             this.m_prbar.TabIndex = 10;
@@ -354,7 +500,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_lblActions.Location = new System.Drawing.Point(13, 266);
             this.m_lblActions.Name = "m_lblActions";
-            this.m_lblActions.Size = new System.Drawing.Size(688, 16);
+            this.m_lblActions.Size = new System.Drawing.Size(805, 16);
             this.m_lblActions.TabIndex = 15;
             this.m_lblActions.Tag = "Perform actions";
             this.m_lblActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
@@ -365,7 +511,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_ebRegEx.Location = new System.Drawing.Point(101, 206);
             this.m_ebRegEx.Name = "m_ebRegEx";
-            this.m_ebRegEx.Size = new System.Drawing.Size(289, 20);
+            this.m_ebRegEx.Size = new System.Drawing.Size(406, 20);
             this.m_ebRegEx.TabIndex = 7;
             // 
             // m_lblRegEx
@@ -379,7 +525,7 @@ namespace SList
             // m_pbMove
             // 
             this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbMove.Location = new System.Drawing.Point(541, 282);
+            this.m_pbMove.Location = new System.Drawing.Point(658, 282);
             this.m_pbMove.Name = "m_pbMove";
             this.m_pbMove.Size = new System.Drawing.Size(72, 24);
             this.m_pbMove.TabIndex = 18;
@@ -389,7 +535,7 @@ namespace SList
             // m_pbDelete
             // 
             this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbDelete.Location = new System.Drawing.Point(621, 282);
+            this.m_pbDelete.Location = new System.Drawing.Point(738, 282);
             this.m_pbDelete.Name = "m_pbDelete";
             this.m_pbDelete.Size = new System.Drawing.Size(72, 24);
             this.m_pbDelete.TabIndex = 19;
@@ -399,7 +545,7 @@ namespace SList
             // m_pbToggle
             // 
             this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbToggle.Location = new System.Drawing.Point(621, 234);
+            this.m_pbToggle.Location = new System.Drawing.Point(738, 234);
             this.m_pbToggle.Name = "m_pbToggle";
             this.m_pbToggle.Size = new System.Drawing.Size(72, 24);
             this.m_pbToggle.TabIndex = 14;
@@ -409,7 +555,7 @@ namespace SList
             // m_pbClear
             // 
             this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbClear.Location = new System.Drawing.Point(541, 234);
+            this.m_pbClear.Location = new System.Drawing.Point(658, 234);
             this.m_pbClear.Name = "m_pbClear";
             this.m_pbClear.Size = new System.Drawing.Size(72, 24);
             this.m_pbClear.TabIndex = 13;
@@ -430,7 +576,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
             this.m_ebMovePath.Location = new System.Drawing.Point(101, 286);
             this.m_ebMovePath.Name = "m_ebMovePath";
-            this.m_ebMovePath.Size = new System.Drawing.Size(424, 20);
+            this.m_ebMovePath.Size = new System.Drawing.Size(541, 20);
             this.m_ebMovePath.TabIndex = 17;
             // 
             // m_pbMatchRegex
@@ -463,7 +609,7 @@ namespace SList
             // m_prbarOverall
             // 
             this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.m_prbarOverall.Location = new System.Drawing.Point(305, 675);
+            this.m_prbarOverall.Location = new System.Drawing.Point(305, 721);
             this.m_prbarOverall.Maximum = 1000;
             this.m_prbarOverall.Name = "m_prbarOverall";
             this.m_prbarOverall.Size = new System.Drawing.Size(190, 15);
@@ -502,7 +648,7 @@ namespace SList
             // m_pbRemove
             // 
             this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbRemove.Location = new System.Drawing.Point(621, 141);
+            this.m_pbRemove.Location = new System.Drawing.Point(738, 141);
             this.m_pbRemove.Name = "m_pbRemove";
             this.m_pbRemove.Size = new System.Drawing.Size(72, 24);
             this.m_pbRemove.TabIndex = 27;
@@ -511,7 +657,7 @@ namespace SList
             // m_pbAddPath
             // 
             this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbAddPath.Location = new System.Drawing.Point(621, 112);
+            this.m_pbAddPath.Location = new System.Drawing.Point(738, 112);
             this.m_pbAddPath.Name = "m_pbAddPath";
             this.m_pbAddPath.Size = new System.Drawing.Size(72, 24);
             this.m_pbAddPath.TabIndex = 28;
@@ -556,7 +702,7 @@ namespace SList
             this.m_lv.ContextMenu = this.m_cxtListView;
             this.m_lv.Location = new System.Drawing.Point(16, 315);
             this.m_lv.Name = "m_lv";
-            this.m_lv.Size = new System.Drawing.Size(672, 348);
+            this.m_lv.Size = new System.Drawing.Size(789, 394);
             this.m_lv.TabIndex = 20;
             this.m_lv.UseCompatibleStateImageBehavior = false;
             this.m_lv.Visible = false;
@@ -565,27 +711,25 @@ namespace SList
             // m_pbValidateSrc
             // 
             this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_pbValidateSrc.Location = new System.Drawing.Point(541, 201);
+            this.m_pbValidateSrc.Location = new System.Drawing.Point(658, 201);
             this.m_pbValidateSrc.Name = "m_pbValidateSrc";
             this.m_pbValidateSrc.Size = new System.Drawing.Size(74, 24);
             this.m_pbValidateSrc.TabIndex = 33;
             this.m_pbValidateSrc.Text = "Validate Src";
-            this.m_pbValidateSrc.Click += new System.EventHandler(this.m_pbValidateSrc_Click);
+            this.m_pbValidateSrc.Click += new System.EventHandler(this.EH_ValidateSrc);
             // 
             // m_cbxIgnoreList
             // 
             this.m_cbxIgnoreList.FormattingEnabled = true;
-            this.m_cbxIgnoreList.Items.AddRange(new object[] {
-            "Source",
-            "Destination"});
-            this.m_cbxIgnoreList.Location = new System.Drawing.Point(360, 64);
+            this.m_cbxIgnoreList.Location = new System.Drawing.Point(287, 63);
             this.m_cbxIgnoreList.Name = "m_cbxIgnoreList";
             this.m_cbxIgnoreList.Size = new System.Drawing.Size(121, 21);
             this.m_cbxIgnoreList.TabIndex = 35;
+            this.m_cbxIgnoreList.SelectedIndexChanged += new System.EventHandler(this.EH_HandleIgnoreListSelect);
             // 
             // label3
             // 
-            this.label3.Location = new System.Drawing.Point(269, 66);
+            this.label3.Location = new System.Drawing.Point(234, 65);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(72, 16);
             this.label3.TabIndex = 34;
@@ -596,17 +740,50 @@ namespace SList
             this.m_cbAddToIgnoreList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.m_cbAddToIgnoreList.Checked = true;
             this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(536, 64);
+            this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(653, 64);
             this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
             this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(152, 21);
             this.m_cbAddToIgnoreList.TabIndex = 36;
             this.m_cbAddToIgnoreList.Text = "Automatically add ignore";
             // 
-            // MainForm
+            // m_pbSaveList
+            // 
+            this.m_pbSaveList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbSaveList.Location = new System.Drawing.Point(414, 63);
+            this.m_pbSaveList.Name = "m_pbSaveList";
+            this.m_pbSaveList.Size = new System.Drawing.Size(72, 24);
+            this.m_pbSaveList.TabIndex = 37;
+            this.m_pbSaveList.Text = "Save List";
+            this.m_pbSaveList.Click += new System.EventHandler(this.EH_DoSaveIgnoreList);
+            // 
+            // m_pbLoadFromFile
+            // 
+            this.m_pbLoadFromFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbLoadFromFile.Location = new System.Drawing.Point(505, 35);
+            this.m_pbLoadFromFile.Name = "m_pbLoadFromFile";
+            this.m_pbLoadFromFile.Size = new System.Drawing.Size(86, 24);
+            this.m_pbLoadFromFile.TabIndex = 38;
+            this.m_pbLoadFromFile.Text = "Load FileList";
+            this.m_pbLoadFromFile.Click += new System.EventHandler(this.EH_LoadFileListFromFile);
+            // 
+            // m_pbSaveFileList
+            // 
+            this.m_pbSaveFileList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_pbSaveFileList.Location = new System.Drawing.Point(597, 36);
+            this.m_pbSaveFileList.Name = "m_pbSaveFileList";
+            this.m_pbSaveFileList.Size = new System.Drawing.Size(86, 24);
+            this.m_pbSaveFileList.TabIndex = 39;
+            this.m_pbSaveFileList.Text = "Save FileList";
+            this.m_pbSaveFileList.Click += new System.EventHandler(this.EH_SaveFileListToFile);
+            // 
+            // SListApp
             // 
             this.AllowDrop = true;
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.ClientSize = new System.Drawing.Size(704, 693);
+            this.ClientSize = new System.Drawing.Size(821, 739);
+            this.Controls.Add(this.m_pbSaveFileList);
+            this.Controls.Add(this.m_pbLoadFromFile);
+            this.Controls.Add(this.m_pbSaveList);
             this.Controls.Add(this.m_cbAddToIgnoreList);
             this.Controls.Add(this.m_cbxIgnoreList);
             this.Controls.Add(this.label3);
@@ -643,8 +820,8 @@ namespace SList
             this.Controls.Add(this.m_pbSearch);
             this.Controls.Add(this.m_ebSearchPath);
             this.Controls.Add(this.m_lv);
-            this.Name = "MainForm";
-            this.Text = "MainForm";
+            this.Name = "SListApp";
+            this.Text = "SListApp";
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.HandleDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.HandleDragEnter);
             this.DragLeave += new System.EventHandler(this.HandleDragLeave);
@@ -658,119 +835,231 @@ namespace SList
 
         #endregion
 
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
-        {
-            Application.Run(new MainForm());
-        }
+        #region EventHandlers
 
-        // the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
-        // for all the list views in the designer and still have our switchable list views
-        void InitializeListViews()
-        {
-            m_rgslis = new SLISet[s_clvMax];
-
-            m_rgslis[s_ilvSource] = new SLISet();
-            m_rgslis[s_ilvSource].Lv = m_lv;
-            m_lv = null;
-
-            for (int ilv = 0; ilv < s_clvMax; ilv++)
-                {
-                if (ilv == s_ilvSource)
-                    continue; // skip, this is already initialized
-
-                ListView lv = new System.Windows.Forms.ListView();
-                lv.Anchor = m_rgslis[s_ilvSource].Lv.Anchor;
-                lv.CheckBoxes = m_rgslis[s_ilvSource].Lv.CheckBoxes;
-
-                lv.ContextMenu = m_rgslis[s_ilvSource].Lv.ContextMenu;
-                lv.Location = m_rgslis[s_ilvSource].Lv.Location;
-                lv.Name = String.Format("m_rglv{0}", ilv);
-                lv.Size = m_rgslis[s_ilvSource].Lv.Size;
-                lv.TabIndex = m_rgslis[s_ilvSource].Lv.TabIndex;
-                lv.UseCompatibleStateImageBehavior = m_rgslis[s_ilvSource].Lv.UseCompatibleStateImageBehavior;
-                //m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
-                lv.Visible = false;
-                this.Controls.Add(lv);
-                m_rgslis[ilv] = new SLISet();
-                m_rgslis[ilv].Lv = lv;
-                }
-        }
-
-
-        private void InitializeListView(int ilv)
-        {
-            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-            m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
-            m_rgslis[ilv].Lv.Columns[0].Width = 146;
-
-            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-            m_rgslis[ilv].Lv.Columns[1].Text = "Size";
-            m_rgslis[ilv].Lv.Columns[1].Width = 52;
-            m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Right;
-
-            m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-            m_rgslis[ilv].Lv.Columns[2].Text = "Location";
-            m_rgslis[ilv].Lv.Columns[2].Width = 128;
-
-            m_rgslis[ilv].Lv.FullRowSelect = true;
-            m_rgslis[ilv].Lv.MultiSelect = false;
-            m_rgslis[ilv].Lv.View = View.Details;
-            m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(1);
-            m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
-            m_rgslis[ilv].Lv.LabelEdit = true;
-        }
-
-        private int m_islisCur = -1;
-
-        void ShowListView(int ilv)
-        {
-            if (m_islisCur != -1)
-                m_rgslis[m_islisCur].PathSpec = m_ebSearchPath.Text;
-
-            for (int i = 0; i < s_clvMax; i++)
-                {
-                m_rgslis[i].Lv.Visible = (i == ilv);
-                }
-            m_islisCur = ilv;
-
-            SyncSearchTarget(ilv);
-            m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
-        }
-
-        void SyncSearchTarget(int ilv)
-        {
-            m_cbxSearchTarget.SelectedIndex = ilv;
-        }
-
-        ListView LvCur { get { return SlisCur.Lv; } }
-        SLISet SlisCur {  get { return m_rgslis[m_islisCur]; } }
-
-        /* E  H  _ C O L U M N  C L I C K */
-        /*----------------------------------------------------------------------------
-		%%Function: EH_ColumnClick
-		%%Qualified: SList.MainForm.EH_ColumnClick
-		%%Contact: rlittle
-
-	----------------------------------------------------------------------------*/
         private void EH_ColumnClick(object o, ColumnClickEventArgs e)
         {
-            if (((ListView) o).ListViewItemSorter == null)
-                ((ListView) o).ListViewItemSorter = new ListViewItemComparer(e.Column);
-            else
-                ((ListViewItemComparer) (((ListView) o).ListViewItemSorter)).SetColumn(e.Column);
-
-            ((ListView) o).Sort();
+            ChangeListViewSort((ListView) o, e.Column);
         }
+
+        private void EH_Uniquify(object sender, System.EventArgs e)
+        {
+            BuildUniqueFileList();
+        }
+
+        private void EH_DoSearch(object sender, System.EventArgs e)
+        {
+            BuildFileList();
+        }
+
+        private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
+        {
+            Label lbl = (Label) sender;
+            string s = (string) lbl.Tag;
+
+            SizeF sf = e.Graphics.MeasureString(s, lbl.Font);
+            int nWidth = (int) sf.Width;
+            int nHeight = (int) sf.Height;
+
+            e.Graphics.DrawString(s, lbl.Font, new SolidBrush(Color.SlateBlue), 0, 0); // new System.Drawing.Point(0, (lbl.Width - nWidth) / 2));
+            e.Graphics.DrawLine(new Pen(new SolidBrush(Color.Gray), 1), 6 + nWidth + 1, (nHeight/2), lbl.Width, (nHeight/2));
+        }
+
+        private void EH_DoMove(object sender, System.EventArgs e)
+        {
+            MoveSelectedFiles(LvCur, m_ebMovePath.Text, m_stbpMainStatus);
+        }
+
+        private void EH_DoDelete(object sender, System.EventArgs e) {}
+
+        private void EH_ToggleAll(object sender, System.EventArgs e)
+        {
+            ToggleAllListViewItems(LvCur);
+        }
+
+        private void EH_ClearAll(object sender, System.EventArgs e)
+        {
+            UncheckAllListViewItems(LvCur);
+        }
+
+        private void EH_MatchRegex(object sender, System.EventArgs e)
+        {
+            DoRegex(RegexOp.Match);
+        }
+
+        private void EH_FilterRegex(object sender, System.EventArgs e)
+        {
+            DoRegex(RegexOp.Filter);
+        }
+
+        private void EH_CheckRegex(object sender, System.EventArgs e)
+        {
+            DoRegex(RegexOp.Check);
+        }
+
+        private void EH_HandleExecuteMenu(object sender, System.EventArgs e)
+        {
+            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+
+            if (slvic != null && slvic.Count >= 1)
+                {
+                LaunchSli((SLItem) slvic[0].Tag);
+                }
+        }
+
+        private void EH_SmartMatchClick(object sender, System.EventArgs e)
+        {
+            sCancelled = SCalcMatchingListViewItems(LvCur, m_ebRegEx.Text, sCancelled);
+        }
+
+        private void EH_HandleEdit(object sender, System.Windows.Forms.LabelEditEventArgs e)
+        {
+            SLItem sli = (SLItem) LvCur.Items[e.Item].Tag;
+
+            if (!FRenameFile(sli.m_sPath, sli.m_sName, sli.m_sPath, e.Label))
+                {
+                e.CancelEdit = true;
+                }
+            else
+                {
+                sli.m_sName = e.Label;
+                }
+        }
+
+        private void EH_ValidateSrc(object sender, EventArgs e)
+        {
+            BuildMissingFileList();
+        }
+
+        /* E  H _  H A N D L E  I G N O R E  L I S T  S E L E C T */
+        /*----------------------------------------------------------------------------
+        	%%Function: EH_HandleIgnoreListSelect
+        	%%Qualified: SList.SListApp.EH_HandleIgnoreListSelect
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
+        private void EH_HandleIgnoreListSelect(object sender, EventArgs e)
+        {
+            if (m_cbxIgnoreList.SelectedIndex <= 1)
+                {
+                // this is "<Create...>" or "<Copy...>"
+                string sName;
+                if (TCore.UI.InputBox.ShowInputBox("New ignore list name", "Ignore list name", "", out sName))
+                    {
+                    m_ign.CreateIgnoreList(sName, m_cbxIgnoreList.SelectedIndex == 1);
+                    m_cbxIgnoreList.Items.Add(sName);
+                    m_cbxIgnoreList.SelectedIndex = m_cbxIgnoreList.Items.Count - 1;
+                    }
+                return;
+                }
+            ApplyIgnoreList((string) m_cbxIgnoreList.SelectedItem);
+        }
+
+        private void EH_DoSaveIgnoreList(object sender, EventArgs e)
+        {
+            m_ign.EnsureListSaved();
+        }
+
+        private void EH_LoadFileListFromFile(object sender, EventArgs e)
+        {
+            LoadFileListFromFile(SlisCur);
+        }
+
+        private void EH_SaveFileListToFile(object sender, EventArgs e)
+        {
+            SaveFileListToFile(SlisCur);
+        }
+
+        #endregion
+
+        #region Generic Utilites
+
+        public class PerfTimer
+        {
+            Stopwatch m_sw;
+            private string m_sOp;
+
+            public PerfTimer()
+            {
+                m_sw = new Stopwatch();
+            }
+
+            public void Start(string sOperation)
+            {
+                m_sOp = sOperation;
+                m_sw.Start();
+            }
+
+            public void Stop()
+            {
+                m_sw.Stop();
+            }
+
+            public void Report(int msecMin = 0)
+            {
+                if (m_sw.ElapsedMilliseconds > msecMin)
+                    MessageBox.Show(String.Format("{0} elapsed time: {1:0.00}", m_sOp, m_sw.ElapsedMilliseconds/1000.0));
+            }
+        }
+
+        #endregion
+
+        #region ListView Support
+
+        /* C H A N G E  L I S T  V I E W  S O R T */
+        /*----------------------------------------------------------------------------
+        	%%Function: ChangeListViewSort
+        	%%Qualified: SList.SListApp.ChangeListViewSort
+        	%%Contact: rlittle
+        	
+            Change the sort order for the given listview to sort by the given column
+        ----------------------------------------------------------------------------*/
+        void ChangeListViewSort(ListView lv, int iColSort)
+        {
+            if (lv.ListViewItemSorter == null)
+                lv.ListViewItemSorter = new ListViewItemComparer(iColSort);
+            else
+                ((ListViewItemComparer) lv.ListViewItemSorter).SetColumn(iColSort);
+
+            lv.Sort();
+        }
+
+        void ToggleAllListViewItems(ListView lvCur)
+        {
+            int i, iMac;
+
+            for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+                {
+                lvCur.Items[i].Checked = !lvCur.Items[i].Checked;
+                }
+        }
+
+        void UncheckAllListViewItems(ListView lvCur)
+        {
+            int i, iMac;
+
+            for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
+                {
+                lvCur.Items[i].Checked = false;
+                }
+        }
+
+        #endregion
 
         static int s_ilvSource = 0;
         static int s_ilvDest = 1;
         static int s_clvMax = 2;
 
-        static private void AddSliToListView(SLItem sli, ListView lv)
+        #region BuildFileList
+
+        /* A D D  S L I  T O  L I S T  V I E W */
+        /*----------------------------------------------------------------------------
+        	%%Function: AddSliToListView
+        	%%Qualified: SList.SListApp.AddSliToListView
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
+        static public void AddSliToListView(SLItem sli, ListView lv)
         {
             AddSliToListView(sli, lv, false);
         }
@@ -830,7 +1119,7 @@ namespace SList
                     plfiTooLong.Add(rgfi[i]);
 
                 // Application.DoEvents();
-            }
+                }
 
             if (fRecurse)
                 {
@@ -847,34 +1136,15 @@ namespace SList
                 }
         }
 
-        class PerfTimer
-        {
-            Stopwatch m_sw;
-            private string m_sOp;
-
-            public PerfTimer()
-            {
-                m_sw = new Stopwatch();
-            }
-
-            public void Start(string sOperation)
-            {
-                m_sOp = sOperation;
-                m_sw.Start();
-            }
-
-            public void Stop()
-            {
-                m_sw.Stop();
-            }
-
-            public void Report()
-            {
-                MessageBox.Show(String.Format("{0} elapsed time: {1}", m_sOp, m_sw.ElapsedMilliseconds/1000));
-            }
-        }
-
-        private void EH_DoSearch(object sender, System.EventArgs e)
+        /* B U I L D  F I L E  L I S T */
+        /*----------------------------------------------------------------------------
+        	%%Function: BuildFileList
+        	%%Qualified: SList.SListApp.BuildFileList
+        	%%Contact: rlittle
+        	
+            Take the search path and build the file list (for the selected target)
+        ----------------------------------------------------------------------------*/
+        private void BuildFileList()
         {
             string sFileSpec = m_ebSearchPath.Text;
             string sPath = null;
@@ -919,7 +1189,6 @@ namespace SList
                 return;
                 }
 
-
             Cursor crsSav = this.Cursor;
 
             // start a wait cursor
@@ -938,10 +1207,9 @@ namespace SList
 
             AddDirectory(di, SlisCur, sPattern, m_cbRecurse.Checked, plfiTooLong);
             if (plfiTooLong.Count > 0)
-            {
+                {
                 MessageBox.Show(String.Format("Encountered {0} paths that were too long", plfiTooLong.Count));
-            }
-
+                }
 
             pt.Stop();
             pt.Report();
@@ -952,19 +1220,163 @@ namespace SList
             this.Cursor = crsSav;
         }
 
-        private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
+        static Int64 FileSizeFromDirectoryLine(string sLine)
         {
-            Label lbl = (Label) sender;
-            string s = (string) lbl.Tag;
-
-            SizeF sf = e.Graphics.MeasureString(s, lbl.Font);
-            int nWidth = (int) sf.Width;
-            int nHeight = (int) sf.Height;
-
-            e.Graphics.DrawString(s, lbl.Font, new SolidBrush(Color.SlateBlue), 0, 0); // new System.Drawing.Point(0, (lbl.Width - nWidth) / 2));
-            e.Graphics.DrawLine(new Pen(new SolidBrush(Color.Gray), 1), 6 + nWidth + 1, (nHeight/2), lbl.Width, (nHeight/2));
-
+            return Int64.Parse(sLine.Substring(20, 19),
+                               NumberStyles.AllowThousands | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowParentheses);
         }
+
+        static string FileNameFromDirectoryLine(string sLine)
+        {
+            return sLine.Substring(39).TrimEnd();
+        }
+
+        static void ParseFileListLine(string sLine, out string sPath, out string sFilename, out Int64 nSize)
+        {
+            int ich;
+            int ichLast;
+
+            ich = sLine.IndexOf('\t');
+            sPath = sLine.Substring(0, ich);
+            ichLast = ich + 1;
+            ich = sLine.IndexOf('\t', ichLast);
+            sFilename = sLine.Substring(ichLast, ich - ichLast);
+            ichLast = ich + 1;
+            nSize = Int64.Parse(sLine.Substring(ichLast));
+        }
+        #region tests
+
+        [TestCase("04/05/2015  05:59 PM    13,704,581,120 hiberfil.sys", 13704581120)]
+        [TestCase("04/05/2015  05:59 PM 1,113,704,581,120 hiberfil.sys", 1113704581120)]
+        [Test]
+        public static void TestFileSizeFromDirectoryLine(string sLine, Int64 nSizeExpected)
+        {
+            Int64 nSize = FileSizeFromDirectoryLine(sLine);
+            Assert.AreEqual(nSizeExpected, nSize);
+        }
+
+        [TestCase("04/05/2015  05:59 PM    13,704,581,120 hiberfil.sys", "hiberfil.sys")]
+        [TestCase("04/05/2015  05:59 PM 1,113,704,581,120 hiberfil.sys", "hiberfil.sys")]
+        [Test]
+        public static void TestFileNameFromDirectoryLine(string sLine, string sNameExpected)
+        {
+            string sFile = FileNameFromDirectoryLine(sLine);
+            Assert.AreEqual(sNameExpected, sFile);
+        }
+
+        [TestCase("04/05/2015  05:59 PM    13,704,581,120 hiberfil.sys", "hiberfil.sys")]
+        [TestCase("04/05/2015  05:59 PM 1,113,704,581,120 hiberfil.sys", "hiberfil.sys")]
+        [Test]
+        public static void TestParseFileListLine(string sLine, string sPathExpected, string sNameExpected, Int64 nSizeExpected)
+        {
+            string sPath, sName;
+            Int64 nSize;
+
+            ParseFileListLine(sLine, out sPath, out sName, out nSize);
+            Assert.AreEqual(sPathExpected, sPath);
+            Assert.AreEqual(nSizeExpected, nSize);
+        }
+
+        static string DirectoryNameFromDirectoryLine(string sLine)
+        {
+            return sLine.Substring(14);
+        }
+
+        [TestCase(" Directory of F:\\", "F:\\")]
+        [TestCase(" Directory of F:\\$Recycle.Bin", "F:\\$Recycle.Bin")]
+        [Test]
+        public static void TestDirectoryNameFromDirectoryLine(string sLine, string sDirNameExpected)
+        {
+            string sDirName = DirectoryNameFromDirectoryLine(sLine);
+            Assert.AreEqual(sDirNameExpected, sDirName);
+        }
+
+        #endregion // tests
+
+        private void LoadFileListFromFile(SLISet slis)
+        {
+            string sFile;
+
+            if (!InputBox.ShowInputBox("File list", out sFile))
+                return;
+
+            PerfTimer pt = new PerfTimer();
+            pt.Start("load file list");
+            // parse a directory listing and add 
+            string sCurDirectory = null;
+            TextReader tr = new StreamReader(new FileStream(sFile, FileMode.Open, FileAccess.Read), Encoding.Default);
+            string sLine;
+            slis.PauseListViewUpdate(true);
+
+            sLine = tr.ReadLine();
+            bool fInternalFormat = false;
+
+            if (sLine == "[file.lst]")
+                fInternalFormat = true;
+
+            while ((sLine = tr.ReadLine()) != null)
+                {
+                if (fInternalFormat)
+                    {
+                    string sPath, sName;
+                    Int64 nSize;
+
+                    ParseFileListLine(sLine, out sPath, out sName, out nSize);
+                    SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
+                    slis.Add(sli);
+                    continue;
+                    }
+                // figure out what this line is
+                if (sLine.Length < 14)
+                    continue;
+
+                if (sLine[2] == '/' && sLine[5] == '/')
+                    {
+                    // this is a leading date, which means this is either a directory or a file
+                    if (sLine[24] == '<') // this is a directory
+                        continue;
+
+                    // ok, from [14,39] is the size, [40, ...] is filename
+                    Int64 nSize = FileSizeFromDirectoryLine(sLine);
+                    string sFileLine = FileNameFromDirectoryLine(sLine);
+
+                    SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory, String.Concat(sCurDirectory, "/", sFileLine));
+                    slis.Add(sli);
+                    }
+                else if (sLine.StartsWith(" Directory of "))
+                    {
+                    sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+                    }
+                }
+            slis.ResumeListViewUpdate();
+
+            pt.Stop();
+            pt.Report();
+            tr.Close();
+        }
+
+        private void SaveFileListToFile(SLISet slis)
+        {
+            string sFile;
+
+            if (!InputBox.ShowInputBox("File list", out sFile))
+                return;
+
+            TextWriter tr = new StreamWriter(new FileStream(sFile, FileMode.CreateNew, FileAccess.Write), Encoding.Default);
+
+            tr.WriteLine("[file.lst]"); // write something out so we know this is one of our files (we will parse it faster)
+            foreach (ListViewItem lvi in slis.Lv.Items)
+                {
+                SLItem sli = (SLItem) lvi.Tag;
+                tr.WriteLine("{0}\t{1}\t{2}", sli.m_sPath, sli.m_sName, sli.m_lSize);
+                }
+            tr.Flush();
+            tr.Close();
+        }
+
+        #endregion
+
+        #region Core Model (Compare Files, etc)
 
         private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
         {
@@ -1003,7 +1415,7 @@ namespace SList
 
             while (lcb > 0)
                 {
-                Application.DoEvents();
+                // Application.DoEvents();
                 if (fProgress)
                     {
                     if (lProgressLast + iIncrement < icb)
@@ -1076,33 +1488,6 @@ namespace SList
 
         }
 
-        /* U P D A T E  S E A R C H */
-        /*----------------------------------------------------------------------------
-		%%Function: UpdateSearch
-		%%Qualified: SList.MainForm.UpdateSearch
-		%%Contact: rlittle
-
-		Kinda like FindDuplicates, but it doesn't search for them.  It just looks
-		for dupe chains, and then favors marking/unmark items that match the paths
-		in the preferred paths list (uses m_cbMarkFavored)
-	    ----------------------------------------------------------------------------*/
-        void UpdateSearch()
-        {
-            foreach (ListViewItem lvi in LvCur.Items)
-                {
-                SLItem sli = (SLItem) lvi.Tag;
-
-                foreach (String s in m_lbPrefPath.Items)
-                    {
-                    if (sli.MatchesPrefPath(s))
-                        {
-                        UpdateForPrefPath(sli, s, m_cbMarkFavored.Checked);
-                        break;
-                        }
-                    }
-                }
-        }
-
         void AddSlisToRgsli(SLISet slis, SLItem[] rgsli, int iFirst, bool fDestOnly)
         {
             int i, iMac;
@@ -1119,11 +1504,11 @@ namespace SList
         /* E  H  _ F I N D  D U P L I C A T E S */
         /*----------------------------------------------------------------------------
 		%%Function: EH_Uniquify
-		%%Qualified: SList.MainForm.EH_Uniquify
+		%%Qualified: SList.SListApp.EH_Uniquify
 		%%Contact: rlittle
 
 	    ----------------------------------------------------------------------------*/
-        private void EH_Uniquify(object sender, System.EventArgs e)
+        private void BuildUniqueFileList()
         {
             int start, end, sum = 0;
             int min = 999999, max = 0, c = 0;
@@ -1137,7 +1522,7 @@ namespace SList
 
             if (m_rgslis[s_ilvDest].Lv.Items.Count > 0)
                 {
-                AddSlisToRgsli(m_rgslis[s_ilvDest], rgsli, slisSrc.Lv.Items.Count, true);    
+                AddSlisToRgsli(m_rgslis[s_ilvDest], rgsli, slisSrc.Lv.Items.Count, true);
                 }
             Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSize));
 
@@ -1218,7 +1603,6 @@ namespace SList
 
                         break; // no reason to continue if the lengths changed; we sorted by length
                         }
-
                     }
                 }
             m_prbar.Hide();
@@ -1241,15 +1625,35 @@ namespace SList
             m_stbpSearch.Text = len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")";
         }
 
-        /* E  H  _ D O  M O V E */
+        /* A D J U S T  L I S T  V I E W  F O R  F A V O R E D  P A T H S */
         /*----------------------------------------------------------------------------
-		%%Function: EH_DoMove
-		%%Qualified: SList.MainForm.EH_DoMove
-		%%Contact: rlittle
+		    %%Function: AdjustListViewForFavoredPaths
+		    %%Qualified: SList.SListApp.AdjustListViewForFavoredPaths
+		    %%Contact: rlittle
+
+		    Kinda like FindDuplicates, but it doesn't search for them.  It just looks
+		    for dupe chains, and then favors marking/unmark items that match the paths
+		    in the preferred paths list (uses m_cbMarkFavored)
 	    ----------------------------------------------------------------------------*/
-        private void EH_DoMove(object sender, System.EventArgs e)
+        void AdjustListViewForFavoredPaths()
         {
-            string sDir = m_ebMovePath.Text;
+            foreach (ListViewItem lvi in LvCur.Items)
+                {
+                SLItem sli = (SLItem) lvi.Tag;
+
+                foreach (String s in m_lbPrefPath.Items)
+                    {
+                    if (sli.MatchesPrefPath(s))
+                        {
+                        UpdateForPrefPath(sli, s, m_cbMarkFavored.Checked);
+                        break;
+                        }
+                    }
+                }
+        }
+
+        static void MoveSelectedFiles(ListView lvCur, string sDir, StatusBarPanel stbp)
+        {
             FileAttributes fa = 0;
             bool fDirExists = false;
             // let's see what they gave us.  First, see if its a directory
@@ -1290,18 +1694,18 @@ namespace SList
             // ok, iterate through all the items and find the ones that are checked
             int i, iMac;
 
-            for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+            for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
                 {
-                if (!LvCur.Items[i].Checked)
+                if (!lvCur.Items[i].Checked)
                     continue;
 
-                SLItem sli = (SLItem) (LvCur.Items[i].Tag);
+                SLItem sli = (SLItem) (lvCur.Items[i].Tag);
                 string sSource = Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName));
                 string sDest = Path.GetFullPath(Path.Combine(sDir, sli.m_sName));
 
                 if (String.Compare(sSource, sDest, true /*ignoreCase*/) == 0)
                     {
-                    m_stbpMainStatus.Text = "Skipped identity move: " + sSource;
+                    stbp.Text = "Skipped identity move: " + sSource;
                     continue;
                     }
 
@@ -1313,7 +1717,7 @@ namespace SList
                 while (File.Exists(sDestClone) && n < 1020)
                     {
                     sDestClone = Path.Combine(Path.GetDirectoryName(sDest), Path.GetFileNameWithoutExtension(sDest) + "(" + n.ToString() + ")" + Path.GetExtension(sDest));
-//				sDestClone = sDest + " (" + n.ToString() + ")";
+                    //				sDestClone = sDest + " (" + n.ToString() + ")";
                     n++;
                     }
 
@@ -1324,34 +1728,66 @@ namespace SList
                     }
 
                 // ok, let's do the move
-                m_stbpMainStatus.Text = "Moving " + sSource + " -> " + sDestClone;
+                stbp.Text = "Moving " + sSource + " -> " + sDestClone;
                 File.Move(sSource, sDestClone);
-                LvCur.Items[i].Checked = false;
+                lvCur.Items[i].Checked = false;
                 }
         }
 
-        private void EH_DoDelete(object sender, System.EventArgs e) {}
-
-        private void EH_ToggleAll(object sender, System.EventArgs e)
+        static bool FRenameFile(string sPathOrig, string sFileOrig, string sPathNew, string sFileNew)
         {
-            int i, iMac;
+            if (sFileNew == null)
+                return false;
 
-            for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+            string sSource = Path.GetFullPath(Path.Combine(sPathOrig, sFileOrig));
+            string sDest = Path.GetFullPath(Path.Combine(sPathNew, sFileNew));
+
+            try
                 {
-                LvCur.Items[i].Checked = !LvCur.Items[i].Checked;
+                File.Move(sSource, sDest);
+                }
+            catch (Exception ex)
+                {
+                MessageBox.Show("Cannot rename '" + sFileOrig + "' to '" + sFileNew + "':\n\n" + ex.ToString(), "SList");
+                return false;
                 }
 
+            return true;
         }
 
-        private void EH_ClearAll(object sender, System.EventArgs e)
+        void ApplyIgnoreList(string sIgnoreList)
         {
-            int i, iMac;
+            SLISet slis = SlisCur;
 
-            for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+            int colSav = ((ListViewItemComparer) slis.Lv.ListViewItemSorter).GetColumn();
+            ((ListViewItemComparer) slis.Lv.ListViewItemSorter).SetColumn(-1);
+            slis.Lv.Sort();
+
+            // otherwise, we're loading a new list
+            m_ign.LoadIgnoreList(sIgnoreList);
+            int iProgress = 0;
+            m_prbarOverall.Value = iProgress;
+            m_prbarOverall.Show();
+
+            // and apply the ignore list
+            Application.DoEvents();
+            int iMac = m_ign.IgnoreItems.Count;
+
+            slis.PauseListViewUpdate(false);
+            for (int i = 0; i < iMac; i++)
                 {
-                LvCur.Items[i].Checked = false;
+                if (iProgress != (1000*i)/iMac)
+                    {
+                    iProgress = (1000*i)/iMac;
+                    m_prbarOverall.Value = iProgress;
+                    m_prbarOverall.Update();
+                    Application.DoEvents();
+                    }
+                RemovePath(slis, m_ign.IgnoreItems[i].PathPrefix);
                 }
-
+            m_prbarOverall.Hide();
+            Application.DoEvents();
+            slis.ResumeListViewUpdate(colSav);
         }
 
         public enum RegexOp
@@ -1412,34 +1848,19 @@ namespace SList
                 }
         }
 
-        private void EH_MatchRegex(object sender, System.EventArgs e)
-        {
-            DoRegex(RegexOp.Match);
-        }
-
-        private void EH_FilterRegex(object sender, System.EventArgs e)
-        {
-            DoRegex(RegexOp.Filter);
-        }
-
-        private void EH_CheckRegex(object sender, System.EventArgs e)
-        {
-            DoRegex(RegexOp.Check);
-        }
-
         string sCancelled;
 
-        private void EH_SmartMatchClick(object sender, System.EventArgs e)
+        static string SCalcMatchingListViewItems(ListView lvCur, string sRegEx, string sCounts)
         {
-            ATMC atmc = new ATMC(m_ebRegEx.Text);
-            string sMatch = String.Format("Matches for '{0}':\n\n", m_ebRegEx.Text);
+            ATMC atmc = new ATMC(sRegEx);
+            string sMatch = String.Format("Matches for '{0}':\n\n", sRegEx);
 
             int i, iMac;
             int cMatch = 0;
 
-            for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+            for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
                 {
-                SLItem sli = (SLItem) (LvCur.Items[i].Tag);
+                SLItem sli = (SLItem) (lvCur.Items[i].Tag);
 
                 if (sli.m_atmc == null)
                     sli.m_atmc = new ATMC(sli.m_sName);
@@ -1448,114 +1869,24 @@ namespace SList
                 nMatch = sli.m_atmc.NMatch(atmc);
                 if (nMatch > 65)
                     {
-                    sMatch += String.Format("{0:d3}% : '{1}'\n", nMatch, Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName)), m_ebRegEx.Text);
+                    sMatch += String.Format("{0:d3}% : '{1}'\n", nMatch, Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName)), sRegEx);
                     cMatch++;
                     }
                 }
             if (cMatch == 0 || MessageBox.Show(sMatch, "Matches", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                sCancelled += String.Format("{0}\n", m_ebRegEx.Text);
+                sCounts += String.Format("{0}\n", sRegEx);
+
+            return sCounts;
         }
 
-        private void EH_HandleExecuteMenu(object sender, System.EventArgs e)
-        {
-            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
-
-            if (slvic != null && slvic.Count >= 1)
-                {
-                SLItem sli = (SLItem) slvic[0].Tag;
-
-                Process.Start(Path.Combine(sli.m_sPath, sli.m_sName));
-                }
-
-        }
-
-        private void EH_HandleEdit(object sender, System.Windows.Forms.LabelEditEventArgs e)
-        {
-            if (e.Label == null)
-                return;
-
-            SLItem sli = (SLItem)LvCur.Items[e.Item].Tag;
-
-            string sSource = Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName));
-            string sDest = Path.GetFullPath(Path.Combine(sli.m_sPath, e.Label));
-
-            try
-                {
-                File.Move(sSource, sDest);
-                }
-            catch (Exception ex)
-                {
-                MessageBox.Show("Cannot rename '" + sli.m_sName + "' to '" + e.Label + "':\n\n" + ex.ToString(), "SList");
-                e.CancelEdit = true;
-                }
-
-            if (e.CancelEdit != true)
-                sli.m_sName = e.Label;
-
-            // let's try to rename it as they have asked
-
-        }
-
-        /* H A N D L E  D R O P */
-        /*----------------------------------------------------------------------------
-		%%Function: HandleDrop
-		%%Qualified: SList.MainForm.HandleDrop
-		%%Contact: rlittle
-
-	----------------------------------------------------------------------------*/
-        private void HandleDrop(object sender, System.Windows.Forms.DragEventArgs e)
-        {
-            this.Activate();
-
-            m_tmr.Enabled = false;
-
-            string[] files = (string[]) e.Data.GetData(DataFormats.FileDrop);
-            sCancelled = "";
-            foreach (string sFile in files)
-                {
-                m_ebRegEx.Text = Path.GetFileName(sFile);
-                EH_SmartMatchClick(null, null);
-                }
-//		if (sCancelled.Length > 0)
-//			MessageBox.Show(sCancelled, "Not Found");
-            m_tmr.Interval = 500;
-            m_tmr.Enabled = true;
-        }
-
-        /* H A N D L E  D R A G  E N T E R */
-        /*----------------------------------------------------------------------------
-		%%Function: HandleDragEnter
-		%%Qualified: SList.MainForm.HandleDragEnter
-		%%Contact: rlittle
-
-	----------------------------------------------------------------------------*/
-        private void HandleDragEnter(object sender, System.Windows.Forms.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                {
-                e.Effect = DragDropEffects.Copy;
-                }
-            else
-                {
-                e.Effect = DragDropEffects.None;
-                }
-        }
-        /* H A N D L E  D R A G  L E A V E */
-        /*----------------------------------------------------------------------------
-		%%Function: HandleDragLeave
-		%%Qualified: SList.MainForm.HandleDragLeave
-		%%Contact: rlittle
-
-	----------------------------------------------------------------------------*/
-        private void HandleDragLeave(object sender, System.EventArgs e) {}
 
         /* E  H  _ I D L E */
         /*----------------------------------------------------------------------------
-		%%Function: EH_Idle
-		%%Qualified: SList.MainForm.EH_Idle
-		%%Contact: rlittle
+		    %%Function: EH_Idle
+		    %%Qualified: SList.SListApp.EH_Idle
+		    %%Contact: rlittle
 
-	----------------------------------------------------------------------------*/
+	    ----------------------------------------------------------------------------*/
         private void EH_Idle(object sender, System.EventArgs e)
         {
             m_tmr.Enabled = false;
@@ -1569,24 +1900,120 @@ namespace SList
         void AddPreferredPath(string s)
         {
             m_lbPrefPath.Items.Add(s);
-            UpdateSearch();
+            AdjustListViewForFavoredPaths();
         }
 
         void RemovePath(SLISet slis, string sPathRoot)
         {
-            slis.Remove(sPathRoot);
-        } 
+            slis.Remove(sPathRoot, m_prbar);
+        }
 
         void EH_RemovePath(object sender, EventArgs e)
         {
-            MenuItem mni = (MenuItem)sender;
+            MenuItem mni = (MenuItem) sender;
             RemovePath(m_rgslis[m_islisCur], mni.Text);
+            if (m_cbAddToIgnoreList.Checked)
+                {
+                m_ign.AddIgnorePath(mni.Text);
+                }
         }
+
         private void EH_AddPreferredPath(object sender, EventArgs e)
         {
             MenuItem mni = (MenuItem) sender;
             AddPreferredPath(mni.Text);
         }
+
+        #endregion // Core Model (Compare Files, etc)
+
+        #region List View Commands
+
+        void LaunchSli(SLItem sli)
+        {
+            Process.Start(Path.Combine(sli.m_sPath, sli.m_sName));
+        }
+
+        /* H A N D L E  D R O P */
+        /*----------------------------------------------------------------------------
+		    %%Function: HandleDrop
+		    %%Qualified: SList.SListApp.HandleDrop
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+        private void HandleDrop(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            this.Activate();
+
+            m_tmr.Enabled = false;
+
+            string[] files = (string[]) e.Data.GetData(DataFormats.FileDrop);
+            sCancelled = "";
+            foreach (string sFile in files)
+                {
+                m_ebRegEx.Text = Path.GetFileName(sFile);
+                EH_SmartMatchClick(null, null);
+                }
+            //		if (sCancelled.Length > 0)
+            //			MessageBox.Show(sCancelled, "Not Found");
+            m_tmr.Interval = 500;
+            m_tmr.Enabled = true;
+        }
+
+        /* H A N D L E  D R A G  E N T E R */
+        /*----------------------------------------------------------------------------
+		    %%Function: HandleDragEnter
+		    %%Qualified: SList.SListApp.HandleDragEnter
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+        private void HandleDragEnter(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                e.Effect = DragDropEffects.Copy;
+                }
+            else
+                {
+                e.Effect = DragDropEffects.None;
+                }
+        }
+
+        /* H A N D L E  D R A G  L E A V E */
+        /*----------------------------------------------------------------------------
+		    %%Function: HandleDragLeave
+		    %%Qualified: SList.SListApp.HandleDragLeave
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+        private void HandleDragLeave(object sender, System.EventArgs e) {}
+
+        private void EH_SelectPrevDupe(object sender, EventArgs e)
+        {
+            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+
+            if (slvic != null && slvic.Count >= 1)
+                {
+                SLItem sli = (SLItem) slvic[0].Tag;
+
+                SLItem sliSel = sli.Prev;
+                Select(sliSel);
+                }
+        }
+
+        private void EH_SelectNextDupe(object sender, EventArgs e)
+        {
+            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+
+            if (slvic != null && slvic.Count >= 1)
+                {
+                SLItem sli = (SLItem) slvic[0].Tag;
+
+                SLItem sliSel = sli.Next;
+                Select(sliSel);
+                }
+        }
+
+        #endregion // List View Commands
 
         private void EH_DoContextPopup(object sender, EventArgs e)
         {
@@ -1626,7 +2053,7 @@ namespace SList
 
                 sSub = "";
                 foreach (string s in rgs)
-                {
+                    {
                     MenuItem mniNew = new MenuItem();
 
                     if (sSub != "")
@@ -1638,8 +2065,8 @@ namespace SList
                     mniNew.Click += new EventHandler(EH_RemovePath);
 
                     mni.MenuItems.Add(mniNew);
+                    }
                 }
-            }
         }
 
         public void UpdateForPrefPath(SLItem sliMaster, string s, bool fMark)
@@ -1708,40 +2135,14 @@ namespace SList
             SystemSounds.Beep.Play();
         }
 
-
-
-        private void EH_SelectPrevDupe(object sender, EventArgs e)
-        {
-            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
-
-            if (slvic != null && slvic.Count >= 1)
-                {
-                SLItem sli = (SLItem) slvic[0].Tag;
-
-                SLItem sliSel = sli.Prev;
-                Select(sliSel);
-                }
-        }
-
-        private void EH_SelectNextDupe(object sender, EventArgs e)
-        {
-            ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
-
-            if (slvic != null && slvic.Count >= 1)
-                {
-                SLItem sli = (SLItem) slvic[0].Tag;
-
-                SLItem sliSel = sli.Next;
-                Select(sliSel);
-                }
-        }
-
         private void DoSearchTargetChange(object sender, EventArgs e)
         {
             ShowListView(m_cbxSearchTarget.SelectedIndex);
         }
 
-        class SLIBucket
+        #region SLI Bucket
+
+        public class SLIBucket
         {
             List<SLItem> m_plsli;
             string m_sKey;
@@ -1753,11 +2154,14 @@ namespace SList
                 m_sKey = sKey;
             }
 
-            public List<SLItem> Items {  get { return m_plsli; } }
+            public List<SLItem> Items
+            {
+                get { return m_plsli; }
+            }
 
             public void Remove(SLItem sli)
             {
-                int i = m_plsli.Count ;
+                int i = m_plsli.Count;
 
                 while (--i >= 0)
                     {
@@ -1775,77 +2179,11 @@ namespace SList
             }
         }
 
+        #endregion
+
         private SLISet[] m_rgslis;
 
-        class SLISet
-        {
-            private Hashtable m_ht;
-            private ListView m_lv;
-            private string m_sSpec;
-
-            public string PathSpec {  get { return m_sSpec; } set { m_sSpec = value; } }
-
-            public ListView Lv
-            {
-                get { return m_lv; }
-                set { m_lv = value; }
-            }
-
-            public SLISet()
-            {
-                m_ht = new Hashtable();
-            }
-
-            public void Add(SLItem sli)
-            {
-                if (m_ht.Contains(sli.Hashkey))
-                    {
-                    SLIBucket slib = (SLIBucket) m_ht[sli.Hashkey];
-
-                    slib.Items.Add(sli);
-                    }
-                else
-                    {
-                    SLIBucket slib = new SLIBucket(sli.Hashkey, sli);
-                    m_ht.Add(sli.Hashkey, slib);
-                    }
-                AddSliToListView(sli, m_lv);
-            }
-
-            public void Remove(string sPathRoot)
-            {
-                m_lv.BeginUpdate();
-                // walk through every list view item, find matching items, then remove them and remove them from the hash set
-                int i = m_lv.Items.Count;
-
-                while (--i >= 0)
-                    {
-                    SLItem sli = (SLItem) m_lv.Items[i].Tag;
-                    if (sli.MatchesPrefPath(sPathRoot))
-                        {
-                        SLIBucket slib = (SLIBucket) m_ht[sli.Hashkey];
-
-                        slib.Remove(sli);
-                        m_lv.Items.RemoveAt(i);
-                        }
-                    }
-                m_lv.EndUpdate();
-            }
-        }
-
-        
-        void PruneSlibs(SLISet slibLeft, SLISet slibRight)
-        {
-            // for every item in left that is also in right, remove it from left
-
-        }
-
-        private void DoPruneSource(object sender, EventArgs e)
-        {
-//            PruneSlib(m_rgslis[s_ilvSource], m_rgslis[s_ilvDest]);
-        }
-
-        private void m_pbValidateSrc_Click(object sender, EventArgs e)
+        void BuildMissingFileList()
         {
             SLItem[] rgsli;
             int start, end, sum = 0;
@@ -1856,7 +2194,7 @@ namespace SList
 
             int cItems = slisSrc.Lv.Items.Count + m_rgslis[s_ilvDest].Lv.Items.Count;
 
-             rgsli = new SLItem[cItems];
+            rgsli = new SLItem[cItems];
 
             AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
@@ -1921,8 +2259,13 @@ namespace SList
                             if (rgsli[i].m_sName == rgsli[iDupe].m_sName)
                                 {
                                 // we found a dupe in the target.. nothing to add
-                                rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
-                                rgsli[i].AddDupeToChain(rgsli[iDupe]);
+                                rgsli[i].m_fMarked = true; //  rgsli[iDupe].m_fMarked = true; // don't mark the dupe
+                                // rgsli[i].AddDupeToChain(rgsli[iDupe]); // don't add to the dupe chain
+                                break;
+                                }
+                            else
+                                {
+                                break; // no sense continuing if the name changed -- we sorted by size by name, and we aren't doing a deep compare, so name mismatch means we'll never match.
                                 }
                             }
                         }
@@ -1931,16 +2274,16 @@ namespace SList
                         break; // no reason to continue if the lengths changed; we sorted by length
                         }
                     }
-                    // we have left the loop.  either we broke out because we know we don't have a match,
-                    // or we exhausted all the dupes and we know we found at least one match.
-                    // in either case, if we found a dupe in the target, we will have marked m_fMarked to be true...
-                    // if its not set, then we didn't find this file in the destination.
-                    if (rgsli[i].m_fMarked == false)
-                        // this was unique...
-                        AddSliToListView(rgsli[i], slisSrc.Lv, true);
+                // we have left the loop.  either we broke out because we know we don't have a match,
+                // or we exhausted all the dupes and we know we found at least one match.
+                // in either case, if we found a dupe in the target, we will have marked m_fMarked to be true...
+                // if its not set, then we didn't find this file in the destination.
+                if (rgsli[i].m_fMarked == false)
+                    // this was unique...
+                    AddSliToListView(rgsli[i], slisSrc.Lv, true);
 
 
-            }
+                }
             m_prbar.Hide();
             m_prbarOverall.Hide();
             if (m_cbCompareFiles.Checked)
@@ -1960,8 +2303,10 @@ namespace SList
             int avg2 = sum/c;
             m_stbpSearch.Text = len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")";
         }
+
     }
 
+    #region ListViewItem Comparer
     public class ListViewItemComparer : IComparer
     {
         private int m_col;
@@ -2010,6 +2355,11 @@ namespace SList
             m_col = col;
         }
 
+        public int GetColumn()
+        {
+            return m_col;
+        }
+
         /* C O M P A R E */
         /*----------------------------------------------------------------------------
 		%%Function: Compare
@@ -2027,29 +2377,9 @@ namespace SList
 
             switch (m_col)
                 {
-#if NEVER
-		case 0:
-			if (lvi1.Checked)
-				{
-				if (lvi2.Checked)
-					n = 0;
-				else
-					n = -1;
-				}
-			else if (!lvi2.Checked)
-				n = 0;
-			else
-				n = 1;
-
-			// manually handle fReverse here -- SLItem.Compare handles it for us elsewhere
-			if (m_fReverse)
-				n = -n;
-
-			if (n == 0)
-				n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareName, m_fReverse);
-			break;
-#endif
-
+                case -1:
+                    n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareHashkey, m_fReverse);
+                    break;
                 case 0:
                     n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareName, m_fReverse);
                     break;
@@ -2064,5 +2394,6 @@ namespace SList
             return n;
         }
     }
+    #endregion
 }
 

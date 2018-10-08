@@ -14,7 +14,6 @@ using System.Resources;
 
 namespace SList
 {
-    public partial class MainForm : System.Windows.Forms.Form {}
     public class SLItemComparer : IComparer
     {
         private SLItem.SLItemCompare m_slic;
@@ -65,7 +64,7 @@ namespace SList
     public class SLItem
     {
         public string m_sName;
-        public long m_lSize;
+        public Int64  m_lSize;
         public string m_sPath;
         public bool m_fMarked;
 
@@ -102,12 +101,27 @@ namespace SList
             CompareName,
             CompareSize,
             ComparePath,
-            CompareSizeDest
+            CompareSizeDest,
+            CompareHashkey
         }
 
-        public string Hashkey => m_fi.Name;
+        public string Hashkey => m_sFiName;
+
+        private string m_sFiName;
 
         public bool DestOnly { get { return m_fDestOnly; } set { m_fDestOnly = value; } }
+
+        public SLItem(string sName, long lSize, string sPath, string sFiName)
+        {
+            m_sName = sName;
+            m_lSize = lSize;
+            m_sPath = sPath;
+            m_sFiName = sFiName;
+            m_di = null;
+            m_fi = null;
+            m_atmc = null;
+        }
+
         public SLItem(string sName, long lSize, string sPath, DirectoryInfo di)
         {
             m_sName = sName;
@@ -123,6 +137,7 @@ namespace SList
             m_sName = sName;
             m_lSize = lSize;
             m_sPath = sPath;
+            m_sFiName = String.Format("{0}/{1}", sPath, fi.Name);
             m_fi = fi;
             m_di = null;
             m_atmc = null;
@@ -167,6 +182,21 @@ namespace SList
 
             switch (slic)
             {
+                case SLItemCompare.CompareHashkey:
+                    n = String.Compare(sli1.Hashkey, sli2.Hashkey);
+                    if (n == 0)
+                    {
+                        // they are again equivalent; the difference is now file size
+                        n = (int)(sli1.m_lSize - sli2.m_lSize);
+
+                        if (n == 0)
+                        {
+                            // yeesh.  diff is now folder
+
+                            n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+                        }
+                    }
+                    break;
                 case SLItemCompare.CompareName:
                     n = String.Compare(sli1.m_sName, sli2.m_sName);
                     if (n == 0)

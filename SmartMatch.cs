@@ -124,7 +124,7 @@ namespace SList
         /* P L A T M  B U I L D  F R O M  S T R I N G */
         /*----------------------------------------------------------------------------
 		    %%Function: PlatmBuildFromString
-		    %%Qualified: SList.MainForm:ATMC.PlatmBuildFromString
+		    %%Qualified: SList.SListApp:ATMC.PlatmBuildFromString
 		    %%Contact: rlittle
 
 		    Build platm from the given sName
@@ -265,7 +265,7 @@ namespace SList
         /* C  T I T L E  W O R D S  I N  P L A T M */
         /*----------------------------------------------------------------------------
 		    %%Function: CTitleWordsInPlatm
-		    %%Qualified: SList.MainForm.CTitleWordsInPlatm
+		    %%Qualified: SList.SListApp.CTitleWordsInPlatm
 		    %%Contact: rlittle
 
 	    ----------------------------------------------------------------------------*/
