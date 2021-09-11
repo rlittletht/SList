@@ -2183,6 +2183,22 @@ namespace SList
 
         private SLISet[] m_rgslis;
 
+        // we might not be at the beginning of the dupe list for this item -- we might
+        // have skipped over some DestOnly items, and those might be the dupes we
+        // are looking for
+        int FindFirstDupeCandidate(SLItem[] rgsli, int iCurrent)
+        {
+            // walk backwards until we change sizes or hit the beginning
+            int i = iCurrent - 1;
+
+            while (i >= 0 && rgsli[i].m_lSize == rgsli[iCurrent].m_lSize)
+                i--;
+
+            // we break on the first item that doesn't match...return
+            // the next item
+            return i + 1;
+        }
+
         void BuildMissingFileList()
         {
             SLItem[] rgsli;
@@ -2234,11 +2250,20 @@ namespace SList
                 if (rgsli[i].DestOnly)
                     continue;
 
+                iDupe = FindFirstDupeCandidate(rgsli, i);
+
                 // search forward for dupes
-                for (iDupe = i + 1, iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
-                    {
+                for (iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
+                {
+                    // don't compare against ourself
+                    if (iDupe == i)
+                        continue;
+
                     // we are explicitly looking ONLY at fDestOnly files to see if there's a dupe
-                    if (rgsli[iDupe].m_fMarked == true || rgsli[iDupe].m_fDestOnly == false)
+                    // (used to include rgsli[iDupe].m_fMarked == true  -- but why exclude
+                    // destonly files that were already duped against? a destonly file can be 
+                    // a dupe for multiple source files...
+                    if (rgsli[iDupe].m_fDestOnly == false)
                         continue;
 
                     if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
@@ -2251,7 +2276,8 @@ namespace SList
                                 {
                                 // we found a dupe in the target. yay, don't add it anywhere
                                 rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
-                                rgsli[i].AddDupeToChain(rgsli[iDupe]);
+                                rgsli[iDupe].AddDupeToChain(rgsli[i]);
+                                break;
                                 }
                             }
                         else
