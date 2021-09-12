@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IgnoreList.cs" />
+    <Compile Include="SLIBucket.cs" />
     <Compile Include="SLitem.cs" />
     <Compile Include="SLItemSet.cs" />
     <Compile Include="SmartMatch.cs" />

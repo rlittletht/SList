@@ -39,13 +39,13 @@ namespace SList
 		{
 			if (m_ht.Contains(sli.Hashkey))
 			{
-				SListApp.SLIBucket slib = (SListApp.SLIBucket)m_ht[sli.Hashkey];
+				SLIBucket slib = (SLIBucket)m_ht[sli.Hashkey];
 
 				slib.Items.Add(sli);
 			}
 			else
 			{
-				SListApp.SLIBucket slib = new SListApp.SLIBucket(sli.Hashkey, sli);
+				SLIBucket slib = new SLIBucket(sli.Hashkey, sli);
 				m_ht.Add(sli.Hashkey, slib);
 			}
 			SListApp.AddSliToListView(sli, m_lv);
@@ -109,7 +109,7 @@ namespace SList
 				SLItem sli = (SLItem)m_lv.Items[i].Tag;
 				if (sli != null && sli.MatchesPrefPath(sPathRoot))
 				{
-					SListApp.SLIBucket slib = (SListApp.SLIBucket)m_ht[sli.Hashkey];
+					SLIBucket slib = (SLIBucket)m_ht[sli.Hashkey];
 
 					slib.Remove(sli);
 					cRemove++;
