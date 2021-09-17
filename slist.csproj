@@ -97,6 +97,9 @@
   <ItemGroup>
     <Compile Include="IgnoreList.cs" />
     <Compile Include="ListViewItemComparer.cs" />
+    <Compile Include="Model.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SLIBucket.cs" />
     <Compile Include="SLitem.cs" />
     <Compile Include="SLItemSet.cs" />
