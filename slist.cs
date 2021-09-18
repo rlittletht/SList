@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections;
 using System.Windows.Forms;
 using System.IO;
+using TCore.UI;
 
 namespace SList
 {
@@ -70,6 +71,7 @@ namespace SList
 		public static int s_ilvSource = 0;
 		public static int s_ilvDest = 1;
 		public static int s_clvMax = 2;
+		private ToolTip m_toolTip;
 
 		public ListView LvCur
 		{
@@ -91,6 +93,11 @@ namespace SList
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
+			// Clear the text for the controls that have their own paint...
+			m_lblFilterBanner.Text = "";
+			m_lblSearchCriteria.Text = "";
+			m_lblActions.Text = "";
+
 			m_progressBarStatusOverall = new ProgressBarStatus(m_prbarOverall);
 			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
 
@@ -288,6 +295,7 @@ namespace SList
 			this.m_pbSaveList = new System.Windows.Forms.Button();
 			this.m_pbLoadFromFile = new System.Windows.Forms.Button();
 			this.m_pbSaveFileList = new System.Windows.Forms.Button();
+			this.m_toolTip = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -403,6 +411,7 @@ namespace SList
 			this.m_lblFilterBanner.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblFilterBanner.TabIndex = 5;
 			this.m_lblFilterBanner.Tag = "Filter files";
+			this.m_lblFilterBanner.Text = "Filter files ----";
 			this.m_lblFilterBanner.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
 			// 
 			// m_lblSearchCriteria
@@ -414,6 +423,7 @@ namespace SList
 			this.m_lblSearchCriteria.Size = new System.Drawing.Size(1305, 24);
 			this.m_lblSearchCriteria.TabIndex = 0;
 			this.m_lblSearchCriteria.Tag = "Populate file lists";
+			this.m_lblSearchCriteria.Text = "Populate file lists ----";
 			this.m_lblSearchCriteria.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
 			// 
 			// m_cbCompareFiles
@@ -473,6 +483,7 @@ namespace SList
 			this.m_lblActions.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblActions.TabIndex = 15;
 			this.m_lblActions.Tag = "Perform actions";
+			this.m_lblActions.Text = "Perform actions ----";
 			this.m_lblActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
 			// 
 			// m_ebRegEx
@@ -650,7 +661,7 @@ namespace SList
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(115, 23);
 			this.label2.TabIndex = 30;
-			this.label2.Text = "Search target";
+			this.label2.Text = "File list";
 			// 
 			// m_cbxSearchTarget
 			// 
@@ -717,6 +728,7 @@ namespace SList
 			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(243, 30);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
 			this.m_cbAddToIgnoreList.Text = "Automatically add ignore";
+			this.m_toolTip.SetToolTip(this.m_cbAddToIgnoreList, "Add path to ignore list when \"Remove...\" is selected from ListView context menu.");
 			// 
 			// m_pbSaveList
 			// 
@@ -831,15 +843,7 @@ namespace SList
 
 		private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
 		{
-			Label lbl = (Label)sender;
-			string s = (string)lbl.Tag;
-
-			SizeF sf = e.Graphics.MeasureString(s, lbl.Font);
-			int nWidth = (int)sf.Width;
-			int nHeight = (int)sf.Height;
-
-			e.Graphics.DrawString(s, lbl.Font, new SolidBrush(Color.SlateBlue), 0, 0); // new System.Drawing.Point(0, (lbl.Width - nWidth) / 2));
-			e.Graphics.DrawLine(new Pen(new SolidBrush(Color.Gray), 1), 6 + nWidth + 1, (nHeight / 2), lbl.Width, (nHeight / 2));
+			RenderSupp.RenderHeadingLine(sender, e);
 		}
 
 		private void EH_DoMove(object sender, System.EventArgs e)
