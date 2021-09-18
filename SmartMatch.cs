@@ -1,16 +1,5 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows.Forms;
-using System.Data;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Globalization;
-using System.Media;
-using System.Resources;
 
 namespace SList
 {

@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Drawing;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
-using System.Data;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Globalization;
-using System.Media;
-using System.Resources;
 using TCore.Settings;
 
 namespace SList
@@ -191,7 +181,7 @@ namespace SList
         ----------------------------------------------------------------------------*/
 		string SGetListKey(string sIgnoreListName)
 		{
-			return String.Format("{0}\\IgnoreLists\\{1}", SListApp.s_sRegRoot, sIgnoreListName);
+			return String.Format("{0}\\IgnoreLists\\{1}", SmartList.s_sRegRoot, sIgnoreListName);
 		}
 
 		private Settings.SettingsElt[] _rgsteeIgnoreList =

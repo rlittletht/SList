@@ -1,21 +1,11 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
-using System.Data;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Globalization;
-using System.Media;
-using System.Resources;
 
 namespace SList
 {
-
-	class SLISet
+	public class SLISet
 	{
 		private Hashtable m_ht;
 		private ListView m_lv;
@@ -48,7 +38,7 @@ namespace SList
 				SLIBucket slib = new SLIBucket(sli.Hashkey, sli);
 				m_ht.Add(sli.Hashkey, slib);
 			}
-			SListApp.AddSliToListView(sli, m_lv);
+			SmartList.AddSliToListView(sli, m_lv);
 		}
 
 		private List<IComparer> m_plLvComparerStack;
@@ -74,20 +64,16 @@ namespace SList
 			m_lv.Update();
 		}
 
-		public void Remove(string sPathRoot, ProgressBar pbar = null)
+		public void Remove(string sPathRoot, ISmartListUi ui)
 		{
 			PauseListViewUpdate(false);
 
-			int iProgress = 0;
-
-			if (pbar != null)
-			{
-				pbar.Value = iProgress;
-				pbar.Show();
-			}
 			m_lv.BeginUpdate();
 			// walk through every list view item, find matching items, then remove them and remove them from the hash set
 			int i = m_lv.Items.Count;
+
+			ui.SetProgressBarMac(ProgressBarType.Current, i);
+			ui.ShowProgressBar(ProgressBarType.Current);
 			int c = i;
 			int cRemove = 0;
 
@@ -98,13 +84,7 @@ namespace SList
 
 			while (--i >= 0)
 			{
-				if (pbar != null && (iProgress < (100 * (c - i)) / c))
-				{
-					iProgress = (100 * (c - i)) / c;
-					pbar.Value = iProgress;
-					pbar.Update();
-					Application.DoEvents();
-				}
+				ui.UpdateProgressBar(ProgressBarType.Current, c - i, Application.DoEvents);
 
 				SLItem sli = (SLItem)m_lv.Items[i].Tag;
 				if (sli != null && sli.MatchesPrefPath(sPathRoot))
@@ -120,7 +100,7 @@ namespace SList
 			}
 
 			// now go through and find all the null tags and remove them
-			SListApp.PerfTimer pt = new SListApp.PerfTimer();
+			SmartList.PerfTimer pt = new SmartList.PerfTimer();
 			pt.Start(String.Format("remove {0} {1} times", sPathRoot, cRemove));
 
 			if (cRemove > 500)
@@ -154,8 +134,7 @@ namespace SList
 			pt.Stop();
 			pt.Report(10000);
 			m_lv.EndUpdate();
-			if (pbar != null)
-				pbar.Hide();
+			ui.HideProgressBar(ProgressBarType.Current);
 			ResumeListViewUpdate();
 		}
 	}

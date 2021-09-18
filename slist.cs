@@ -1,24 +1,12 @@
 using System;
 using System.Drawing;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
-using System.Data;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Globalization;
-using System.Media;
-using System.Resources;
-using System.Text;
-using System.Xml;
-using NUnit.Framework;
-using TCore.UI;
 
 namespace SList
 {
-	public partial class SListApp : System.Windows.Forms.Form
+	public partial class SListApp : System.Windows.Forms.Form, ISmartListUi
 	{
 		#region Designer definitions
 
@@ -78,7 +66,24 @@ namespace SList
 
 		#endregion
 
+		private SLISet[] m_rgslis;
+		public static int s_ilvSource = 0;
+		public static int s_ilvDest = 1;
+		public static int s_clvMax = 2;
+
+		public ListView LvCur
+		{
+			get { return SlisCur.Lv; }
+		}
+
+		public SLISet SlisCur
+		{
+			get { return m_rgslis[m_islisCur]; }
+		}
+
 		#region AppHost
+
+		private SmartList m_model;
 
 		public SListApp()
 		{
@@ -86,18 +91,104 @@ namespace SList
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
-
-			m_rgb1 = new byte[lcbMax];
-			m_rgb2 = new byte[lcbMax];
+			m_progressBarStatusOverall = new ProgressBarStatus(m_prbarOverall);
+			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
 
 			InitializeListViews();
 			InitializeListView(s_ilvSource);
 			InitializeListView(s_ilvDest);
-			InitIgnoreLists();
-			ShowListView(s_ilvSource);
+
+			m_model = new SmartList(this);
+
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
+		}
+
+		// the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
+		// for all the list views in the designer and still have our switchable list views
+		void InitializeListViews()
+		{
+			m_rgslis = new SLISet[s_clvMax];
+
+			m_rgslis[s_ilvSource] = new SLISet();
+			m_rgslis[s_ilvSource].Lv = m_lv;
+			m_lv = null;
+
+			for (int ilv = 0; ilv < s_clvMax; ilv++)
+			{
+				if (ilv == s_ilvSource)
+					continue; // skip, this is already initialized
+
+				ListView lv = new System.Windows.Forms.ListView();
+				lv.Anchor = m_rgslis[s_ilvSource].Lv.Anchor;
+				lv.CheckBoxes = m_rgslis[s_ilvSource].Lv.CheckBoxes;
+
+				lv.ContextMenu = m_rgslis[s_ilvSource].Lv.ContextMenu;
+				lv.Location = m_rgslis[s_ilvSource].Lv.Location;
+				lv.Name = String.Format("m_rglv{0}", ilv);
+				lv.Size = m_rgslis[s_ilvSource].Lv.Size;
+				lv.TabIndex = m_rgslis[s_ilvSource].Lv.TabIndex;
+				lv.UseCompatibleStateImageBehavior = m_rgslis[s_ilvSource].Lv.UseCompatibleStateImageBehavior;
+				//m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
+				lv.Visible = false;
+				this.Controls.Add(lv);
+				m_rgslis[ilv] = new SLISet();
+				m_rgslis[ilv].Lv = lv;
+			}
+		}
+
+		private void InitializeListView(int ilv)
+		{
+			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+			m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
+			m_rgslis[ilv].Lv.Columns[0].Width = 146;
+
+			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+			m_rgslis[ilv].Lv.Columns[1].Text = "Size";
+			m_rgslis[ilv].Lv.Columns[1].Width = 52;
+			m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Right;
+
+			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+			m_rgslis[ilv].Lv.Columns[2].Text = "Location";
+			m_rgslis[ilv].Lv.Columns[2].Width = 128;
+
+			m_rgslis[ilv].Lv.FullRowSelect = true;
+			m_rgslis[ilv].Lv.MultiSelect = false;
+			m_rgslis[ilv].Lv.View = View.Details;
+			m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(1);
+			m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
+			m_rgslis[ilv].Lv.LabelEdit = true;
+		}
+
+		private int m_islisCur = -1;
+
+		/* S Y N C  S E A R C H  T A R G E T */
+		/*----------------------------------------------------------------------------
+			%%Function: SyncSearchTargetUI
+			%%Qualified: SList.SListApp.SyncSearchTargetUI
+
+			make the UI reflect what we want the sync target to be. Typically used
+			on initialization
+        ----------------------------------------------------------------------------*/
+		void SyncSearchTargetUI(int ilv)
+		{
+			m_cbxSearchTarget.SelectedIndex = ilv;
+		}
+
+		public void ShowListView(int ilv)
+		{
+			if (m_islisCur != -1)
+				m_rgslis[m_islisCur].PathSpec = m_ebSearchPath.Text;
+
+			for (int i = 0; i < s_clvMax; i++)
+			{
+				m_rgslis[i].Lv.Visible = (i == ilv);
+			}
+			m_islisCur = ilv;
+
+			SyncSearchTargetUI(ilv);
+			m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
 		}
 
 		/// <summary>
@@ -260,14 +351,14 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebSearchPath.Location = new System.Drawing.Point(171, 53);
 			this.m_ebSearchPath.Name = "m_ebSearchPath";
-			this.m_ebSearchPath.Size = new System.Drawing.Size(10, 26);
+			this.m_ebSearchPath.Size = new System.Drawing.Size(520, 26);
 			this.m_ebSearchPath.TabIndex = 2;
 			this.m_ebSearchPath.Text = "c:\\temp";
 			// 
 			// m_pbSearch
 			// 
 			this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSearch.Location = new System.Drawing.Point(680, 47);
+			this.m_pbSearch.Location = new System.Drawing.Point(1190, 47);
 			this.m_pbSearch.Name = "m_pbSearch";
 			this.m_pbSearch.Size = new System.Drawing.Size(115, 35);
 			this.m_pbSearch.TabIndex = 4;
@@ -287,7 +378,7 @@ namespace SList
 			this.m_cbRecurse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbRecurse.Checked = true;
 			this.m_cbRecurse.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbRecurse.Location = new System.Drawing.Point(190, 57);
+			this.m_cbRecurse.Location = new System.Drawing.Point(700, 57);
 			this.m_cbRecurse.Name = "m_cbRecurse";
 			this.m_cbRecurse.Size = new System.Drawing.Size(115, 23);
 			this.m_cbRecurse.TabIndex = 3;
@@ -296,7 +387,7 @@ namespace SList
 			// m_pbDuplicates
 			// 
 			this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDuplicates.Location = new System.Drawing.Point(688, 294);
+			this.m_pbDuplicates.Location = new System.Drawing.Point(1198, 294);
 			this.m_pbDuplicates.Name = "m_pbDuplicates";
 			this.m_pbDuplicates.Size = new System.Drawing.Size(115, 35);
 			this.m_pbDuplicates.TabIndex = 9;
@@ -309,7 +400,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_lblFilterBanner.Location = new System.Drawing.Point(21, 272);
 			this.m_lblFilterBanner.Name = "m_lblFilterBanner";
-			this.m_lblFilterBanner.Size = new System.Drawing.Size(795, 23);
+			this.m_lblFilterBanner.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblFilterBanner.TabIndex = 5;
 			this.m_lblFilterBanner.Tag = "Filter files";
 			this.m_lblFilterBanner.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
@@ -320,7 +411,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_lblSearchCriteria.Location = new System.Drawing.Point(13, 23);
 			this.m_lblSearchCriteria.Name = "m_lblSearchCriteria";
-			this.m_lblSearchCriteria.Size = new System.Drawing.Size(795, 24);
+			this.m_lblSearchCriteria.Size = new System.Drawing.Size(1305, 24);
 			this.m_lblSearchCriteria.TabIndex = 0;
 			this.m_lblSearchCriteria.Tag = "Populate file lists";
 			this.m_lblSearchCriteria.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
@@ -328,7 +419,7 @@ namespace SList
 			// m_cbCompareFiles
 			// 
 			this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_cbCompareFiles.Location = new System.Drawing.Point(328, 305);
+			this.m_cbCompareFiles.Location = new System.Drawing.Point(838, 305);
 			this.m_cbCompareFiles.Name = "m_cbCompareFiles";
 			this.m_cbCompareFiles.Size = new System.Drawing.Size(243, 24);
 			this.m_cbCompareFiles.TabIndex = 8;
@@ -346,7 +437,7 @@ namespace SList
             this.m_stbpFilterStatus,
             this.m_stbpSearch});
 			this.m_stb.ShowPanels = true;
-			this.m_stb.Size = new System.Drawing.Size(821, 35);
+			this.m_stb.Size = new System.Drawing.Size(1331, 35);
 			this.m_stb.TabIndex = 9;
 			// 
 			// m_stbpMainStatus
@@ -379,7 +470,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_lblActions.Location = new System.Drawing.Point(21, 389);
 			this.m_lblActions.Name = "m_lblActions";
-			this.m_lblActions.Size = new System.Drawing.Size(795, 23);
+			this.m_lblActions.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblActions.TabIndex = 15;
 			this.m_lblActions.Tag = "Perform actions";
 			this.m_lblActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
@@ -390,7 +481,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebRegEx.Location = new System.Drawing.Point(162, 301);
 			this.m_ebRegEx.Name = "m_ebRegEx";
-			this.m_ebRegEx.Size = new System.Drawing.Size(156, 26);
+			this.m_ebRegEx.Size = new System.Drawing.Size(666, 26);
 			this.m_ebRegEx.TabIndex = 7;
 			// 
 			// m_lblRegEx
@@ -404,7 +495,7 @@ namespace SList
 			// m_pbMove
 			// 
 			this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbMove.Location = new System.Drawing.Point(560, 412);
+			this.m_pbMove.Location = new System.Drawing.Point(1070, 412);
 			this.m_pbMove.Name = "m_pbMove";
 			this.m_pbMove.Size = new System.Drawing.Size(115, 35);
 			this.m_pbMove.TabIndex = 18;
@@ -414,7 +505,7 @@ namespace SList
 			// m_pbDelete
 			// 
 			this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDelete.Location = new System.Drawing.Point(688, 412);
+			this.m_pbDelete.Location = new System.Drawing.Point(1198, 412);
 			this.m_pbDelete.Name = "m_pbDelete";
 			this.m_pbDelete.Size = new System.Drawing.Size(115, 35);
 			this.m_pbDelete.TabIndex = 19;
@@ -424,7 +515,7 @@ namespace SList
 			// m_pbToggle
 			// 
 			this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbToggle.Location = new System.Drawing.Point(688, 342);
+			this.m_pbToggle.Location = new System.Drawing.Point(1198, 342);
 			this.m_pbToggle.Name = "m_pbToggle";
 			this.m_pbToggle.Size = new System.Drawing.Size(115, 35);
 			this.m_pbToggle.TabIndex = 14;
@@ -434,7 +525,7 @@ namespace SList
 			// m_pbClear
 			// 
 			this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbClear.Location = new System.Drawing.Point(560, 342);
+			this.m_pbClear.Location = new System.Drawing.Point(1070, 342);
 			this.m_pbClear.Name = "m_pbClear";
 			this.m_pbClear.Size = new System.Drawing.Size(115, 35);
 			this.m_pbClear.TabIndex = 13;
@@ -455,7 +546,7 @@ namespace SList
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebMovePath.Location = new System.Drawing.Point(162, 418);
 			this.m_ebMovePath.Name = "m_ebMovePath";
-			this.m_ebMovePath.Size = new System.Drawing.Size(372, 26);
+			this.m_ebMovePath.Size = new System.Drawing.Size(882, 26);
 			this.m_ebMovePath.TabIndex = 17;
 			// 
 			// m_pbMatchRegex
@@ -528,7 +619,7 @@ namespace SList
 			// m_pbRemove
 			// 
 			this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbRemove.Location = new System.Drawing.Point(688, 206);
+			this.m_pbRemove.Location = new System.Drawing.Point(1198, 206);
 			this.m_pbRemove.Name = "m_pbRemove";
 			this.m_pbRemove.Size = new System.Drawing.Size(115, 35);
 			this.m_pbRemove.TabIndex = 27;
@@ -537,7 +628,7 @@ namespace SList
 			// m_pbAddPath
 			// 
 			this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbAddPath.Location = new System.Drawing.Point(688, 164);
+			this.m_pbAddPath.Location = new System.Drawing.Point(1198, 164);
 			this.m_pbAddPath.Name = "m_pbAddPath";
 			this.m_pbAddPath.Size = new System.Drawing.Size(115, 35);
 			this.m_pbAddPath.TabIndex = 28;
@@ -583,7 +674,7 @@ namespace SList
 			this.m_lv.HideSelection = false;
 			this.m_lv.Location = new System.Drawing.Point(26, 460);
 			this.m_lv.Name = "m_lv";
-			this.m_lv.Size = new System.Drawing.Size(769, 235);
+			this.m_lv.Size = new System.Drawing.Size(1279, 235);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
 			this.m_lv.Visible = false;
@@ -592,7 +683,7 @@ namespace SList
 			// m_pbValidateSrc
 			// 
 			this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbValidateSrc.Location = new System.Drawing.Point(560, 294);
+			this.m_pbValidateSrc.Location = new System.Drawing.Point(1070, 294);
 			this.m_pbValidateSrc.Name = "m_pbValidateSrc";
 			this.m_pbValidateSrc.Size = new System.Drawing.Size(118, 35);
 			this.m_pbValidateSrc.TabIndex = 33;
@@ -621,7 +712,7 @@ namespace SList
 			this.m_cbAddToIgnoreList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbAddToIgnoreList.Checked = true;
 			this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(552, 94);
+			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1062, 94);
 			this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
 			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(243, 30);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
@@ -630,7 +721,7 @@ namespace SList
 			// m_pbSaveList
 			// 
 			this.m_pbSaveList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSaveList.Location = new System.Drawing.Point(169, 92);
+			this.m_pbSaveList.Location = new System.Drawing.Point(679, 92);
 			this.m_pbSaveList.Name = "m_pbSaveList";
 			this.m_pbSaveList.Size = new System.Drawing.Size(116, 35);
 			this.m_pbSaveList.TabIndex = 37;
@@ -640,7 +731,7 @@ namespace SList
 			// m_pbLoadFromFile
 			// 
 			this.m_pbLoadFromFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbLoadFromFile.Location = new System.Drawing.Point(315, 51);
+			this.m_pbLoadFromFile.Location = new System.Drawing.Point(825, 51);
 			this.m_pbLoadFromFile.Name = "m_pbLoadFromFile";
 			this.m_pbLoadFromFile.Size = new System.Drawing.Size(138, 35);
 			this.m_pbLoadFromFile.TabIndex = 38;
@@ -650,7 +741,7 @@ namespace SList
 			// m_pbSaveFileList
 			// 
 			this.m_pbSaveFileList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSaveFileList.Location = new System.Drawing.Point(462, 53);
+			this.m_pbSaveFileList.Location = new System.Drawing.Point(972, 53);
 			this.m_pbSaveFileList.Name = "m_pbSaveFileList";
 			this.m_pbSaveFileList.Size = new System.Drawing.Size(138, 35);
 			this.m_pbSaveFileList.TabIndex = 39;
@@ -661,7 +752,7 @@ namespace SList
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
-			this.ClientSize = new System.Drawing.Size(821, 739);
+			this.ClientSize = new System.Drawing.Size(1331, 739);
 			this.Controls.Add(this.m_pbSaveFileList);
 			this.Controls.Add(this.m_pbLoadFromFile);
 			this.Controls.Add(this.m_pbSaveList);
@@ -718,19 +809,24 @@ namespace SList
 
 		#region EventHandlers
 
+		private void DoSearchTargetChange(object sender, EventArgs e)
+		{
+			ShowListView(m_cbxSearchTarget.SelectedIndex);
+		}
+
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
 		{
-			ChangeListViewSort((ListView)o, e.Column);
+			m_model.ChangeListViewSort((ListView)o, e.Column);
 		}
 
 		private void EH_Uniquify(object sender, System.EventArgs e)
 		{
-			BuildUniqueFileList();
+			m_model.BuildUniqueFileList();
 		}
 
 		private void EH_DoSearch(object sender, System.EventArgs e)
 		{
-			BuildFileList();
+			m_model.BuildFileList();
 		}
 
 		private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -748,34 +844,34 @@ namespace SList
 
 		private void EH_DoMove(object sender, System.EventArgs e)
 		{
-			MoveSelectedFiles(LvCur, m_ebMovePath.Text, m_stbpMainStatus);
+			SmartList.MoveSelectedFiles(LvCur, m_ebMovePath.Text, m_stbpMainStatus);
 		}
 
 		private void EH_DoDelete(object sender, System.EventArgs e) { }
 
 		private void EH_ToggleAll(object sender, System.EventArgs e)
 		{
-			ToggleAllListViewItems(LvCur);
+			m_model.ToggleAllListViewItems(LvCur);
 		}
 
 		private void EH_ClearAll(object sender, System.EventArgs e)
 		{
-			UncheckAllListViewItems(LvCur);
+			m_model.UncheckAllListViewItems(LvCur);
 		}
 
 		private void EH_MatchRegex(object sender, System.EventArgs e)
 		{
-			DoRegex(RegexOp.Match);
+			m_model.DoRegex(SmartList.RegexOp.Match, m_ebRegEx.Text);
 		}
 
 		private void EH_FilterRegex(object sender, System.EventArgs e)
 		{
-			DoRegex(RegexOp.Filter);
+			m_model.DoRegex(SmartList.RegexOp.Filter, m_ebRegEx.Text);
 		}
 
 		private void EH_CheckRegex(object sender, System.EventArgs e)
 		{
-			DoRegex(RegexOp.Check);
+			m_model.DoRegex(SmartList.RegexOp.Check, m_ebRegEx.Text);
 		}
 
 		private void EH_HandleExecuteMenu(object sender, System.EventArgs e)
@@ -784,20 +880,20 @@ namespace SList
 
 			if (slvic != null && slvic.Count >= 1)
 			{
-				LaunchSli((SLItem)slvic[0].Tag);
+				m_model.LaunchSli((SLItem)slvic[0].Tag);
 			}
 		}
 
 		private void EH_SmartMatchClick(object sender, System.EventArgs e)
 		{
-			sCancelled = SCalcMatchingListViewItems(LvCur, m_ebRegEx.Text, sCancelled);
+			sCancelled = SmartList.SCalcMatchingListViewItems(LvCur, m_ebRegEx.Text, sCancelled);
 		}
 
 		private void EH_HandleEdit(object sender, System.Windows.Forms.LabelEditEventArgs e)
 		{
 			SLItem sli = (SLItem)LvCur.Items[e.Item].Tag;
 
-			if (!FRenameFile(sli.m_sPath, sli.m_sName, sli.m_sPath, e.Label))
+			if (!SmartList.FRenameFile(sli.m_sPath, sli.m_sName, sli.m_sPath, e.Label))
 			{
 				e.CancelEdit = true;
 			}
@@ -809,7 +905,7 @@ namespace SList
 
 		private void EH_ValidateSrc(object sender, EventArgs e)
 		{
-			BuildMissingFileList();
+			m_model.BuildMissingFileList();
 		}
 
 		/* E  H _  H A N D L E  I G N O R E  L I S T  S E L E C T */
@@ -827,28 +923,44 @@ namespace SList
 				string sName;
 				if (TCore.UI.InputBox.ShowInputBox("New ignore list name", "Ignore list name", "", out sName))
 				{
-					m_ign.CreateIgnoreList(sName, m_cbxIgnoreList.SelectedIndex == 1);
+					m_model.CreateIgnoreList(sName, m_cbxIgnoreList.SelectedIndex == 1);
 					m_cbxIgnoreList.Items.Add(sName);
 					m_cbxIgnoreList.SelectedIndex = m_cbxIgnoreList.Items.Count - 1;
 				}
 				return;
 			}
-			ApplyIgnoreList((string)m_cbxIgnoreList.SelectedItem);
+			m_model.ApplyIgnoreList((string)m_cbxIgnoreList.SelectedItem);
 		}
 
 		private void EH_DoSaveIgnoreList(object sender, EventArgs e)
 		{
-			m_ign.EnsureListSaved();
+			m_model.EnsureIgnoreListSaved();
 		}
 
 		private void EH_LoadFileListFromFile(object sender, EventArgs e)
 		{
-			LoadFileListFromFile(SlisCur);
+			m_model.LoadFileListFromFile(SlisCur);
 		}
 
 		private void EH_SaveFileListToFile(object sender, EventArgs e)
 		{
-			SaveFileListToFile(SlisCur);
+			m_model.SaveFileListToFile(SlisCur);
+		}
+
+		void EH_RemovePath(object sender, EventArgs e)
+		{
+			MenuItem mni = (MenuItem)sender;
+			m_model.RemovePath(m_rgslis[m_islisCur], mni.Text);
+			if (m_cbAddToIgnoreList.Checked)
+			{
+				m_model.AddIgnorePath(mni.Text);
+			}
+		}
+
+		private void EH_AddPreferredPath(object sender, EventArgs e)
+		{
+			MenuItem mni = (MenuItem)sender;
+			m_model.AddPreferredPath(mni.Text);
 		}
 
 		private void EH_DoContextPopup(object sender, EventArgs e)
@@ -905,7 +1017,224 @@ namespace SList
 			}
 		}
 
+		string sCancelled;
+
+		/* E  H  _ I D L E */
+		/*----------------------------------------------------------------------------
+		    %%Function: EH_Idle
+		    %%Qualified: SList.SListApp.EH_Idle
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+		private void EH_Idle(object sender, System.EventArgs e)
+		{
+			m_tmr.Enabled = false;
+			if (sCancelled.Length > 0)
+			{
+				MessageBox.Show(sCancelled, "Not Found");
+				sCancelled = "";
+			}
+		}
+
 		#endregion
+
+		#region ListView Handlers
+		/* H A N D L E  D R O P */
+		/*----------------------------------------------------------------------------
+		    %%Function: HandleDrop
+		    %%Qualified: SList.SListApp.HandleDrop
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+		private void HandleDrop(object sender, System.Windows.Forms.DragEventArgs e)
+		{
+			this.Activate();
+
+			m_tmr.Enabled = false;
+
+			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			sCancelled = "";
+			foreach (string sFile in files)
+			{
+				m_ebRegEx.Text = Path.GetFileName(sFile);
+				EH_SmartMatchClick(null, null);
+			}
+			//		if (sCancelled.Length > 0)
+			//			MessageBox.Show(sCancelled, "Not Found");
+			m_tmr.Interval = 500;
+			m_tmr.Enabled = true;
+		}
+
+		/* H A N D L E  D R A G  E N T E R */
+		/*----------------------------------------------------------------------------
+		    %%Function: HandleDragEnter
+		    %%Qualified: SList.SListApp.HandleDragEnter
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+		private void HandleDragEnter(object sender, System.Windows.Forms.DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				e.Effect = DragDropEffects.Copy;
+			}
+			else
+			{
+				e.Effect = DragDropEffects.None;
+			}
+		}
+
+		/* H A N D L E  D R A G  L E A V E */
+		/*----------------------------------------------------------------------------
+		    %%Function: HandleDragLeave
+		    %%Qualified: SList.SListApp.HandleDragLeave
+		    %%Contact: rlittle
+
+	    ----------------------------------------------------------------------------*/
+		private void HandleDragLeave(object sender, System.EventArgs e) { }
+
+		private void EH_SelectPrevDupe(object sender, EventArgs e)
+		{
+			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+
+			if (slvic != null && slvic.Count >= 1)
+			{
+				SLItem sli = (SLItem)slvic[0].Tag;
+
+				SLItem sliSel = sli.Prev;
+				m_model.Select(sliSel);
+			}
+		}
+
+		private void EH_SelectNextDupe(object sender, EventArgs e)
+		{
+			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+
+			if (slvic != null && slvic.Count >= 1)
+			{
+				SLItem sli = (SLItem)slvic[0].Tag;
+
+				SLItem sliSel = sli.Next;
+				m_model.Select(sliSel);
+			}
+		}
+		#endregion
+
+		#region ISmartListUi
+
+		public Cursor SetCursor(Cursor cursor)
+		{
+			Cursor old = this.Cursor;
+
+			this.Cursor = cursor;
+
+			return old;
+		}
+
+		public bool FCompareFilesChecked() => m_cbCompareFiles.Checked;
+
+		public void SetStatusText(string text)
+		{
+			m_stbpMainStatus.Text = text;
+		}
+
+		public void AddIgnoreListItem(string text)
+		{
+			m_cbxIgnoreList.Items.Add(text);
+		}
+
+		public SLISet GetSliSet(int iListView)
+		{
+			return m_rgslis[iListView];
+		}
+
+		public string GetSearchPath() => m_ebSearchPath.Text;
+
+		public bool FRecurseChecked() => m_cbRecurse.Checked;
+		public bool FMarkFavored() => m_cbMarkFavored.Checked;
+
+		public void AddPreferredPath(string path)
+		{
+			m_lbPrefPath.Items.Add(path);
+		}
+
+		public IEnumerable GetPreferredPaths()
+		{
+			return m_lbPrefPath.Items;
+		}
+
+		class ProgressBarStatus
+		{
+			private ProgressBar m_bar;
+
+			public ProgressBarStatus(ProgressBar bar)
+			{
+				m_bar = bar;
+			}
+
+			public void Show()
+			{
+				m_bar.Show();
+			}
+
+			public void Hide()
+			{
+				m_bar.Hide();
+			}
+			public long MacProgressBarOverall { get; set; }
+			public long IncrementProgressBarOverall { get; set; }
+			private long LastProgressBarOverall { get; set; }
+
+			public void SetMacProgress(long mac)
+			{
+				MacProgressBarOverall = mac;
+				IncrementProgressBarOverall = Math.Max(1, mac / m_bar.Maximum);
+				m_bar.Value = 0;
+			}
+
+			public void Update(long i, OnProgressUpdateDelegate del)
+			{
+				if (LastProgressBarOverall + IncrementProgressBarOverall < i)
+				{
+					m_bar.Value = Math.Min(m_bar.Maximum, (int)(i / IncrementProgressBarOverall));
+					LastProgressBarOverall = m_bar.Value * IncrementProgressBarOverall;
+					m_bar.Update();
+					if (del != null)
+						del();
+				}
+			}
+		}
+
+		private ProgressBarStatus m_progressBarStatusOverall;
+		private ProgressBarStatus m_progressBarStatusCurrent;
+
+		ProgressBarStatus BarFromType(ProgressBarType barType)
+		{
+			if (barType == ProgressBarType.Current)
+				return m_progressBarStatusCurrent;
+			else
+				return m_progressBarStatusOverall;
+		}
+
+		public void SetProgressBarMac(ProgressBarType barType, long iMac)
+		{
+			BarFromType(barType).SetMacProgress(iMac);
+		}
+
+		public void ShowProgressBar(ProgressBarType barType)
+		{
+			BarFromType(barType).Show();
+		}
+
+		public void UpdateProgressBar(ProgressBarType barType, long i, OnProgressUpdateDelegate del)
+		{
+			BarFromType(barType).Update(i, del);
+		}
+
+		public void HideProgressBar(ProgressBarType barType) => BarFromType(barType).Hide();
+
+		#endregion
+
 	}
 }
 

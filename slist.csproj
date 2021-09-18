@@ -103,6 +103,7 @@
     <Compile Include="SLIBucket.cs" />
     <Compile Include="SLitem.cs" />
     <Compile Include="SLItemSet.cs" />
+    <Compile Include="ISmartListUi.cs" />
     <Compile Include="SmartMatch.cs" />
     <Content Include="App.ico" />
     <Compile Include="AssemblyInfo.cs">

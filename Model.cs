@@ -1,25 +1,33 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
-using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Globalization;
 using System.Media;
-using System.Resources;
 using System.Text;
-using System.Xml;
 using NUnit.Framework;
 using TCore.UI;
 
 namespace SList
 {
-	public partial class SListApp : System.Windows.Forms.Form
+	public class SmartList
 	{
+		private ISmartListUi m_ui;
+
+		public SmartList(ISmartListUi ui)
+		{
+			m_ui = ui;
+
+			m_rgb1 = new byte[lcbMax];
+			m_rgb2 = new byte[lcbMax];
+
+			InitIgnoreLists();
+			m_ui.ShowListView(SListApp.s_ilvSource);
+		}
+
 		private byte[] m_rgb1;
 		private byte[] m_rgb2;
 		private IgnoreList m_ign;
@@ -27,15 +35,6 @@ namespace SList
 		public const int lcbMax = 4 * 1024 * 1024;
 		public static string s_sRegRoot = "Software\\Thetasoft\\SList";
 
-		ListView LvCur
-		{
-			get { return SlisCur.Lv; }
-		}
-
-		SLISet SlisCur
-		{
-			get { return m_rgslis[m_islisCur]; }
-		}
 
 		#region Initialization
 
@@ -44,104 +43,31 @@ namespace SList
 			m_ign = new IgnoreList();
 			m_ign.LoadIgnoreListNames(s_sRegRoot);
 
-			m_cbxIgnoreList.Items.Add("<Create List...>");
-			m_cbxIgnoreList.Items.Add("<Copy current list...>");
+			m_ui.AddIgnoreListItem("<Create List...>");
+			m_ui.AddIgnoreListItem("<Copy current list...>");
 			foreach (string s in m_ign.IgnoreLists)
 			{
-				m_cbxIgnoreList.Items.Add(s);
+				m_ui.AddIgnoreListItem(s);
 			}
 		}
 
-		// the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
-		// for all the list views in the designer and still have our switchable list views
-		void InitializeListViews()
+		public void CreateIgnoreList(string name, bool fCreateFromExisting)
 		{
-			m_rgslis = new SLISet[s_clvMax];
-
-			m_rgslis[s_ilvSource] = new SLISet();
-			m_rgslis[s_ilvSource].Lv = m_lv;
-			m_lv = null;
-
-			for (int ilv = 0; ilv < s_clvMax; ilv++)
-			{
-				if (ilv == s_ilvSource)
-					continue; // skip, this is already initialized
-
-				ListView lv = new System.Windows.Forms.ListView();
-				lv.Anchor = m_rgslis[s_ilvSource].Lv.Anchor;
-				lv.CheckBoxes = m_rgslis[s_ilvSource].Lv.CheckBoxes;
-
-				lv.ContextMenu = m_rgslis[s_ilvSource].Lv.ContextMenu;
-				lv.Location = m_rgslis[s_ilvSource].Lv.Location;
-				lv.Name = String.Format("m_rglv{0}", ilv);
-				lv.Size = m_rgslis[s_ilvSource].Lv.Size;
-				lv.TabIndex = m_rgslis[s_ilvSource].Lv.TabIndex;
-				lv.UseCompatibleStateImageBehavior = m_rgslis[s_ilvSource].Lv.UseCompatibleStateImageBehavior;
-				//m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
-				lv.Visible = false;
-				this.Controls.Add(lv);
-				m_rgslis[ilv] = new SLISet();
-				m_rgslis[ilv].Lv = lv;
-			}
+			m_ign.CreateIgnoreList(name, fCreateFromExisting);
 		}
 
-		private void InitializeListView(int ilv)
+		public void EnsureIgnoreListSaved()
 		{
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
-			m_rgslis[ilv].Lv.Columns[0].Width = 146;
-
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[1].Text = "Size";
-			m_rgslis[ilv].Lv.Columns[1].Width = 52;
-			m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Right;
-
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[2].Text = "Location";
-			m_rgslis[ilv].Lv.Columns[2].Width = 128;
-
-			m_rgslis[ilv].Lv.FullRowSelect = true;
-			m_rgslis[ilv].Lv.MultiSelect = false;
-			m_rgslis[ilv].Lv.View = View.Details;
-			m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(1);
-			m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
-			m_rgslis[ilv].Lv.LabelEdit = true;
+			m_ign.EnsureListSaved();
 		}
 
-		private int m_islisCur = -1;
-
-		void ShowListView(int ilv)
+		public void AddIgnorePath(string path)
 		{
-			if (m_islisCur != -1)
-				m_rgslis[m_islisCur].PathSpec = m_ebSearchPath.Text;
-
-			for (int i = 0; i < s_clvMax; i++)
-			{
-				m_rgslis[i].Lv.Visible = (i == ilv);
-			}
-			m_islisCur = ilv;
-
-			SyncSearchTargetUI(ilv);
-			m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
-		}
-
-		/* S Y N C  S E A R C H  T A R G E T */
-		/*----------------------------------------------------------------------------
-        	%%Function: SyncSearchTargetUI
-        	%%Qualified: SList.SListApp.SyncSearchTargetUI
-        	%%Contact: rlittle
-        	
-            make the UI reflect what we want the sync target to be. Typically used
-            on initialization
-        ----------------------------------------------------------------------------*/
-		void SyncSearchTargetUI(int ilv)
-		{
-			m_cbxSearchTarget.SelectedIndex = ilv;
+			m_ign.AddIgnorePath(path);
 		}
 
 		#endregion
-
-
+		
 		#region Generic Utilites
 
 		public class PerfTimer
@@ -184,7 +110,7 @@ namespace SList
         	
             Change the sort order for the given listview to sort by the given column
         ----------------------------------------------------------------------------*/
-		void ChangeListViewSort(ListView lv, int iColSort)
+		public void ChangeListViewSort(ListView lv, int iColSort)
 		{
 			if (lv.ListViewItemSorter == null)
 				lv.ListViewItemSorter = new ListViewItemComparer(iColSort);
@@ -194,31 +120,27 @@ namespace SList
 			lv.Sort();
 		}
 
-		void ToggleAllListViewItems(ListView lvCur)
+		public void ToggleAllListViewItems(ListView lvCur)
 		{
 			int i, iMac;
 
-			for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
 			{
-				lvCur.Items[i].Checked = !lvCur.Items[i].Checked;
+				m_ui.LvCur.Items[i].Checked = !m_ui.LvCur.Items[i].Checked;
 			}
 		}
 
-		void UncheckAllListViewItems(ListView lvCur)
+		internal void UncheckAllListViewItems(ListView lvCur)
 		{
 			int i, iMac;
 
-			for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
 			{
-				lvCur.Items[i].Checked = false;
+				m_ui.LvCur.Items[i].Checked = false;
 			}
 		}
 
 		#endregion
-
-		static int s_ilvSource = 0;
-		static int s_ilvDest = 1;
-		static int s_clvMax = 2;
 
 		#region BuildFileList
 
@@ -281,7 +203,7 @@ namespace SList
 						slis.Add(sli);
 					}
 				}
-				catch (Exception exc)
+				catch (Exception)
 				{
 					fTooLong = true;
 				}
@@ -293,16 +215,10 @@ namespace SList
 
 			if (fRecurse)
 			{
-				DirectoryInfo[] rgdi;
+				DirectoryInfo[] rgdi = di.GetDirectories();
 
-				rgdi = di.GetDirectories();
-				if (rgdi != null)
-				{
-					for (i = 0, iMac = rgdi.Length; i < iMac; i++)
-					{
-						AddDirectory(rgdi[i], slis, sPattern, fRecurse, plfiTooLong);
-					}
-				}
+				for (i = 0, iMac = rgdi.Length; i < iMac; i++)
+					AddDirectory(rgdi[i], slis, sPattern, fRecurse, plfiTooLong);
 			}
 		}
 
@@ -314,9 +230,9 @@ namespace SList
         	
             Take the search path and build the file list (for the selected target)
         ----------------------------------------------------------------------------*/
-		private void BuildFileList()
+		public void BuildFileList()
 		{
-			string sFileSpec = m_ebSearchPath.Text;
+			string sFileSpec = m_ui.GetSearchPath();
 			string sPath = null;
 			string sPattern = null;
 			FileAttributes fa = 0;
@@ -345,7 +261,7 @@ namespace SList
 			else
 			{
 				sPath = Path.GetDirectoryName(sFileSpec);
-				sPattern = Path.GetFileName(m_ebSearchPath.Text);
+				sPattern = Path.GetFileName(m_ui.GetSearchPath());
 
 				if (sPattern == "")
 					sPattern = "*";
@@ -359,23 +275,20 @@ namespace SList
 				return;
 			}
 
-			Cursor crsSav = this.Cursor;
-
-			// start a wait cursor
-			this.Cursor = Cursors.WaitCursor;
+			Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
 
 			// stop redrawing
-			LvCur.BeginUpdate();
+			m_ui.LvCur.BeginUpdate();
 
 			// save off and reset the item sorter for faster adding
-			IComparer lvicSav = LvCur.ListViewItemSorter;
-			LvCur.ListViewItemSorter = null;
+			IComparer lvicSav = m_ui.LvCur.ListViewItemSorter;
+			m_ui.LvCur.ListViewItemSorter = null;
 
-			LvCur.Items.Clear();
+			m_ui.LvCur.Items.Clear();
 
 			List<FileInfo> plfiTooLong = new List<FileInfo>();
 
-			AddDirectory(di, SlisCur, sPattern, m_cbRecurse.Checked, plfiTooLong);
+			AddDirectory(di, m_ui.SlisCur, sPattern, m_ui.FRecurseChecked(), plfiTooLong);
 			if (plfiTooLong.Count > 0)
 			{
 				MessageBox.Show(String.Format("Encountered {0} paths that were too long", plfiTooLong.Count));
@@ -384,10 +297,10 @@ namespace SList
 			pt.Stop();
 			pt.Report();
 
-			LvCur.EndUpdate();
-			LvCur.ListViewItemSorter = lvicSav;
-			LvCur.Update();
-			this.Cursor = crsSav;
+			m_ui.LvCur.EndUpdate();
+			m_ui.LvCur.ListViewItemSorter = lvicSav;
+			m_ui.LvCur.Update();
+			m_ui.SetCursor(crsSav);
 		}
 
 		static Int64 FileSizeFromDirectoryLine(string sLine)
@@ -463,7 +376,7 @@ namespace SList
 
 		#endregion // tests
 
-		private void LoadFileListFromFile(SLISet slis)
+		internal void LoadFileListFromFile(SLISet slis)
 		{
 			string sFile;
 
@@ -525,7 +438,7 @@ namespace SList
 			tr.Close();
 		}
 
-		private void SaveFileListToFile(SLISet slis)
+		internal void SaveFileListToFile(SLISet slis)
 		{
 			string sFile;
 
@@ -560,14 +473,8 @@ namespace SList
 
 			long icb = 0;
 			int i;
-			int iProgress = 0;
-			int iCurProgress = 0;
 			bool fProgress = true;
-			int iIncrement = (int)sli1.m_lSize / 100;
-			long lProgressLast = 0;
-
-			if (iIncrement == 0)
-				iIncrement = 1;
+			m_ui.SetProgressBarMac(ProgressBarType.Current, sli1.m_lSize);
 
 			if (sli1.m_lSize < 10000)
 				fProgress = false;
@@ -575,28 +482,17 @@ namespace SList
 			if (icb + lcb >= sli1.m_lSize)
 				lcb = (int)(sli1.m_lSize - icb);
 
-			m_stbpMainStatus.Text = sli1.m_sName;
+			m_ui.SetStatusText(sli1.m_sName);
 			if (fProgress)
-			{
-				m_prbar.Value = iProgress;
-				m_prbar.Show();
-			}
+				m_ui.ShowProgressBar(ProgressBarType.Current);
 
 
 			while (lcb > 0)
 			{
 				// Application.DoEvents();
 				if (fProgress)
-				{
-					if (lProgressLast + iIncrement < icb)
-					{
-						iCurProgress = (int)(icb / iIncrement);
-						m_prbar.Value = Math.Min(iCurProgress, 100);
-						iProgress = iCurProgress;
-						lProgressLast = iIncrement * iProgress;
-					}
-				}
-
+					m_ui.UpdateProgressBar(ProgressBarType.Current, icb, null);
+				
 				bs1.Read(m_rgb1, 0, lcb);
 				bs2.Read(m_rgb2, 0, lcb);
 
@@ -611,7 +507,7 @@ namespace SList
 						bs1.Close();
 						bs2.Close();
 
-						m_prbar.Value = 100;
+						m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.m_lSize, null);
 						nEnd = Environment.TickCount;
 
 						if ((nEnd - nStart) < min)
@@ -644,7 +540,7 @@ namespace SList
 			//		br2.Close();
 			bs1.Close();
 			bs2.Close();
-			m_prbar.Value = 100;
+			m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.m_lSize, null);
 			nEnd = Environment.TickCount;
 
 			if ((nEnd - nStart) < min)
@@ -671,28 +567,26 @@ namespace SList
 			}
 		}
 
-		/* E  H  _ F I N D  D U P L I C A T E S */
 		/*----------------------------------------------------------------------------
-		%%Function: EH_Uniquify
-		%%Qualified: SList.SListApp.EH_Uniquify
-		%%Contact: rlittle
+			%%Function: BuildUniqueFileList
+			%%Qualified: SList.SListApp.BuildUniqueFileList
 
 	    ----------------------------------------------------------------------------*/
-		private void BuildUniqueFileList()
+		public void BuildUniqueFileList()
 		{
 			int start, end, sum = 0;
 			int min = 999999, max = 0, c = 0;
-			SLISet slisSrc = m_rgslis[s_ilvSource];
-			int cItems = slisSrc.Lv.Items.Count + m_rgslis[s_ilvDest].Lv.Items.Count;
+			SLISet slisSrc = m_ui.GetSliSet(SListApp.s_ilvSource);
+			int cItems = slisSrc.Lv.Items.Count + m_ui.GetSliSet(SListApp.s_ilvDest).Lv.Items.Count;
 			SLItem[] rgsli = new SLItem[cItems];
 
 			start = Environment.TickCount;
 
 			AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
-			if (m_rgslis[s_ilvDest].Lv.Items.Count > 0)
+			if (m_ui.GetSliSet(SListApp.s_ilvDest).Lv.Items.Count > 0)
 			{
-				AddSlisToRgsli(m_rgslis[s_ilvDest], rgsli, slisSrc.Lv.Items.Count, true);
+				AddSlisToRgsli(m_ui.GetSliSet(SListApp.s_ilvDest), rgsli, slisSrc.Lv.Items.Count, true);
 			}
 			Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSize));
 
@@ -702,23 +596,16 @@ namespace SList
 			int i = 0;
 			int iMac = rgsli.Length;
 
-			int iIncrement = Math.Max(1, iMac / 1000);
-			int iLast = 0;
+			m_ui.SetProgressBarMac(ProgressBarType.Overall, iMac);
 
-			Cursor crsSav = this.Cursor;
+			Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
 
-			// start a wait cursor
-			this.Cursor = Cursors.WaitCursor;
-			m_prbarOverall.Show();
+			m_ui.ShowProgressBar(ProgressBarType.Overall);
 			for (; i < iMac; i++)
 			{
 				int iDupe, iDupeMac;
 
-				if (iLast + iIncrement < i)
-				{
-					m_prbarOverall.Value = Math.Min(1000, (int)(i / iIncrement));
-					iLast = m_prbarOverall.Value * iIncrement;
-				}
+				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
 
 				if (rgsli[i].m_fMarked)
 					continue;
@@ -735,7 +622,7 @@ namespace SList
 					if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
 					{
 						// do more extensive check here...for now, the size and the name is enough
-						if (m_cbCompareFiles.Checked)
+						if (m_ui.FCompareFilesChecked())
 						{
 							c++;
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
@@ -775,15 +662,15 @@ namespace SList
 					}
 				}
 			}
-			m_prbar.Hide();
-			m_prbarOverall.Hide();
-			if (m_cbCompareFiles.Checked)
-				m_stbpMainStatus.Text = "Search complete.  Duplicates filtered by file compare.";
+			m_ui.HideProgressBar(ProgressBarType.Current);
+			m_ui.HideProgressBar(ProgressBarType.Overall);
+			if (m_ui.FCompareFilesChecked())
+				m_ui.SetStatusText("Search complete.  Duplicates filtered by file compare.");
 			else
-				m_stbpMainStatus.Text = "Search complete.  Duplicates filtered by size and name.";
+				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
 			slisSrc.Lv.EndUpdate();
-			this.Cursor = crsSav;
+			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 
 			int len = end - start;
@@ -792,7 +679,7 @@ namespace SList
 
 			int avg = len / c;
 			int avg2 = sum / c;
-			m_stbpSearch.Text = len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")";
+			m_ui.SetStatusText(len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")");
 		}
 
 		/* A D J U S T  L I S T  V I E W  F O R  F A V O R E D  P A T H S */
@@ -807,22 +694,24 @@ namespace SList
 	    ----------------------------------------------------------------------------*/
 		void AdjustListViewForFavoredPaths()
 		{
-			foreach (ListViewItem lvi in LvCur.Items)
+			foreach (ListViewItem lvi in m_ui.LvCur.Items)
 			{
 				SLItem sli = (SLItem)lvi.Tag;
 
-				foreach (String s in m_lbPrefPath.Items)
+				IEnumerator<string> e = (IEnumerator<string>)m_ui.GetPreferredPaths();
+
+				foreach (String s in m_ui.GetPreferredPaths())
 				{
 					if (sli.MatchesPrefPath(s))
 					{
-						UpdateForPrefPath(sli, s, m_cbMarkFavored.Checked);
+						UpdateForPrefPath(sli, s, m_ui.FMarkFavored());
 						break;
 					}
 				}
 			}
 		}
 
-		static void MoveSelectedFiles(ListView lvCur, string sDir, StatusBarPanel stbp)
+		public static void MoveSelectedFiles(ListView lvCur, string sDir, StatusBarPanel stbp)
 		{
 			FileAttributes fa = 0;
 			bool fDirExists = false;
@@ -904,7 +793,7 @@ namespace SList
 			}
 		}
 
-		static bool FRenameFile(string sPathOrig, string sFileOrig, string sPathNew, string sFileNew)
+		public static bool FRenameFile(string sPathOrig, string sFileOrig, string sPathNew, string sFileNew)
 		{
 			if (sFileNew == null)
 				return false;
@@ -925,9 +814,9 @@ namespace SList
 			return true;
 		}
 
-		void ApplyIgnoreList(string sIgnoreList)
+		internal void ApplyIgnoreList(string sIgnoreList)
 		{
-			SLISet slis = SlisCur;
+			SLISet slis = m_ui.SlisCur;
 
 			int colSav = ((ListViewItemComparer)slis.Lv.ListViewItemSorter).GetColumn();
 			((ListViewItemComparer)slis.Lv.ListViewItemSorter).SetColumn(-1);
@@ -935,27 +824,21 @@ namespace SList
 
 			// otherwise, we're loading a new list
 			m_ign.LoadIgnoreList(sIgnoreList);
-			int iProgress = 0;
-			m_prbarOverall.Value = iProgress;
-			m_prbarOverall.Show();
 
 			// and apply the ignore list
 			Application.DoEvents();
 			int iMac = m_ign.IgnoreItems.Count;
+			m_ui.SetProgressBarMac(ProgressBarType.Overall, iMac);
+			m_ui.ShowProgressBar(ProgressBarType.Overall);
 
 			slis.PauseListViewUpdate(false);
 			for (int i = 0; i < iMac; i++)
 			{
-				if (iProgress != (1000 * i) / iMac)
-				{
-					iProgress = (1000 * i) / iMac;
-					m_prbarOverall.Value = iProgress;
-					m_prbarOverall.Update();
-					Application.DoEvents();
-				}
+				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, Application.DoEvents);
 				RemovePath(slis, m_ign.IgnoreItems[i].PathPrefix);
 			}
-			m_prbarOverall.Hide();
+
+			m_ui.HideProgressBar(ProgressBarType.Overall);
 			Application.DoEvents();
 			slis.ResumeListViewUpdate(colSav);
 		}
@@ -967,26 +850,26 @@ namespace SList
 			Check
 		};
 
-		private void DoRegex(RegexOp rop)
+		internal void DoRegex(RegexOp rop, string text)
 		{
 			Regex rx = null;
 
 			try
 			{
-				rx = new Regex(m_ebRegEx.Text);
+				rx = new Regex(text);
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show("Could not compile Regular Expression '" + m_ebRegEx.Text + "':\n" + e.ToString(), "SLList");
+				MessageBox.Show("Could not compile Regular Expression '" + text + "':\n" + e.ToString(), "SLList");
 				return;
 			}
 
 
 			int i, iMac;
 
-			for (i = 0, iMac = LvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
 			{
-				SLItem sli = (SLItem)(LvCur.Items[i].Tag);
+				SLItem sli = (SLItem)(m_ui.LvCur.Items[i].Tag);
 				string sPath = Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName));
 				bool fMatch = false;
 
@@ -996,12 +879,12 @@ namespace SList
 				{
 					case RegexOp.Check:
 						if (fMatch)
-							LvCur.Items[i].Checked = true;
+							m_ui.LvCur.Items[i].Checked = true;
 						break;
 					case RegexOp.Filter:
 						if (fMatch)
 						{
-							LvCur.Items[i].Remove();
+							m_ui.LvCur.Items[i].Remove();
 							iMac--;
 							i--;
 						}
@@ -1009,7 +892,7 @@ namespace SList
 					case RegexOp.Match:
 						if (!fMatch)
 						{
-							LvCur.Items[i].Remove();
+							m_ui.LvCur.Items[i].Remove();
 							iMac--;
 							i--;
 						}
@@ -1018,9 +901,7 @@ namespace SList
 			}
 		}
 
-		string sCancelled;
-
-		static string SCalcMatchingListViewItems(ListView lvCur, string sRegEx, string sCounts)
+		public static string SCalcMatchingListViewItems(ListView lvCur, string sRegEx, string sCounts)
 		{
 			ATMC atmc = new ATMC(sRegEx);
 			string sMatch = String.Format("Matches for '{0}':\n\n", sRegEx);
@@ -1049,138 +930,24 @@ namespace SList
 			return sCounts;
 		}
 
-
-		/* E  H  _ I D L E */
-		/*----------------------------------------------------------------------------
-		    %%Function: EH_Idle
-		    %%Qualified: SList.SListApp.EH_Idle
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void EH_Idle(object sender, System.EventArgs e)
+		internal void AddPreferredPath(string s)
 		{
-			m_tmr.Enabled = false;
-			if (sCancelled.Length > 0)
-			{
-				MessageBox.Show(sCancelled, "Not Found");
-				sCancelled = "";
-			}
-		}
-
-		void AddPreferredPath(string s)
-		{
-			m_lbPrefPath.Items.Add(s);
+			m_ui.AddPreferredPath(s);
 			AdjustListViewForFavoredPaths();
 		}
 
-		void RemovePath(SLISet slis, string sPathRoot)
+		internal void RemovePath(SLISet slis, string sPathRoot)
 		{
-			slis.Remove(sPathRoot, m_prbar);
-		}
-
-		void EH_RemovePath(object sender, EventArgs e)
-		{
-			MenuItem mni = (MenuItem)sender;
-			RemovePath(m_rgslis[m_islisCur], mni.Text);
-			if (m_cbAddToIgnoreList.Checked)
-			{
-				m_ign.AddIgnorePath(mni.Text);
-			}
-		}
-
-		private void EH_AddPreferredPath(object sender, EventArgs e)
-		{
-			MenuItem mni = (MenuItem)sender;
-			AddPreferredPath(mni.Text);
+			slis.Remove(sPathRoot, m_ui);
 		}
 
 		#endregion // Core Model (Compare Files, etc)
 
 		#region List View Commands
 
-		void LaunchSli(SLItem sli)
+		internal void LaunchSli(SLItem sli)
 		{
 			Process.Start(Path.Combine(sli.m_sPath, sli.m_sName));
-		}
-
-		/* H A N D L E  D R O P */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDrop
-		    %%Qualified: SList.SListApp.HandleDrop
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDrop(object sender, System.Windows.Forms.DragEventArgs e)
-		{
-			this.Activate();
-
-			m_tmr.Enabled = false;
-
-			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-			sCancelled = "";
-			foreach (string sFile in files)
-			{
-				m_ebRegEx.Text = Path.GetFileName(sFile);
-				EH_SmartMatchClick(null, null);
-			}
-			//		if (sCancelled.Length > 0)
-			//			MessageBox.Show(sCancelled, "Not Found");
-			m_tmr.Interval = 500;
-			m_tmr.Enabled = true;
-		}
-
-		/* H A N D L E  D R A G  E N T E R */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDragEnter
-		    %%Qualified: SList.SListApp.HandleDragEnter
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDragEnter(object sender, System.Windows.Forms.DragEventArgs e)
-		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
-			{
-				e.Effect = DragDropEffects.Copy;
-			}
-			else
-			{
-				e.Effect = DragDropEffects.None;
-			}
-		}
-
-		/* H A N D L E  D R A G  L E A V E */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDragLeave
-		    %%Qualified: SList.SListApp.HandleDragLeave
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDragLeave(object sender, System.EventArgs e) { }
-
-		private void EH_SelectPrevDupe(object sender, EventArgs e)
-		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
-
-			if (slvic != null && slvic.Count >= 1)
-			{
-				SLItem sli = (SLItem)slvic[0].Tag;
-
-				SLItem sliSel = sli.Prev;
-				Select(sliSel);
-			}
-		}
-
-		private void EH_SelectNextDupe(object sender, EventArgs e)
-		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
-
-			if (slvic != null && slvic.Count >= 1)
-			{
-				SLItem sli = (SLItem)slvic[0].Tag;
-
-				SLItem sliSel = sli.Next;
-				Select(sliSel);
-			}
 		}
 
 		#endregion // List View Commands
@@ -1225,7 +992,7 @@ namespace SList
 
 		ListViewItem LviFromSli(SLItem sli)
 		{
-			foreach (ListViewItem lvi in LvCur.Items)
+			foreach (ListViewItem lvi in m_ui.LvCur.Items)
 			{
 				if (lvi.Tag == sli)
 					return lvi;
@@ -1233,7 +1000,7 @@ namespace SList
 			return null;
 		}
 
-		void Select(SLItem sli)
+		public void Select(SLItem sli)
 		{
 			if (sli == null)
 			{
@@ -1245,18 +1012,11 @@ namespace SList
 			if (lvi != null)
 			{
 				lvi.Selected = true;
-				LvCur.Select();
+				m_ui.LvCur.Select();
 				return;
 			}
 			SystemSounds.Beep.Play();
 		}
-
-		private void DoSearchTargetChange(object sender, EventArgs e)
-		{
-			ShowListView(m_cbxSearchTarget.SelectedIndex);
-		}
-
-		private SLISet[] m_rgslis;
 
 		// we might not be at the beginning of the dupe list for this item -- we might
 		// have skipped over some DestOnly items, and those might be the dupes we
@@ -1274,24 +1034,24 @@ namespace SList
 			return i + 1;
 		}
 
-		void BuildMissingFileList()
+		internal void BuildMissingFileList()
 		{
 			SLItem[] rgsli;
 			int start, end, sum = 0;
 			int min = 999999, max = 0, c = 0;
-			SLISet slisSrc = m_rgslis[s_ilvSource];
+			SLISet slisSrc = m_ui.GetSliSet(SListApp.s_ilvSource);
 
 			start = Environment.TickCount;
 
-			int cItems = slisSrc.Lv.Items.Count + m_rgslis[s_ilvDest].Lv.Items.Count;
+			int cItems = slisSrc.Lv.Items.Count + m_ui.GetSliSet(SListApp.s_ilvDest).Lv.Items.Count;
 
 			rgsli = new SLItem[cItems];
 
 			AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
-			if (m_rgslis[s_ilvDest].Lv.Items.Count > 0)
+			if (m_ui.GetSliSet(SListApp.s_ilvDest).Lv.Items.Count > 0)
 			{
-				AddSlisToRgsli(m_rgslis[s_ilvDest], rgsli, slisSrc.Lv.Items.Count, true);
+				AddSlisToRgsli(m_ui.GetSliSet(SListApp.s_ilvDest), rgsli, slisSrc.Lv.Items.Count, true);
 			}
 			Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSizeDest));
 
@@ -1301,23 +1061,16 @@ namespace SList
 			int i = 0;
 			int iMac = rgsli.Length;
 
-			int iIncrement = Math.Max(1, iMac / 1000);
-			int iLast = 0;
+			m_ui.SetProgressBarMac(ProgressBarType.Overall, iMac);
 
-			Cursor crsSav = this.Cursor;
+			Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
 
-			// start a wait cursor
-			this.Cursor = Cursors.WaitCursor;
-			m_prbarOverall.Show();
+			m_ui.ShowProgressBar(ProgressBarType.Overall);
 			for (; i < iMac; i++)
 			{
 				int iDupe, iDupeMac;
 
-				if (iLast + iIncrement < i)
-				{
-					m_prbarOverall.Value = Math.Min(1000, (int)(i / iIncrement));
-					iLast = m_prbarOverall.Value * iIncrement;
-				}
+				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
 
 				if (rgsli[i].m_fMarked)
 					continue;
@@ -1344,7 +1097,7 @@ namespace SList
 					if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
 					{
 						// do more extensive check here...for now, the size and the name is enough
-						if (m_cbCompareFiles.Checked)
+						if (m_ui.FCompareFilesChecked())
 						{
 							c++;
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
@@ -1385,15 +1138,15 @@ namespace SList
 
 
 			}
-			m_prbar.Hide();
-			m_prbarOverall.Hide();
-			if (m_cbCompareFiles.Checked)
-				m_stbpMainStatus.Text = "Search complete.  Duplicates filtered by file compare.";
+			m_ui.HideProgressBar(ProgressBarType.Current);
+			m_ui.HideProgressBar(ProgressBarType.Overall);
+			if (m_ui.FCompareFilesChecked())
+				m_ui.SetStatusText("Search complete.  Duplicates filtered by file compare.");
 			else
-				m_stbpMainStatus.Text = "Search complete.  Duplicates filtered by size and name.";
+				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
 			slisSrc.Lv.EndUpdate();
-			this.Cursor = crsSav;
+			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 
 			int len = end - start;
@@ -1402,7 +1155,7 @@ namespace SList
 
 			int avg = len / c;
 			int avg2 = sum / c;
-			m_stbpSearch.Text = len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")";
+			m_ui.SetStatusText(len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")");
 		}
 	}
 }
