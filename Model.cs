@@ -91,10 +91,18 @@ namespace SList
 				m_sw.Stop();
 			}
 
-			public void Report(int msecMin = 0)
+			public void Report(int msecMin = 0, ISmartListUi ui = null)
 			{
 				if (m_sw.ElapsedMilliseconds > msecMin)
-					MessageBox.Show(String.Format("{0} elapsed time: {1:0.00}", m_sOp, m_sw.ElapsedMilliseconds / 1000.0));
+				{
+					string sReport = String.Format("{0} elapsed time: {1:0.00}", m_sOp,
+						m_sw.ElapsedMilliseconds / 1000.0);
+
+					if (ui != null)
+						ui.SetStatusText(sReport);
+					else
+						MessageBox.Show(sReport);
+				}
 			}
 		}
 
@@ -295,7 +303,7 @@ namespace SList
 			}
 
 			pt.Stop();
-			pt.Report();
+			pt.Report(0, m_ui);
 
 			m_ui.LvCur.EndUpdate();
 			m_ui.LvCur.ListViewItemSorter = lvicSav;
@@ -434,7 +442,7 @@ namespace SList
 			slis.ResumeListViewUpdate();
 
 			pt.Stop();
-			pt.Report();
+			pt.Report(0, m_ui);
 			tr.Close();
 		}
 

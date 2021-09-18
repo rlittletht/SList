@@ -72,6 +72,12 @@ namespace SList
 		public static int s_ilvDest = 1;
 		public static int s_clvMax = 2;
 		private ToolTip m_toolTip;
+		private Label m_lblOneListActions;
+		private Button m_pbShazaam;
+		private Label label4;
+		private TextBox m_ebSaveMePath;
+		private Label label5;
+		private TextBox m_ebRetireMePath;
 
 		public ListView LvCur
 		{
@@ -97,6 +103,7 @@ namespace SList
 			m_lblFilterBanner.Text = "";
 			m_lblSearchCriteria.Text = "";
 			m_lblActions.Text = "";
+			m_lblOneListActions.Text = "";
 
 			m_progressBarStatusOverall = new ProgressBarStatus(m_prbarOverall);
 			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
@@ -296,6 +303,12 @@ namespace SList
 			this.m_pbLoadFromFile = new System.Windows.Forms.Button();
 			this.m_pbSaveFileList = new System.Windows.Forms.Button();
 			this.m_toolTip = new System.Windows.Forms.ToolTip(this.components);
+			this.m_lblOneListActions = new System.Windows.Forms.Label();
+			this.m_pbShazaam = new System.Windows.Forms.Button();
+			this.label4 = new System.Windows.Forms.Label();
+			this.m_ebSaveMePath = new System.Windows.Forms.TextBox();
+			this.label5 = new System.Windows.Forms.Label();
+			this.m_ebRetireMePath = new System.Windows.Forms.TextBox();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -361,12 +374,12 @@ namespace SList
 			this.m_ebSearchPath.Name = "m_ebSearchPath";
 			this.m_ebSearchPath.Size = new System.Drawing.Size(520, 26);
 			this.m_ebSearchPath.TabIndex = 2;
-			this.m_ebSearchPath.Text = "c:\\temp";
+			this.m_ebSearchPath.Text = "f:\\DeDedupe";
 			// 
 			// m_pbSearch
 			// 
 			this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSearch.Location = new System.Drawing.Point(1190, 47);
+			this.m_pbSearch.Location = new System.Drawing.Point(1190, 49);
 			this.m_pbSearch.Name = "m_pbSearch";
 			this.m_pbSearch.Size = new System.Drawing.Size(115, 35);
 			this.m_pbSearch.TabIndex = 4;
@@ -395,7 +408,7 @@ namespace SList
 			// m_pbDuplicates
 			// 
 			this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDuplicates.Location = new System.Drawing.Point(1198, 294);
+			this.m_pbDuplicates.Location = new System.Drawing.Point(1199, 347);
 			this.m_pbDuplicates.Name = "m_pbDuplicates";
 			this.m_pbDuplicates.Size = new System.Drawing.Size(115, 35);
 			this.m_pbDuplicates.TabIndex = 9;
@@ -406,7 +419,7 @@ namespace SList
 			// 
 			this.m_lblFilterBanner.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_lblFilterBanner.Location = new System.Drawing.Point(21, 272);
+			this.m_lblFilterBanner.Location = new System.Drawing.Point(22, 325);
 			this.m_lblFilterBanner.Name = "m_lblFilterBanner";
 			this.m_lblFilterBanner.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblFilterBanner.TabIndex = 5;
@@ -429,7 +442,7 @@ namespace SList
 			// m_cbCompareFiles
 			// 
 			this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_cbCompareFiles.Location = new System.Drawing.Point(838, 305);
+			this.m_cbCompareFiles.Location = new System.Drawing.Point(839, 358);
 			this.m_cbCompareFiles.Name = "m_cbCompareFiles";
 			this.m_cbCompareFiles.Size = new System.Drawing.Size(243, 24);
 			this.m_cbCompareFiles.TabIndex = 8;
@@ -440,7 +453,7 @@ namespace SList
 			this.m_stb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_stb.Dock = System.Windows.Forms.DockStyle.None;
-			this.m_stb.Location = new System.Drawing.Point(0, 707);
+			this.m_stb.Location = new System.Drawing.Point(0, 968);
 			this.m_stb.Name = "m_stb";
 			this.m_stb.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
             this.m_stbpMainStatus,
@@ -468,7 +481,7 @@ namespace SList
 			// m_prbar
 			// 
 			this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.m_prbar.Location = new System.Drawing.Point(179, 713);
+			this.m_prbar.Location = new System.Drawing.Point(179, 974);
 			this.m_prbar.Name = "m_prbar";
 			this.m_prbar.Size = new System.Drawing.Size(304, 22);
 			this.m_prbar.TabIndex = 10;
@@ -478,7 +491,7 @@ namespace SList
 			// 
 			this.m_lblActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_lblActions.Location = new System.Drawing.Point(21, 389);
+			this.m_lblActions.Location = new System.Drawing.Point(21, 534);
 			this.m_lblActions.Name = "m_lblActions";
 			this.m_lblActions.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblActions.TabIndex = 15;
@@ -490,14 +503,14 @@ namespace SList
 			// 
 			this.m_ebRegEx.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebRegEx.Location = new System.Drawing.Point(162, 301);
+			this.m_ebRegEx.Location = new System.Drawing.Point(163, 354);
 			this.m_ebRegEx.Name = "m_ebRegEx";
 			this.m_ebRegEx.Size = new System.Drawing.Size(666, 26);
 			this.m_ebRegEx.TabIndex = 7;
 			// 
 			// m_lblRegEx
 			// 
-			this.m_lblRegEx.Location = new System.Drawing.Point(34, 307);
+			this.m_lblRegEx.Location = new System.Drawing.Point(35, 360);
 			this.m_lblRegEx.Name = "m_lblRegEx";
 			this.m_lblRegEx.Size = new System.Drawing.Size(115, 58);
 			this.m_lblRegEx.TabIndex = 6;
@@ -506,7 +519,7 @@ namespace SList
 			// m_pbMove
 			// 
 			this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbMove.Location = new System.Drawing.Point(1070, 412);
+			this.m_pbMove.Location = new System.Drawing.Point(1070, 557);
 			this.m_pbMove.Name = "m_pbMove";
 			this.m_pbMove.Size = new System.Drawing.Size(115, 35);
 			this.m_pbMove.TabIndex = 18;
@@ -516,7 +529,7 @@ namespace SList
 			// m_pbDelete
 			// 
 			this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDelete.Location = new System.Drawing.Point(1198, 412);
+			this.m_pbDelete.Location = new System.Drawing.Point(1198, 557);
 			this.m_pbDelete.Name = "m_pbDelete";
 			this.m_pbDelete.Size = new System.Drawing.Size(115, 35);
 			this.m_pbDelete.TabIndex = 19;
@@ -526,7 +539,7 @@ namespace SList
 			// m_pbToggle
 			// 
 			this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbToggle.Location = new System.Drawing.Point(1198, 342);
+			this.m_pbToggle.Location = new System.Drawing.Point(1199, 395);
 			this.m_pbToggle.Name = "m_pbToggle";
 			this.m_pbToggle.Size = new System.Drawing.Size(115, 35);
 			this.m_pbToggle.TabIndex = 14;
@@ -536,7 +549,7 @@ namespace SList
 			// m_pbClear
 			// 
 			this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbClear.Location = new System.Drawing.Point(1070, 342);
+			this.m_pbClear.Location = new System.Drawing.Point(1071, 395);
 			this.m_pbClear.Name = "m_pbClear";
 			this.m_pbClear.Size = new System.Drawing.Size(115, 35);
 			this.m_pbClear.TabIndex = 13;
@@ -545,7 +558,7 @@ namespace SList
 			// 
 			// m_lblMoveTo
 			// 
-			this.m_lblMoveTo.Location = new System.Drawing.Point(34, 424);
+			this.m_lblMoveTo.Location = new System.Drawing.Point(34, 569);
 			this.m_lblMoveTo.Name = "m_lblMoveTo";
 			this.m_lblMoveTo.Size = new System.Drawing.Size(89, 23);
 			this.m_lblMoveTo.TabIndex = 16;
@@ -555,14 +568,14 @@ namespace SList
 			// 
 			this.m_ebMovePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebMovePath.Location = new System.Drawing.Point(162, 418);
+			this.m_ebMovePath.Location = new System.Drawing.Point(162, 563);
 			this.m_ebMovePath.Name = "m_ebMovePath";
 			this.m_ebMovePath.Size = new System.Drawing.Size(882, 26);
 			this.m_ebMovePath.TabIndex = 17;
 			// 
 			// m_pbMatchRegex
 			// 
-			this.m_pbMatchRegex.Location = new System.Drawing.Point(162, 342);
+			this.m_pbMatchRegex.Location = new System.Drawing.Point(163, 395);
 			this.m_pbMatchRegex.Name = "m_pbMatchRegex";
 			this.m_pbMatchRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbMatchRegex.TabIndex = 10;
@@ -571,7 +584,7 @@ namespace SList
 			// 
 			// m_pbRemoveRegex
 			// 
-			this.m_pbRemoveRegex.Location = new System.Drawing.Point(290, 342);
+			this.m_pbRemoveRegex.Location = new System.Drawing.Point(291, 395);
 			this.m_pbRemoveRegex.Name = "m_pbRemoveRegex";
 			this.m_pbRemoveRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbRemoveRegex.TabIndex = 11;
@@ -580,7 +593,7 @@ namespace SList
 			// 
 			// m_pbCheckRegex
 			// 
-			this.m_pbCheckRegex.Location = new System.Drawing.Point(418, 342);
+			this.m_pbCheckRegex.Location = new System.Drawing.Point(419, 395);
 			this.m_pbCheckRegex.Name = "m_pbCheckRegex";
 			this.m_pbCheckRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbCheckRegex.TabIndex = 12;
@@ -590,7 +603,7 @@ namespace SList
 			// m_prbarOverall
 			// 
 			this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.m_prbarOverall.Location = new System.Drawing.Point(488, 713);
+			this.m_prbarOverall.Location = new System.Drawing.Point(488, 974);
 			this.m_prbarOverall.Maximum = 1000;
 			this.m_prbarOverall.Name = "m_prbarOverall";
 			this.m_prbarOverall.Size = new System.Drawing.Size(304, 22);
@@ -599,7 +612,7 @@ namespace SList
 			// 
 			// m_pbSmartMatch
 			// 
-			this.m_pbSmartMatch.Location = new System.Drawing.Point(546, 342);
+			this.m_pbSmartMatch.Location = new System.Drawing.Point(547, 395);
 			this.m_pbSmartMatch.Name = "m_pbSmartMatch";
 			this.m_pbSmartMatch.Size = new System.Drawing.Size(128, 35);
 			this.m_pbSmartMatch.TabIndex = 24;
@@ -630,7 +643,7 @@ namespace SList
 			// m_pbRemove
 			// 
 			this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbRemove.Location = new System.Drawing.Point(1198, 206);
+			this.m_pbRemove.Location = new System.Drawing.Point(863, 181);
 			this.m_pbRemove.Name = "m_pbRemove";
 			this.m_pbRemove.Size = new System.Drawing.Size(115, 35);
 			this.m_pbRemove.TabIndex = 27;
@@ -639,7 +652,7 @@ namespace SList
 			// m_pbAddPath
 			// 
 			this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbAddPath.Location = new System.Drawing.Point(1198, 164);
+			this.m_pbAddPath.Location = new System.Drawing.Point(863, 140);
 			this.m_pbAddPath.Name = "m_pbAddPath";
 			this.m_pbAddPath.Size = new System.Drawing.Size(115, 35);
 			this.m_pbAddPath.TabIndex = 28;
@@ -683,9 +696,9 @@ namespace SList
 			this.m_lv.CheckBoxes = true;
 			this.m_lv.ContextMenu = this.m_cxtListView;
 			this.m_lv.HideSelection = false;
-			this.m_lv.Location = new System.Drawing.Point(26, 460);
+			this.m_lv.Location = new System.Drawing.Point(26, 609);
 			this.m_lv.Name = "m_lv";
-			this.m_lv.Size = new System.Drawing.Size(1279, 235);
+			this.m_lv.Size = new System.Drawing.Size(1279, 347);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
 			this.m_lv.Visible = false;
@@ -694,7 +707,7 @@ namespace SList
 			// m_pbValidateSrc
 			// 
 			this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbValidateSrc.Location = new System.Drawing.Point(1070, 294);
+			this.m_pbValidateSrc.Location = new System.Drawing.Point(1071, 347);
 			this.m_pbValidateSrc.Name = "m_pbValidateSrc";
 			this.m_pbValidateSrc.Size = new System.Drawing.Size(118, 35);
 			this.m_pbValidateSrc.TabIndex = 33;
@@ -723,9 +736,9 @@ namespace SList
 			this.m_cbAddToIgnoreList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbAddToIgnoreList.Checked = true;
 			this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1062, 94);
+			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1102, 97);
 			this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
-			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(243, 30);
+			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(216, 30);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
 			this.m_cbAddToIgnoreList.Text = "Automatically add ignore";
 			this.m_toolTip.SetToolTip(this.m_cbAddToIgnoreList, "Add path to ignore list when \"Remove...\" is selected from ListView context menu.");
@@ -743,7 +756,7 @@ namespace SList
 			// m_pbLoadFromFile
 			// 
 			this.m_pbLoadFromFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbLoadFromFile.Location = new System.Drawing.Point(825, 51);
+			this.m_pbLoadFromFile.Location = new System.Drawing.Point(800, 51);
 			this.m_pbLoadFromFile.Name = "m_pbLoadFromFile";
 			this.m_pbLoadFromFile.Size = new System.Drawing.Size(138, 35);
 			this.m_pbLoadFromFile.TabIndex = 38;
@@ -753,18 +766,82 @@ namespace SList
 			// m_pbSaveFileList
 			// 
 			this.m_pbSaveFileList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSaveFileList.Location = new System.Drawing.Point(972, 53);
+			this.m_pbSaveFileList.Location = new System.Drawing.Point(944, 50);
 			this.m_pbSaveFileList.Name = "m_pbSaveFileList";
 			this.m_pbSaveFileList.Size = new System.Drawing.Size(138, 35);
 			this.m_pbSaveFileList.TabIndex = 39;
 			this.m_pbSaveFileList.Text = "Save FileList";
 			this.m_pbSaveFileList.Click += new System.EventHandler(this.EH_SaveFileListToFile);
 			// 
+			// m_lblOneListActions
+			// 
+			this.m_lblOneListActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_lblOneListActions.Location = new System.Drawing.Point(22, 447);
+			this.m_lblOneListActions.Name = "m_lblOneListActions";
+			this.m_lblOneListActions.Size = new System.Drawing.Size(1305, 23);
+			this.m_lblOneListActions.TabIndex = 40;
+			this.m_lblOneListActions.Tag = "OneList actions";
+			this.m_lblOneListActions.Text = "OneList actions ----";
+			this.m_lblOneListActions.Paint += new System.Windows.Forms.PaintEventHandler(this.EH_RenderHeadingLine);
+			// 
+			// m_pbShazaam
+			// 
+			this.m_pbShazaam.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbShazaam.Location = new System.Drawing.Point(1199, 473);
+			this.m_pbShazaam.Name = "m_pbShazaam";
+			this.m_pbShazaam.Size = new System.Drawing.Size(115, 35);
+			this.m_pbShazaam.TabIndex = 41;
+			this.m_pbShazaam.Text = "Shazaam!";
+			this.m_pbShazaam.Click += new System.EventHandler(this.DoShazaam);
+			// 
+			// label4
+			// 
+			this.label4.Location = new System.Drawing.Point(26, 257);
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(115, 24);
+			this.label4.TabIndex = 42;
+			this.label4.Text = "SaveMe Path";
+			// 
+			// m_ebSaveMePath
+			// 
+			this.m_ebSaveMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_ebSaveMePath.Location = new System.Drawing.Point(171, 252);
+			this.m_ebSaveMePath.Name = "m_ebSaveMePath";
+			this.m_ebSaveMePath.Size = new System.Drawing.Size(520, 26);
+			this.m_ebSaveMePath.TabIndex = 43;
+			this.m_ebSaveMePath.Text = "f:\\DeDupe\\Target\\SnatchedFromDestruction";
+			// 
+			// label5
+			// 
+			this.label5.Location = new System.Drawing.Point(26, 289);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(115, 24);
+			this.label5.TabIndex = 44;
+			this.label5.Text = "RetireMe Path";
+			// 
+			// m_ebRetireMePath
+			// 
+			this.m_ebRetireMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_ebRetireMePath.Location = new System.Drawing.Point(171, 284);
+			this.m_ebRetireMePath.Name = "m_ebRetireMePath";
+			this.m_ebRetireMePath.Size = new System.Drawing.Size(520, 26);
+			this.m_ebRetireMePath.TabIndex = 45;
+			this.m_ebRetireMePath.Text = "f:\\DeDupe\\RetireMe";
+			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
-			this.ClientSize = new System.Drawing.Size(1331, 739);
+			this.ClientSize = new System.Drawing.Size(1331, 1000);
+			this.Controls.Add(this.label5);
+			this.Controls.Add(this.m_ebRetireMePath);
+			this.Controls.Add(this.label4);
+			this.Controls.Add(this.m_ebSaveMePath);
+			this.Controls.Add(this.m_pbShazaam);
+			this.Controls.Add(this.m_lblOneListActions);
 			this.Controls.Add(this.m_pbSaveFileList);
 			this.Controls.Add(this.m_pbLoadFromFile);
 			this.Controls.Add(this.m_pbSaveList);
@@ -1239,6 +1316,10 @@ namespace SList
 
 		#endregion
 
+		private void DoShazaam(object sender, EventArgs e)
+		{
+
+		}
 	}
 }
 
