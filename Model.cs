@@ -471,6 +471,9 @@ namespace SList
 
 		private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
 		{
+			if (sli1.FCanCompareSha256(sli2))
+				return sli1.IsEqualSha256(sli2);
+
 			int nStart = Environment.TickCount;
 			int nEnd;
 

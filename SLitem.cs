@@ -1,54 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace SList
 {
-	public class SLItemComparer : IComparer
-	{
-		private SLItem.SLItemCompare m_slic;
-
-		/* S  L  I T E M  C O M P A R E R */
-		/*----------------------------------------------------------------------------
-        	%%Function: SLItemComparer
-        	%%Qualified: SList.SLItemComparer.SLItemComparer
-        	%%Contact: rlittle
-        	
-        ----------------------------------------------------------------------------*/
-		public SLItemComparer()
-		{
-			m_slic = SLItem.SLItemCompare.CompareName;
-		}
-
-		/* S  L  I T E M  C O M P A R E R */
-		/*----------------------------------------------------------------------------
-        	%%Function: SLItemComparer
-        	%%Qualified: SList.SLItemComparer.SLItemComparer
-        	%%Contact: rlittle
-        	
-        ----------------------------------------------------------------------------*/
-		public SLItemComparer(SLItem.SLItemCompare slic)
-		{
-			m_slic = slic;
-		}
-
-		/* C O M P A R E */
-		/*----------------------------------------------------------------------------
-		    %%Function: Compare
-		    %%Qualified: SList.ListViewItemComparer.Compare
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		public int Compare(object x, object y)
-		{
-			SLItem sli1 = (SLItem)x;
-			SLItem sli2 = (SLItem)y;
-
-			return SLItem.Compare(sli1, sli2, m_slic, false /*fReverse*/);
-		}
-	}
-
 	// ============================================================================
 	// S  L  I T E M
 	// ============================================================================
@@ -67,6 +25,8 @@ namespace SList
 
 		FileInfo m_fi;
 		DirectoryInfo m_di;
+		private byte[] m_rgbSha256;
+
 		public TextAtoms Atoms { get; set; }
 
 		SLItem m_sliPrev;
@@ -259,6 +219,52 @@ namespace SList
 				return n;
 		}
 
+		public void EnsureSha256()
+		{
+			if (m_rgbSha256 != null)
+				return;
+
+			using (SHA256 sha = SHA256.Create())
+			{
+				try
+				{
+					using (FileStream fileStream = m_fi.OpenRead())
+					{
+						fileStream.Position = 0;
+						m_rgbSha256 = sha.ComputeHash(fileStream);
+						fileStream.Close();
+					}
+				}
+				catch
+				{ }
+			}
+		}
+
+		public bool HasSha256
+		{
+			get
+			{
+				EnsureSha256();
+				return m_rgbSha256 != null;
+			}
+		}
+
+		public bool FCanCompareSha256(SLItem item)
+		{
+			return HasSha256 && item.HasSha256;
+		}
+
+		public bool IsEqualSha256(SLItem item)
+		{
+			if (m_rgbSha256.Length != item.m_rgbSha256.Length)
+				return false;
+
+			for (int i = 0; i < m_rgbSha256.Length; i++)
+				if (m_rgbSha256[i] != item.m_rgbSha256[i])
+					return false;
+
+			return true;
+		}
 	};
 
 }
