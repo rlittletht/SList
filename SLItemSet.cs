@@ -28,8 +28,16 @@ namespace SList
 			m_plLvComparerStack = new List<IComparer>();
 		}
 
-		public void Add(SLItem sli)
+		public void Clear()
 		{
+			m_items = new Dictionary<string, SLItem>();
+		}
+
+		public void Add(SLItem sli, bool duplicatesOK = false)
+		{
+			if (duplicatesOK && m_items.ContainsKey(sli.Hashkey))
+				return;
+
 			m_items.Add(sli.Hashkey, sli);
 			SmartList.AddSliToListView(sli, m_lv);
 		}

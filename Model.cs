@@ -185,7 +185,7 @@ namespace SList
 			lv.Items.Add(lvi);
 		}
 
-		private void AddDirectory(DirectoryInfo di, SLISet slis, string sPattern, bool fRecurse, List<FileInfo> plfiTooLong)
+		private void AddDirectory(DirectoryInfo di, SLISet slis, string sPattern, bool fRecurse, List<FileInfo> plfiTooLong, bool fAppend)
 		{
 			FileInfo[] rgfi;
 			int cchDir = di.FullName.Length;
@@ -211,7 +211,7 @@ namespace SList
 					else
 					{
 						SLItem sli = new SLItem(rgfi[i].Name, rgfi[i].Length, rgfi[i].DirectoryName, rgfi[i]);
-						slis.Add(sli);
+						slis.Add(sli, fAppend);
 					}
 				}
 				catch (Exception)
@@ -229,7 +229,7 @@ namespace SList
 				DirectoryInfo[] rgdi = di.GetDirectories();
 
 				for (i = 0, iMac = rgdi.Length; i < iMac; i++)
-					AddDirectory(rgdi[i], slis, sPattern, fRecurse, plfiTooLong);
+					AddDirectory(rgdi[i], slis, sPattern, fRecurse, plfiTooLong, fAppend);
 			}
 		}
 
@@ -241,7 +241,7 @@ namespace SList
         	
             Take the search path and build the file list (for the selected target)
         ----------------------------------------------------------------------------*/
-		public void BuildFileList()
+		public void BuildFileList(bool fAppend = false)
 		{
 			string sFileSpec = m_ui.GetSearchPath();
 			string sPath = null;
@@ -295,11 +295,15 @@ namespace SList
 			IComparer lvicSav = m_ui.LvCur.ListViewItemSorter;
 			m_ui.LvCur.ListViewItemSorter = null;
 
-			m_ui.LvCur.Items.Clear();
+			if (!fAppend)
+			{
+				m_ui.LvCur.Items.Clear();
+				m_ui.SlisCur.Clear();
+			}
 
 			List<FileInfo> plfiTooLong = new List<FileInfo>();
 
-			AddDirectory(di, m_ui.SlisCur, sPattern, m_ui.FRecurseChecked(), plfiTooLong);
+			AddDirectory(di, m_ui.SlisCur, sPattern, m_ui.FRecurseChecked(), plfiTooLong, fAppend);
 			if (plfiTooLong.Count > 0)
 			{
 				MessageBox.Show(String.Format("Encountered {0} paths that were too long", plfiTooLong.Count));

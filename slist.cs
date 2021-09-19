@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections;
 using System.Windows.Forms;
 using System.IO;
+using System.Linq.Expressions;
 using TCore.UI;
 
 namespace SList
@@ -92,6 +93,7 @@ namespace SList
 		#region AppHost
 
 		private SmartList m_model;
+		private Button button1;
 		private SmartListSettings m_settings;
 
 		public SListApp()
@@ -376,6 +378,7 @@ namespace SList
 			this.m_ebSaveMePath = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
 			this.m_ebRetireMePath = new System.Windows.Forms.TextBox();
+			this.button1 = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -803,7 +806,7 @@ namespace SList
 			this.m_cbAddToIgnoreList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbAddToIgnoreList.Checked = true;
 			this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1102, 97);
+			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1102, 136);
 			this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
 			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(216, 30);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
@@ -898,11 +901,22 @@ namespace SList
 			this.m_ebRetireMePath.TabIndex = 45;
 			this.m_ebRetireMePath.Text = "f:\\DeDupe\\RetireMe";
 			// 
+			// button1
+			// 
+			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button1.Location = new System.Drawing.Point(1190, 92);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(115, 35);
+			this.button1.TabIndex = 46;
+			this.button1.Text = "Append";
+			this.button1.Click += new System.EventHandler(this.EH_DoAppendSearch);
+			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
 			this.ClientSize = new System.Drawing.Size(1331, 1000);
+			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this.m_ebRetireMePath);
 			this.Controls.Add(this.label4);
@@ -990,6 +1004,11 @@ namespace SList
 		private void EH_DoSearch(object sender, System.EventArgs e)
 		{
 			m_model.BuildFileList();
+		}
+
+		private void EH_DoAppendSearch(object sender, System.EventArgs e)
+		{
+			m_model.BuildFileList(true /*fAppend*/);
 		}
 
 		private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
