@@ -27,7 +27,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -127,6 +127,16 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\liblet\cs\TCore.XMLIO\XMLIO\XMLIO.csproj">
+      <Project>{044279b4-a894-45f0-94ea-5c2cd60063b5}</Project>
+      <Name>XMLIO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\liblet\cs\TCore.XmlSettings\TCore.XmlSettings\TCore.XmlSettings.csproj">
+      <Project>{e5ce59a9-7f1c-4553-8937-0a52dcb245cc}</Project>
+      <Name>TCore.XmlSettings</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

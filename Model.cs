@@ -10,6 +10,7 @@ using System.Media;
 using System.Text;
 using NUnit.Framework;
 using TCore.UI;
+using TCore.XmlSettings;
 
 namespace SList
 {
@@ -452,6 +453,9 @@ namespace SList
 
 			if (!InputBox.ShowInputBox("File list", out sFile))
 				return;
+
+//			SaveFileListXml(slis, sFile);
+//			return;
 
 			TextWriter tr = new StreamWriter(new FileStream(sFile, FileMode.CreateNew, FileAccess.Write), Encoding.Default);
 

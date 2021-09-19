@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using TCore.XmlSettings;
 
 namespace SList
 {
@@ -138,5 +139,27 @@ namespace SList
 			ui.HideProgressBar(ProgressBarType.Current);
 			ResumeListViewUpdate();
 		}
+
+#if notyet
+		static RepeatContext<SLISet>.RepeatItemContext createFileRepeatItemContext(
+			SLISet slis,
+			Element<SLISet> element,
+			RepeatContext<SLISet>.RepeatItemContext parent)
+		{
+			slis.
+			// if slis.
+			throw new NotImplementedException();
+		}
+
+		void SaveFileListXml(SLISet slis, string outfile)
+		{
+			XmlDescription<SLISet> xml = XmlDescriptionBuilder<SLISet>
+				.Build("http://www.thetasoft.com/scehmas/SList/filelist/2020", "FileList")
+				.DiscardAttributesWithNoSetter()
+				.DiscardUnknownAttributes()
+				.AddChildElement("File", null, null)
+				.SetRepeating(createFileRepeatItemContext, areRemainingFiles, commitFileRepeatItemContext)
+		}
+#endif
 	}
 }
