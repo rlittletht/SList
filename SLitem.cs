@@ -312,17 +312,12 @@ namespace SList
 			}
 		}
 
-		public bool HasSha256
-		{
-			get
-			{
-				EnsureSha256();
-				return m_rgbSha256 != null;
-			}
-		}
-
+		public bool HasSha256 => m_rgbSha256 != null;
 		public bool FCanCompareSha256(SLItem item)
 		{
+			EnsureSha256();
+			item.EnsureSha256();
+
 			return HasSha256 && item.HasSha256;
 		}
 
