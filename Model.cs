@@ -173,9 +173,9 @@ namespace SList
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 
 			lvi.Tag = sli;
-			lvi.SubItems[2].Text = sli.m_sPath;
-			lvi.SubItems[1].Text = sli.m_lSize.ToString("###,###,###");
-			lvi.SubItems[0].Text = sli.m_sName;
+			lvi.SubItems[2].Text = sli.Path;
+			lvi.SubItems[1].Text = sli.Size.ToString("###,###,###");
+			lvi.SubItems[0].Text = sli.Name;
 
 			if (fChecked)
 				lvi.Checked = true;
@@ -459,7 +459,7 @@ namespace SList
 			foreach (ListViewItem lvi in slis.Lv.Items)
 			{
 				SLItem sli = (SLItem)lvi.Tag;
-				tr.WriteLine("{0}\t{1}\t{2}", sli.m_sPath, sli.m_sName, sli.m_lSize);
+				tr.WriteLine("{0}\t{1}\t{2}", sli.Path, sli.Name, sli.Size);
 			}
 			tr.Flush();
 			tr.Close();
@@ -474,23 +474,23 @@ namespace SList
 			int nStart = Environment.TickCount;
 			int nEnd;
 
-			FileStream bs1 = new FileStream(Path.Combine(sli1.m_sPath, sli1.m_sName), FileMode.Open, FileAccess.Read, FileShare.Read, 8, false);
-			FileStream bs2 = new FileStream(Path.Combine(sli2.m_sPath, sli2.m_sName), FileMode.Open, FileAccess.Read, FileShare.Read, 8, false);
+			FileStream bs1 = new FileStream(Path.Combine(sli1.Path, sli1.Name), FileMode.Open, FileAccess.Read, FileShare.Read, 8, false);
+			FileStream bs2 = new FileStream(Path.Combine(sli2.Path, sli2.Name), FileMode.Open, FileAccess.Read, FileShare.Read, 8, false);
 
 			int lcb = 16;
 
 			long icb = 0;
 			int i;
 			bool fProgress = true;
-			m_ui.SetProgressBarMac(ProgressBarType.Current, sli1.m_lSize);
+			m_ui.SetProgressBarMac(ProgressBarType.Current, sli1.Size);
 
-			if (sli1.m_lSize < 10000)
+			if (sli1.Size < 10000)
 				fProgress = false;
 
-			if (icb + lcb >= sli1.m_lSize)
-				lcb = (int)(sli1.m_lSize - icb);
+			if (icb + lcb >= sli1.Size)
+				lcb = (int)(sli1.Size - icb);
 
-			m_ui.SetStatusText(sli1.m_sName);
+			m_ui.SetStatusText(sli1.Name);
 			if (fProgress)
 				m_ui.ShowProgressBar(ProgressBarType.Current);
 
@@ -515,7 +515,7 @@ namespace SList
 						bs1.Close();
 						bs2.Close();
 
-						m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.m_lSize, null);
+						m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.Size, null);
 						nEnd = Environment.TickCount;
 
 						if ((nEnd - nStart) < min)
@@ -532,7 +532,7 @@ namespace SList
 
 				if (lcb < lcbMax)
 				{
-					if ((int)(sli1.m_lSize - icb - 1) == 0)
+					if ((int)(sli1.Size - icb - 1) == 0)
 						break;
 
 					lcb *= 2;
@@ -540,15 +540,15 @@ namespace SList
 						lcb = lcbMax;
 				}
 
-				if (icb + lcb >= sli1.m_lSize)
-					lcb = (int)(sli1.m_lSize - icb - 1);
+				if (icb + lcb >= sli1.Size)
+					lcb = (int)(sli1.Size - icb - 1);
 
 			}
 			//		br1.Close();
 			//		br2.Close();
 			bs1.Close();
 			bs2.Close();
-			m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.m_lSize, null);
+			m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.Size, null);
 			nEnd = Environment.TickCount;
 
 			if ((nEnd - nStart) < min)
@@ -570,8 +570,8 @@ namespace SList
 			{
 				rgsli[iFirst + i] = (SLItem)slis.Lv.Items[i].Tag;
 				rgsli[iFirst + i].ClearDupeChain();
-				rgsli[iFirst + i].m_fMarked = false;
-				rgsli[iFirst + i].DestOnly = fDestOnly;
+				rgsli[iFirst + i].IsMarked = false;
+				rgsli[iFirst + i].IsDestOnly = fDestOnly;
 			}
 		}
 
@@ -615,19 +615,19 @@ namespace SList
 
 				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
 
-				if (rgsli[i].m_fMarked)
+				if (rgsli[i].IsMarked)
 					continue;
 
-				if (rgsli[i].DestOnly)
+				if (rgsli[i].IsDestOnly)
 					continue;
 
 				// search forward for dupes
 				for (iDupe = i + 1, iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
 				{
-					if (rgsli[iDupe].m_fMarked == true)
+					if (rgsli[iDupe].IsMarked == true)
 						continue;
 
-					if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
+					if (rgsli[i].Size == rgsli[iDupe].Size)
 					{
 						// do more extensive check here...for now, the size and the name is enough
 						if (m_ui.FCompareFilesChecked())
@@ -635,34 +635,34 @@ namespace SList
 							c++;
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
 							{
-								if (rgsli[i].m_fMarked == false)
+								if (rgsli[i].IsMarked == false)
 									AddSliToListView(rgsli[i], slisSrc.Lv, true);
 
-								if (rgsli[iDupe].m_fMarked == false)
+								if (rgsli[iDupe].IsMarked == false)
 									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
 
-								rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
+								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
 								rgsli[i].AddDupeToChain(rgsli[iDupe]);
 							}
 						}
 						else
 						{
-							if (rgsli[i].m_sName == rgsli[iDupe].m_sName)
+							if (rgsli[i].Name == rgsli[iDupe].Name)
 							{
-								if (rgsli[i].m_fMarked == false)
+								if (rgsli[i].IsMarked == false)
 									AddSliToListView(rgsli[i], slisSrc.Lv);
 
-								if (rgsli[iDupe].m_fMarked == false)
+								if (rgsli[iDupe].IsMarked == false)
 									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
 
-								rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
+								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
 								rgsli[i].AddDupeToChain(rgsli[iDupe]);
 							}
 						}
 					}
 					else
 					{
-						if (rgsli[i].m_fMarked == false)
+						if (rgsli[i].IsMarked == false)
 							// this was unique...
 							AddSliToListView(rgsli[i], slisSrc.Lv, true);
 
@@ -767,8 +767,8 @@ namespace SList
 					continue;
 
 				SLItem sli = (SLItem)(lvCur.Items[i].Tag);
-				string sSource = Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName));
-				string sDest = Path.GetFullPath(Path.Combine(sDir, sli.m_sName));
+				string sSource = Path.GetFullPath(Path.Combine(sli.Path, sli.Name));
+				string sDest = Path.GetFullPath(Path.Combine(sDir, sli.Name));
 
 				if (String.Compare(sSource, sDest, true /*ignoreCase*/) == 0)
 				{
@@ -878,7 +878,7 @@ namespace SList
 			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
 			{
 				SLItem sli = (SLItem)(m_ui.LvCur.Items[i].Tag);
-				string sPath = Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName));
+				string sPath = Path.GetFullPath(Path.Combine(sli.Path, sli.Name));
 				bool fMatch = false;
 
 				fMatch = rx.IsMatch(sPath);
@@ -911,7 +911,7 @@ namespace SList
 
 		public static string SCalcMatchingListViewItems(ListView lvCur, string sRegEx, string sCounts)
 		{
-			ATMC atmc = new ATMC(sRegEx);
+			TextAtoms textAtoms = new TextAtoms(sRegEx);
 			string sMatch = String.Format("Matches for '{0}':\n\n", sRegEx);
 
 			int i, iMac;
@@ -921,14 +921,14 @@ namespace SList
 			{
 				SLItem sli = (SLItem)(lvCur.Items[i].Tag);
 
-				if (sli.m_atmc == null)
-					sli.m_atmc = new ATMC(sli.m_sName);
+				if (sli.Atoms == null)
+					sli.Atoms = new TextAtoms(sli.Name);
 
 				int nMatch = 0;
-				nMatch = sli.m_atmc.NMatch(atmc);
+				nMatch = sli.Atoms.NMatch(textAtoms);
 				if (nMatch > 65)
 				{
-					sMatch += String.Format("{0:d3}% : '{1}'\n", nMatch, Path.GetFullPath(Path.Combine(sli.m_sPath, sli.m_sName)), sRegEx);
+					sMatch += String.Format("{0:d3}% : '{1}'\n", nMatch, Path.GetFullPath(Path.Combine(sli.Path, sli.Name)), sRegEx);
 					cMatch++;
 				}
 			}
@@ -955,7 +955,7 @@ namespace SList
 
 		internal void LaunchSli(SLItem sli)
 		{
-			Process.Start(Path.Combine(sli.m_sPath, sli.m_sName));
+			Process.Start(Path.Combine(sli.Path, sli.Name));
 		}
 
 		#endregion // List View Commands
@@ -964,7 +964,7 @@ namespace SList
 		{
 			SLItem sli;
 
-			sliMaster.m_fMarked = fMark;
+			sliMaster.IsMarked = fMark;
 			UpdateMark(sliMaster);
 
 			sli = sliMaster;
@@ -972,9 +972,9 @@ namespace SList
 			while ((sli = sli.Prev) != null)
 			{
 				if (sli.MatchesPrefPath(s))
-					sli.m_fMarked = fMark;
+					sli.IsMarked = fMark;
 				else
-					sli.m_fMarked = !fMark;
+					sli.IsMarked = !fMark;
 
 				UpdateMark(sli);
 			}
@@ -984,9 +984,9 @@ namespace SList
 			while ((sli = sli.Next) != null)
 			{
 				if (sli.MatchesPrefPath(s))
-					sli.m_fMarked = fMark;
+					sli.IsMarked = fMark;
 				else
-					sli.m_fMarked = !fMark;
+					sli.IsMarked = !fMark;
 				UpdateMark(sli);
 			}
 		}
@@ -995,7 +995,7 @@ namespace SList
 		{
 			ListViewItem lvi = LviFromSli(sli);
 
-			lvi.Checked = sli.m_fMarked;
+			lvi.Checked = sli.IsMarked;
 		}
 
 		ListViewItem LviFromSli(SLItem sli)
@@ -1027,14 +1027,14 @@ namespace SList
 		}
 
 		// we might not be at the beginning of the dupe list for this item -- we might
-		// have skipped over some DestOnly items, and those might be the dupes we
+		// have skipped over some IsDestOnly items, and those might be the dupes we
 		// are looking for
 		int FindFirstDupeCandidate(SLItem[] rgsli, int iCurrent)
 		{
 			// walk backwards until we change sizes or hit the beginning
 			int i = iCurrent - 1;
 
-			while (i >= 0 && rgsli[i].m_lSize == rgsli[iCurrent].m_lSize)
+			while (i >= 0 && rgsli[i].Size == rgsli[iCurrent].Size)
 				i--;
 
 			// we break on the first item that doesn't match...return
@@ -1080,10 +1080,10 @@ namespace SList
 
 				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
 
-				if (rgsli[i].m_fMarked)
+				if (rgsli[i].IsMarked)
 					continue;
 
-				if (rgsli[i].DestOnly)
+				if (rgsli[i].IsDestOnly)
 					continue;
 
 				iDupe = FindFirstDupeCandidate(rgsli, i);
@@ -1096,13 +1096,13 @@ namespace SList
 						continue;
 
 					// we are explicitly looking ONLY at fDestOnly files to see if there's a dupe
-					// (used to include rgsli[iDupe].m_fMarked == true  -- but why exclude
+					// (used to include rgsli[iDupe].IsMarked == true  -- but why exclude
 					// destonly files that were already duped against? a destonly file can be 
 					// a dupe for multiple source files...
-					if (rgsli[iDupe].m_fDestOnly == false)
+					if (rgsli[iDupe].IsDestOnly == false)
 						continue;
 
-					if (rgsli[i].m_lSize == rgsli[iDupe].m_lSize)
+					if (rgsli[i].Size == rgsli[iDupe].Size)
 					{
 						// do more extensive check here...for now, the size and the name is enough
 						if (m_ui.FCompareFilesChecked())
@@ -1111,17 +1111,17 @@ namespace SList
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
 							{
 								// we found a dupe in the target. yay, don't add it anywhere
-								rgsli[i].m_fMarked = rgsli[iDupe].m_fMarked = true;
+								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
 								rgsli[iDupe].AddDupeToChain(rgsli[i]);
 								break;
 							}
 						}
 						else
 						{
-							if (rgsli[i].m_sName == rgsli[iDupe].m_sName)
+							if (rgsli[i].Name == rgsli[iDupe].Name)
 							{
 								// we found a dupe in the target.. nothing to add
-								rgsli[i].m_fMarked = true; //  rgsli[iDupe].m_fMarked = true; // don't mark the dupe
+								rgsli[i].IsMarked = true; //  rgsli[iDupe].IsMarked = true; // don't mark the dupe
 														   // rgsli[i].AddDupeToChain(rgsli[iDupe]); // don't add to the dupe chain
 								break;
 							}
@@ -1138,9 +1138,9 @@ namespace SList
 				}
 				// we have left the loop.  either we broke out because we know we don't have a match,
 				// or we exhausted all the dupes and we know we found at least one match.
-				// in either case, if we found a dupe in the target, we will have marked m_fMarked to be true...
+				// in either case, if we found a dupe in the target, we will have marked IsMarked to be true...
 				// if its not set, then we didn't find this file in the destination.
-				if (rgsli[i].m_fMarked == false)
+				if (rgsli[i].IsMarked == false)
 					// this was unique...
 					AddSliToListView(rgsli[i], slisSrc.Lv, true);
 

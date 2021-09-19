@@ -54,38 +54,31 @@ namespace SList
 	// ============================================================================
 	public class SLItem
 	{
-		public string m_sName;
-		public Int64 m_lSize;
-		public string m_sPath;
-		public bool m_fMarked;
+		public string Name { get; set; }
+		public Int64 Size { get; }
+		public string Path { get; }
+		public bool IsMarked { get; set; }
 
 		// some items are intended only to matched *against*, but we shouldn't treat them as unique.  
 		// (i.e. drive old and drive new.  we don't care to find dupes for items on drive new on 
 		// drive new; we only care about finding items from drive old that are on drive new.
 
-		public bool m_fDestOnly;
+		public bool IsDestOnly { get; set; }
 
-		public FileInfo m_fi;
-		public DirectoryInfo m_di;
-		public ATMC m_atmc;
+		FileInfo m_fi;
+		DirectoryInfo m_di;
+		public TextAtoms Atoms { get; set; }
 
 		SLItem m_sliPrev;
 		SLItem m_sliNext;
 
 		public int CompareTo(SLItem sli)
 		{
-			return String.Compare(m_sPath, sli.m_sPath);
+			return String.Compare(Path, sli.Path);
 		}
 
-		public SLItem Prev
-		{
-			get { return m_sliPrev; }
-		}
-
-		public SLItem Next
-		{
-			get { return m_sliNext; }
-		}
+		public SLItem Prev => m_sliPrev;
+		public SLItem Next => m_sliNext;
 
 		public enum SLItemCompare
 		{
@@ -100,38 +93,36 @@ namespace SList
 
 		private string m_sFiName;
 
-		public bool DestOnly { get { return m_fDestOnly; } set { m_fDestOnly = value; } }
-
 		public SLItem(string sName, long lSize, string sPath, string sFiName)
 		{
-			m_sName = sName;
-			m_lSize = lSize;
-			m_sPath = sPath;
+			Name = sName;
+			Size = lSize;
+			Path = sPath;
 			m_sFiName = sFiName;
 			m_di = null;
 			m_fi = null;
-			m_atmc = null;
+			Atoms = null;
 		}
 
 		public SLItem(string sName, long lSize, string sPath, DirectoryInfo di)
 		{
-			m_sName = sName;
-			m_lSize = lSize;
-			m_sPath = sPath;
+			Name = sName;
+			Size = lSize;
+			Path = sPath;
 			m_di = di;
 			m_fi = null;
-			m_atmc = null;
+			Atoms = null;
 		}
 
 		public SLItem(string sName, long lSize, string sPath, FileInfo fi)
 		{
-			m_sName = sName;
-			m_lSize = lSize;
-			m_sPath = sPath;
+			Name = sName;
+			Size = lSize;
+			Path = sPath;
 			m_sFiName = String.Format("{0}/{1}", sPath, fi.Name);
 			m_fi = fi;
 			m_di = null;
-			m_atmc = null;
+			Atoms = null;
 		}
 
 		CultureInfo ci = new CultureInfo("en-US");
@@ -143,10 +134,10 @@ namespace SList
 
 		public bool MatchesPrefPath(string s)
 		{
-			if (m_sPath.Length < s.Length)
+			if (Path.Length < s.Length)
 				return false;
 
-			if (m_sPath.StartsWith(s, true /*ignoreCase*/, ci))
+			if (Path.StartsWith(s, true /*ignoreCase*/, ci))
 				return true;
 
 			return false;
@@ -167,7 +158,7 @@ namespace SList
 		}
 
 
-		static public int Compare(SLItem sli1, SLItem sli2, SLItemCompare slic, bool fReverse)
+		public static int Compare(SLItem sli1, SLItem sli2, SLItemCompare slic, bool fReverse)
 		{
 			int n = 0;
 
@@ -178,60 +169,60 @@ namespace SList
 					if (n == 0)
 					{
 						// they are again equivalent; the difference is now file size
-						n = (int)(sli1.m_lSize - sli2.m_lSize);
+						n = (int)(sli1.Size - sli2.Size);
 
 						if (n == 0)
 						{
 							// yeesh.  diff is now folder
 
-							n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+							n = String.Compare(sli1.Path, sli2.Path);
 						}
 					}
 					break;
 				case SLItemCompare.CompareName:
-					n = String.Compare(sli1.m_sName, sli2.m_sName);
+					n = String.Compare(sli1.Name, sli2.Name);
 					if (n == 0)
 					{
 						// they are again equivalent; the difference is now file size
-						n = (int)(sli1.m_lSize - sli2.m_lSize);
+						n = (int)(sli1.Size - sli2.Size);
 
 						if (n == 0)
 						{
 							// yeesh.  diff is now folder
 
-							n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+							n = String.Compare(sli1.Path, sli2.Path);
 						}
 					}
 					break;
 				case SLItemCompare.CompareSize:
-					n = (int)(sli1.m_lSize - sli2.m_lSize);
+					n = (int)(sli1.Size - sli2.Size);
 
 					if (n == 0)
 					{
 						// they are the same; now look at the name
-						n = String.Compare(sli1.m_sName, sli2.m_sName);
+						n = String.Compare(sli1.Name, sli2.Name);
 
 						if (n == 0)
 						{
 							// yeesh.  diff is now folder
 
-							n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+							n = String.Compare(sli1.Path, sli2.Path);
 						}
 					}
 					break;
 				case SLItemCompare.CompareSizeDest:
-					n = (int)(sli1.m_lSize - sli2.m_lSize);
+					n = (int)(sli1.Size - sli2.Size);
 
 					if (n == 0)
 					{
 						// they are the same; now look at the name
-						n = String.Compare(sli1.m_sName, sli2.m_sName);
+						n = String.Compare(sli1.Name, sli2.Name);
 
 						if (n == 0)
 						{
-							if (sli1.DestOnly == sli2.DestOnly)
+							if (sli1.IsDestOnly == sli2.IsDestOnly)
 								n = 0;
-							else if (sli1.DestOnly)
+							else if (sli1.IsDestOnly)
 								n = 1;
 							else
 								n = -1;
@@ -240,23 +231,23 @@ namespace SList
 							{
 								// yeesh.  diff is now folder
 
-								n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+								n = String.Compare(sli1.Path, sli2.Path);
 							}
 						}
 					}
 					break;
 				case SLItemCompare.ComparePath:
-					n = String.Compare(sli1.m_sPath, sli2.m_sPath);
+					n = String.Compare(sli1.Path, sli2.Path);
 
 					if (n == 0)
 					{
 						// they are equivalent; the difference is now based on the name
-						n = String.Compare(sli1.m_sName, sli2.m_sName);
+						n = String.Compare(sli1.Name, sli2.Name);
 
 						if (n == 0)
 						{
 							// they are again equivalent; the difference is now file size
-							n = (int)(sli1.m_lSize - sli2.m_lSize);
+							n = (int)(sli1.Size - sli2.Size);
 						}
 					}
 					break;

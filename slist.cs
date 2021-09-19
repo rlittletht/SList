@@ -1043,13 +1043,13 @@ namespace SList
 		{
 			SLItem sli = (SLItem)LvCur.Items[e.Item].Tag;
 
-			if (!SmartList.FRenameFile(sli.m_sPath, sli.m_sName, sli.m_sPath, e.Label))
+			if (!SmartList.FRenameFile(sli.Path, sli.Name, sli.Path, e.Label))
 			{
 				e.CancelEdit = true;
 			}
 			else
 			{
-				sli.m_sName = e.Label;
+				sli.Name = e.Label;
 			}
 		}
 
@@ -1127,8 +1127,8 @@ namespace SList
 
 				mni.MenuItems.Clear();
 				// break the path into pieces and add an item for each piece
-				Path.GetDirectoryName(sli.m_sPath);
-				string[] rgs = sli.m_sPath.Split('\\');
+				Path.GetDirectoryName(sli.Path);
+				string[] rgs = sli.Path.Split('\\');
 
 				string sSub = "";
 				foreach (string s in rgs)
