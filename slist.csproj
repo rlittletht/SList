@@ -107,7 +107,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="SLIBucket.cs" />
     <Compile Include="SLitem.cs" />
     <Compile Include="SLItemComparer.cs" />
     <Compile Include="SLItemSet.cs" />

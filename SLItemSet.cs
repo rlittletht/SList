@@ -8,7 +8,7 @@ namespace SList
 {
 	public class SLISet
 	{
-		private Hashtable m_ht;
+		private Dictionary<string, SLItem> m_items;
 		private ListView m_lv;
 		private string m_sSpec;
 
@@ -23,23 +23,13 @@ namespace SList
 
 		public SLISet()
 		{
-			m_ht = new Hashtable();
+			m_items = new Dictionary<string, SLItem>();
 			m_plLvComparerStack = new List<IComparer>();
 		}
 
 		public void Add(SLItem sli)
 		{
-			if (m_ht.Contains(sli.Hashkey))
-			{
-				SLIBucket slib = (SLIBucket)m_ht[sli.Hashkey];
-
-				slib.Items.Add(sli);
-			}
-			else
-			{
-				SLIBucket slib = new SLIBucket(sli.Hashkey, sli);
-				m_ht.Add(sli.Hashkey, slib);
-			}
+			m_items.Add(sli.Hashkey, sli);
 			SmartList.AddSliToListView(sli, m_lv);
 		}
 
@@ -91,9 +81,7 @@ namespace SList
 				SLItem sli = (SLItem)m_lv.Items[i].Tag;
 				if (sli != null && sli.MatchesPrefPath(sPathRoot))
 				{
-					SLIBucket slib = (SLIBucket)m_ht[sli.Hashkey];
-
-					slib.Remove(sli);
+					m_items.Remove(sli.Hashkey);
 					cRemove++;
 					m_lv.Items[i].Tag = null;
 					if (i <= iSelStart)
