@@ -172,10 +172,12 @@ namespace SList
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
+			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 
 			lvi.Tag = sli;
-			lvi.SubItems[2].Text = sli.Path;
-			lvi.SubItems[1].Text = sli.Size.ToString("###,###,###");
+			lvi.SubItems[3].Text = sli.Path;
+			lvi.SubItems[2].Text = sli.Size.ToString("###,###,###");
+			lvi.SubItems[1].Text = Path.GetExtension(sli.Name);
 			lvi.SubItems[0].Text = sli.Name;
 
 			if (fChecked)

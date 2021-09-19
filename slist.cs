@@ -207,16 +207,21 @@ namespace SList
 		{
 			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
 			m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
-			m_rgslis[ilv].Lv.Columns[0].Width = 146;
+			m_rgslis[ilv].Lv.Columns[0].Width = 212;
 
 			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[1].Text = "Size";
-			m_rgslis[ilv].Lv.Columns[1].Width = 52;
-			m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Right;
+			m_rgslis[ilv].Lv.Columns[1].Text = "Type";
+			m_rgslis[ilv].Lv.Columns[1].Width = 48;
+			m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Center;
 
 			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[2].Text = "Location";
-			m_rgslis[ilv].Lv.Columns[2].Width = 300;
+			m_rgslis[ilv].Lv.Columns[2].Text = "Size";
+			m_rgslis[ilv].Lv.Columns[2].Width = 52;
+			m_rgslis[ilv].Lv.Columns[2].TextAlign = HorizontalAlignment.Right;
+
+			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
+			m_rgslis[ilv].Lv.Columns[3].Text = "Location";
+			m_rgslis[ilv].Lv.Columns[3].Width = 512;
 
 			m_rgslis[ilv].Lv.FullRowSelect = true;
 			m_rgslis[ilv].Lv.MultiSelect = false;
