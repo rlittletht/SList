@@ -387,64 +387,68 @@ namespace SList
 
 		internal void LoadFileListFromFile(SLISet slis)
 		{
-			string sFile;
-
-			if (!InputBox.ShowInputBox("File list", out sFile))
+			if (!InputBox.ShowInputBox("File list", out string sFile))
 				return;
 
 			PerfTimer pt = new PerfTimer();
 			pt.Start("load file list");
-			// parse a directory listing and add 
-			string sCurDirectory = null;
-			TextReader tr = new StreamReader(new FileStream(sFile, FileMode.Open, FileAccess.Read), Encoding.Default);
-			string sLine;
 			slis.PauseListViewUpdate(true);
 
-			sLine = tr.ReadLine();
-			bool fInternalFormat = false;
-
-			if (sLine == "[file.lst]")
-				fInternalFormat = true;
-
-			while ((sLine = tr.ReadLine()) != null)
+			if (sFile.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
 			{
-				if (fInternalFormat)
+				SLISet.LoadFileListXml(slis, sFile);
+			}
+			else
+			{
+				// parse a directory listing and add 
+				string sCurDirectory = null;
+				using (TextReader tr = new StreamReader(new FileStream(sFile, FileMode.Open, FileAccess.Read), Encoding.Default))
 				{
-					string sPath, sName;
-					Int64 nSize;
+					string sLine = tr.ReadLine();
+					bool fInternalFormat = sLine == "[file.lst]";
 
-					ParseFileListLine(sLine, out sPath, out sName, out nSize);
-					SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
-					slis.Add(sli);
-					continue;
-				}
-				// figure out what this line is
-				if (sLine.Length < 14)
-					continue;
+					while ((sLine = tr.ReadLine()) != null)
+					{
+						if (fInternalFormat)
+						{
+							ParseFileListLine(sLine, out string sPath, out string sName, out long nSize);
+							SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
+							slis.Add(sli);
+							continue;
+						}
 
-				if (sLine[2] == '/' && sLine[5] == '/')
-				{
-					// this is a leading date, which means this is either a directory or a file
-					if (sLine[24] == '<') // this is a directory
-						continue;
+						// figure out what this line is
+						if (sLine.Length < 14)
+							continue;
 
-					// ok, from [14,39] is the size, [40, ...] is filename
-					Int64 nSize = FileSizeFromDirectoryLine(sLine);
-					string sFileLine = FileNameFromDirectoryLine(sLine);
+						if (sLine[2] == '/' && sLine[5] == '/')
+						{
+							// this is a leading date, which means this is either a directory or a file
+							if (sLine[24] == '<') // this is a directory
+								continue;
 
-					SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory, String.Concat(sCurDirectory, "/", sFileLine));
-					slis.Add(sli);
-				}
-				else if (sLine.StartsWith(" Directory of "))
-				{
-					sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+							// ok, from [14,39] is the size, [40, ...] is filename
+							Int64 nSize = FileSizeFromDirectoryLine(sLine);
+							string sFileLine = FileNameFromDirectoryLine(sLine);
+
+							SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory,
+								String.Concat(sCurDirectory, "/", sFileLine));
+							slis.Add(sli);
+						}
+						else if (sLine.StartsWith(" Directory of "))
+						{
+							sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+						}
+					}
+
+					tr.Close();
 				}
 			}
+
 			slis.ResumeListViewUpdate();
 
 			pt.Stop();
 			pt.Report(0, m_ui);
-			tr.Close();
 		}
 
 		internal void SaveFileListToFile(SLISet slis)
@@ -454,8 +458,8 @@ namespace SList
 			if (!InputBox.ShowInputBox("File list", out sFile))
 				return;
 
-//			SaveFileListXml(slis, sFile);
-//			return;
+			SLISet.SaveFileListXml(slis, sFile);
+			return;
 
 			TextWriter tr = new StreamWriter(new FileStream(sFile, FileMode.CreateNew, FileAccess.Write), Encoding.Default);
 

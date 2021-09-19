@@ -216,7 +216,7 @@ namespace SList
 
 			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
 			m_rgslis[ilv].Lv.Columns[2].Text = "Location";
-			m_rgslis[ilv].Lv.Columns[2].Width = 128;
+			m_rgslis[ilv].Lv.Columns[2].Width = 300;
 
 			m_rgslis[ilv].Lv.FullRowSelect = true;
 			m_rgslis[ilv].Lv.MultiSelect = false;
@@ -1049,7 +1049,7 @@ namespace SList
 			}
 			else
 			{
-				sli.Name = e.Label;
+				sli.Rename(e.Label);
 			}
 		}
 

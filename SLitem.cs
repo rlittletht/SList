@@ -3,6 +3,7 @@ using System.IO;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Windows.Forms;
 
 namespace SList
@@ -12,10 +13,12 @@ namespace SList
 	// ============================================================================
 	public class SLItem
 	{
-		public string Name { get; set; }
-		public Int64 Size { get; }
-		public string Path { get; }
+		public string Name { get; private set; }
+		public Int64 Size { get; private set; }
+		public string Path { get; private set; }
 		public bool IsMarked { get; set; }
+
+		public bool IsReparsePoint { get; private set; }
 
 		// some items are intended only to matched *against*, but we shouldn't treat them as unique.  
 		// (i.e. drive old and drive new.  we don't care to find dupes for items on drive new on 
@@ -53,6 +56,69 @@ namespace SList
 
 		private string m_sFiName;
 
+		public SLItem()
+		{
+		}
+
+		public byte[] Sha256Bytes => m_rgbSha256;
+
+		static int GetHexVal(char hex)
+		{
+			int val = (int) hex;
+			//For lowercase a-f letters:
+			return val - (val <= '9' ? '0' : 'a');
+
+			//For uppercase A-F letters:
+			//return val - (val < 58 ? 48 : 55);
+			//Or the two combined, but a bit slower:
+			//return val - (val < 58 ? 48 : (val < 97 ? 55 : 97));
+		}
+
+		public static string GetPath(SLItem item) => item.Path;
+		public static string SetPath(SLItem item, string value) => item.Path = value;
+		public static string GetName(SLItem item) => item.Name;
+		public static string SetName(SLItem item, string value) => item.Name = value;
+
+		public static string GetItemHashKey(SLItem item) => item.Hashkey;
+		public static string SetItemHashKey(SLItem item, string value) => item.m_sFiName = value;
+		public static string GetIsReparsePoint(SLItem item) => item.IsReparsePoint ? "true" : null;
+		public static void SetIsReparsePoint(SLItem item, string value) => item.IsReparsePoint = (value == null || value != "true") ? false : true;
+		public static string GetSize(SLItem item) => item.Size.ToString();
+		public static void SetSize(SLItem item, string value) => item.Size = Int64.Parse(value);
+
+		public static void SetSha256(SLItem item, string value)
+		{
+			byte[] bytes = new byte[value.Length / 2];
+
+			for (int i = 0; i < value.Length / 2; i++)
+			{
+				bytes[i] = (byte) ((GetHexVal(value[i * 2]) << 4) + (GetHexVal(value[(i * 2) + 1])));
+			}
+
+			item.m_rgbSha256 = bytes;
+		}
+
+		public static string GetSha256(SLItem item)
+		{
+			byte[] bytes = item.Sha256Bytes;
+
+			if (bytes == null)
+				return null;
+
+			StringBuilder sb = new StringBuilder();
+
+			foreach (byte b in bytes)
+				sb.Append(b.ToString("x2"));
+
+			return sb.ToString();
+		}
+
+		public void Rename(string newName)
+		{
+			Name = newName; // need to create a new hash key too, yes??
+			throw new Exception("NYI: this is probably broken because the hash key is now out of sync");
+		}
+
 		public SLItem(string sName, long lSize, string sPath, string sFiName)
 		{
 			Name = sName;
@@ -81,6 +147,9 @@ namespace SList
 			Path = sPath;
 			m_sFiName = String.Format("{0}/{1}", sPath, fi.Name);
 			m_fi = fi;
+			if ((m_fi.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+				IsReparsePoint = true;
+
 			m_di = null;
 			Atoms = null;
 		}
@@ -228,6 +297,9 @@ namespace SList
 			{
 				try
 				{
+					if (m_fi == null)
+						m_fi = new FileInfo(System.IO.Path.Combine(Path, Name));
+
 					using (FileStream fileStream = m_fi.OpenRead())
 					{
 						fileStream.Position = 0;

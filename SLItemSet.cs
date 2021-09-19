@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
 using TCore.XmlSettings;
 
@@ -128,26 +129,112 @@ namespace SList
 			ResumeListViewUpdate();
 		}
 
-#if notyet
-		static RepeatContext<SLISet>.RepeatItemContext createFileRepeatItemContext(
+		public IEnumerator<string> ItemEnumerator { get; set; }
+
+		static RepeatContext<SLISet>.RepeatItemContext CreateFileRepeatItemContext(
 			SLISet slis,
 			Element<SLISet> element,
 			RepeatContext<SLISet>.RepeatItemContext parent)
 		{
-			slis.
-			// if slis.
-			throw new NotImplementedException();
+			// for write...
+			if (slis.m_items != null && slis.ItemEnumerator != null)
+			{
+				return new RepeatContext<SLISet>.RepeatItemContext(
+					element,
+					parent,
+					slis.m_items[slis.ItemEnumerator.Current]);
+			}
+
+			// for read
+			return new RepeatContext<SLISet>.RepeatItemContext(element, parent, new SLItem());
 		}
 
-		void SaveFileListXml(SLISet slis, string outfile)
+		static bool AreRemainingFiles(SLISet t, RepeatContext<SLISet>.RepeatItemContext itemcontext)
 		{
-			XmlDescription<SLISet> xml = XmlDescriptionBuilder<SLISet>
+			if (t.m_items == null || t.m_items.Count == 0)
+				return false;
+
+			if (t.ItemEnumerator == null)
+				t.ItemEnumerator = t.m_items.Keys.GetEnumerator();
+
+			return t.ItemEnumerator.MoveNext();
+		}
+
+		private static void CommitFileRepeatItemContext(SLISet t, RepeatContext<SLISet>.RepeatItemContext itemcontext)
+		{
+			SLItem item = (SLItem) itemcontext.RepeatKey;
+			if (t.m_items == null)
+				t.m_items = new Dictionary<string, SLItem>();
+
+			t.Add(item);
+		}
+
+		static XmlDescription<SLISet> CreateXmlDescription()
+		{
+			return XmlDescriptionBuilder<SLISet>
 				.Build("http://www.thetasoft.com/scehmas/SList/filelist/2020", "FileList")
 				.DiscardAttributesWithNoSetter()
 				.DiscardUnknownAttributes()
 				.AddChildElement("File", null, null)
-				.SetRepeating(createFileRepeatItemContext, areRemainingFiles, commitFileRepeatItemContext)
+				.SetRepeating(
+					CreateFileRepeatItemContext,
+					AreRemainingFiles,
+					CommitFileRepeatItemContext)
+				.AddAttribute("hashKey", GetItemHashKey, SetItemHashKey)
+				.AddAttribute("size", GetItemSize, SetItemSize)
+				.AddAttribute("isReparsePoint", GetIsReparsePoint, SetIsReparsePoint)
+				.AddChildElement("sha256", GetSha256, SetSha256)
+				.AddElement("name", GetName, SetName)
+				.AddElement("path", GetPath, SetPath);
 		}
-#endif
+
+		public static void SaveFileListXml(SLISet slis, string outfile)
+		{
+			XmlDescription<SLISet> xml = CreateXmlDescription();
+
+			slis.ItemEnumerator = null;				
+			using (WriteFile<SLISet> writeFile = WriteFile<SLISet>.CreateSettingsFile(xml, outfile, slis))
+			{
+				writeFile.SerializeSettings(xml, slis);
+			}
+		}
+
+		public static void LoadFileListXml(SLISet slis, string infile)
+		{
+			XmlDescription<SLISet> xml = CreateXmlDescription();
+
+			using (ReadFile<SLISet> readFile = ReadFile<SLISet>.CreateSettingsFile(infile))
+			{
+				readFile.DeSerialize(xml, slis);
+			}
+		}
+
+		private static void SetSha256(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.SetSha256((SLItem)repeatitemcontext.RepeatKey, value);
+
+		private static string GetSha256(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.GetSha256((SLItem) repeatitemcontext.RepeatKey);
+
+		private static void SetItemSize(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.SetSize(((SLItem) repeatitemcontext.RepeatKey), value);
+
+		private static string GetItemSize(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.GetSize((SLItem) repeatitemcontext.RepeatKey);
+
+		private static void SetItemHashKey(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)	=> SLItem.SetItemHashKey((SLItem)repeatitemcontext.RepeatKey, value);
+		private static string GetItemHashKey(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)				=> SLItem.GetItemHashKey((SLItem) repeatitemcontext.RepeatKey);
+
+		private static void   SetName(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)	=> SLItem.SetName((SLItem)repeatitemcontext.RepeatKey, value);
+		private static string GetName(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)				=> SLItem.GetName((SLItem) repeatitemcontext.RepeatKey);
+
+		private static void   SetPath(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)	=> SLItem.SetPath((SLItem)repeatitemcontext.RepeatKey, value);
+		private static string GetPath(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)				=> SLItem.GetPath((SLItem) repeatitemcontext.RepeatKey);
+
+		private static void SetIsReparsePoint(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.SetIsReparsePoint((SLItem)repeatitemcontext.RepeatKey, value);
+
+		private static string GetIsReparsePoint(SLISet t, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)
+			=> SLItem.GetIsReparsePoint((SLItem)repeatitemcontext.RepeatKey);
+
 	}
 }
