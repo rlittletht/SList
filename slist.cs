@@ -92,6 +92,7 @@ namespace SList
 		#region AppHost
 
 		private SmartList m_model;
+		private SmartListSettings m_settings;
 
 		public SListApp()
 		{
@@ -105,12 +106,17 @@ namespace SList
 			m_lblActions.Text = "";
 			m_lblOneListActions.Text = "";
 
+			
 			m_progressBarStatusOverall = new ProgressBarStatus(m_prbarOverall);
 			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
 
 			InitializeListViews();
 			InitializeListView(s_ilvSource);
 			InitializeListView(s_ilvDest);
+
+			m_settings = new SmartListSettings();
+			m_settings.Load();
+			SyncUiWithSettings();
 
 			m_model = new SmartList(this);
 
@@ -119,6 +125,51 @@ namespace SList
 			//
 		}
 
+		void SyncUiWithSettings()
+		{
+			m_cbAddToIgnoreList.Checked = m_settings.AutomaticallyAddIgnore;
+			m_rgslis[s_ilvSource].PathSpec = m_settings.SourceSearchPath;
+			m_rgslis[s_ilvSource].Recurse = m_settings.RecurseSourceSearch;
+			m_rgslis[s_ilvDest].PathSpec = m_settings.DestinationSearchPath;
+			m_rgslis[s_ilvDest].Recurse = m_settings.RecurseDestinationSearch;
+			if (m_islisCur == s_ilvSource)
+			{
+				m_ebSearchPath.Text = m_settings.SourceSearchPath;
+				m_cbRecurse.Checked = m_settings.RecurseSourceSearch;
+			}
+			else if (m_islisCur == s_ilvDest)
+			{
+				m_ebSearchPath.Text = m_settings.DestinationSearchPath;
+				m_cbRecurse.Checked = m_settings.RecurseDestinationSearch;
+			}
+			m_cbMarkFavored.Checked = m_settings.MarkFavored;
+			m_ebRetireMePath.Text = m_settings.RetireMePath;
+			m_ebSaveMePath.Text = m_settings.SaveMePath;
+		}
+
+		void SyncSettingsWithUi()
+		{
+			m_settings.AutomaticallyAddIgnore = m_cbAddToIgnoreList.Checked;
+			m_settings.SourceSearchPath = m_rgslis[s_ilvSource].PathSpec;
+			m_settings.RecurseSourceSearch = m_rgslis[s_ilvSource].Recurse;
+			m_settings.DestinationSearchPath = m_rgslis[s_ilvDest].PathSpec;
+			m_settings.RecurseDestinationSearch = m_rgslis[s_ilvDest].Recurse;
+
+			if (m_islisCur == s_ilvSource)
+			{
+				m_settings.SourceSearchPath = m_ebSearchPath.Text;
+				m_settings.RecurseSourceSearch = m_cbRecurse.Checked;
+			}
+			else if (m_islisCur == s_ilvDest)
+			{
+				m_settings.DestinationSearchPath = m_ebSearchPath.Text;
+				m_settings.RecurseDestinationSearch = m_cbRecurse.Checked;
+			}
+
+			m_settings.MarkFavored = m_cbMarkFavored.Checked;
+			m_settings.RetireMePath = m_ebRetireMePath.Text;
+			m_settings.SaveMePath = m_ebSaveMePath.Text;
+		}
 		// the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
 		// for all the list views in the designer and still have our switchable list views
 		void InitializeListViews()
@@ -190,10 +241,18 @@ namespace SList
 			m_cbxSearchTarget.SelectedIndex = ilv;
 		}
 
+		private bool m_fSyncingSearchTarget = false;
+
 		public void ShowListView(int ilv)
 		{
+			if (m_fSyncingSearchTarget)
+				return;
+
 			if (m_islisCur != -1)
+			{
 				m_rgslis[m_islisCur].PathSpec = m_ebSearchPath.Text;
+				m_rgslis[m_islisCur].Recurse = m_cbRecurse.Checked;
+			}
 
 			for (int i = 0; i < s_clvMax; i++)
 			{
@@ -201,8 +260,11 @@ namespace SList
 			}
 			m_islisCur = ilv;
 
+			m_fSyncingSearchTarget = true;
 			SyncSearchTargetUI(ilv);
+			m_fSyncingSearchTarget = false;
 			m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
+			m_cbRecurse.Checked = m_rgslis[ilv].Recurse;
 		}
 
 		/// <summary>
@@ -883,6 +945,7 @@ namespace SList
 			this.Controls.Add(this.m_lv);
 			this.Name = "SListApp";
 			this.Text = "SListApp";
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EH_OnFormClosing);
 			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.HandleDrop);
 			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.HandleDragEnter);
 			this.DragLeave += new System.EventHandler(this.HandleDragLeave);
@@ -897,6 +960,12 @@ namespace SList
 		#endregion
 
 		#region EventHandlers
+
+		private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
+		{
+			SyncSettingsWithUi();
+			m_settings.Save();
+		}
 
 		private void DoSearchTargetChange(object sender, EventArgs e)
 		{

@@ -12,6 +12,7 @@ namespace SList
 		private string m_sSpec;
 
 		public string PathSpec { get { return m_sSpec; } set { m_sSpec = value; } }
+		public bool Recurse { get; set; }
 
 		public ListView Lv
 		{
