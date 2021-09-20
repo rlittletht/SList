@@ -66,7 +66,7 @@ namespace SList
 		{
 			int val = (int) hex;
 			//For lowercase a-f letters:
-			return val - (val <= '9' ? '0' : 'a');
+			return val - (val <= '9' ? '0' : ('a' - 10));
 
 			//For uppercase A-F letters:
 			//return val - (val < 58 ? 48 : 55);

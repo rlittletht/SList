@@ -635,9 +635,6 @@ namespace SList
 				if (rgsli[i].IsMarked)
 					continue;
 
-				if (rgsli[i].IsDestOnly)
-					continue;
-
 				// search forward for dupes
 				for (iDupe = i + 1, iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
 				{
@@ -646,16 +643,15 @@ namespace SList
 
 					if (rgsli[i].Size == rgsli[iDupe].Size)
 					{
-						// do more extensive check here...for now, the size and the name is enough
 						if (m_ui.FCompareFilesChecked())
 						{
 							c++;
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
 							{
-								if (rgsli[i].IsMarked == false)
+								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
 									AddSliToListView(rgsli[i], slisSrc.Lv, true);
 
-								if (rgsli[iDupe].IsMarked == false)
+								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
 									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
 
 								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
@@ -666,10 +662,10 @@ namespace SList
 						{
 							if (rgsli[i].Name == rgsli[iDupe].Name)
 							{
-								if (rgsli[i].IsMarked == false)
+								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
 									AddSliToListView(rgsli[i], slisSrc.Lv);
 
-								if (rgsli[iDupe].IsMarked == false)
+								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
 									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
 
 								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
