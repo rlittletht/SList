@@ -17,6 +17,7 @@ namespace SList
 		public Int64 Size { get; private set; }
 		public string Path { get; private set; }
 		public bool IsMarked { get; set; }
+		public string Extension => System.IO.Path.GetExtension(Name);
 
 		public bool IsReparsePoint { get; private set; }
 
@@ -45,9 +46,10 @@ namespace SList
 
 		public enum SLItemCompare
 		{
-			CompareName,
-			CompareSize,
-			ComparePath,
+			CompareName = 1,
+			CompareType = 2,
+			CompareSize = 3,
+			ComparePath = 4,
 			CompareSizeDest,
 			CompareHashkey
 		}
@@ -161,7 +163,7 @@ namespace SList
 			m_sliNext = m_sliPrev = null;
 		}
 
-		public bool MatchesPrefPath(string s)
+		public bool MatchesPathPrefix(string s)
 		{
 			if (Path.Length < s.Length)
 				return false;
@@ -207,6 +209,11 @@ namespace SList
 							n = String.Compare(sli1.Path, sli2.Path);
 						}
 					}
+					break;
+				case SLItemCompare.CompareType:
+					n = string.Compare(System.IO.Path.GetExtension(sli1.Name), System.IO.Path.GetExtension(sli2.Name));
+					if (n == 0)
+						return Compare(sli1, sli2, SLItemCompare.CompareName, fReverse);
 					break;
 				case SLItemCompare.CompareName:
 					n = String.Compare(sli1.Name, sli2.Name);

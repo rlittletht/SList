@@ -53,8 +53,6 @@ namespace SList
 		private CheckBox m_cbMarkFavored;
 		private MenuItem menuItem4;
 		private MenuItem menuItem5;
-		private Label label2;
-		private ComboBox m_cbxSearchTarget;
 		private Button m_pbValidateSrc;
 		private MenuItem menuItem6;
 		private MenuItem menuItem7;
@@ -69,9 +67,13 @@ namespace SList
 		#endregion
 
 		private SLISet[] m_rgslis;
-		public static int s_ilvSource = 0;
-		public static int s_ilvDest = 1;
-		public static int s_clvMax = 2;
+
+		public enum FileList
+		{
+			Source = 0,
+			Destination = 1
+		}
+
 		private ToolTip m_toolTip;
 		private Label m_lblOneListActions;
 		private Button m_pbShazaam;
@@ -80,20 +82,24 @@ namespace SList
 		private Label label5;
 		private TextBox m_ebRetireMePath;
 
-		public ListView LvCur
-		{
-			get { return SlisCur.Lv; }
-		}
-
-		public SLISet SlisCur
-		{
-			get { return m_rgslis[m_islisCur]; }
-		}
+		public ListView LvCur => SlisCur.Lv;
+		public SLISet SlisCur => m_rgslis[m_islisCur];
 
 		#region AppHost
 
 		private SmartList m_model;
 		private Button button1;
+		private RadioButton radioButton1;
+		private RadioButton radioButton2;
+		private Panel panel1;
+		private Label label2;
+		private TextBox m_ebCopyPath;
+		private Button button2;
+		private CheckBox m_cbGenerateScript;
+		private Label label6;
+		private TextBox m_ebScript;
+		private MenuItem menuItem8;
+		private MenuItem menuItem9;
 		private SmartListSettings m_settings;
 
 		public SListApp()
@@ -147,6 +153,10 @@ namespace SList
 			m_cbMarkFavored.Checked = m_settings.MarkFavored;
 			m_ebRetireMePath.Text = m_settings.RetireMePath;
 			m_ebSaveMePath.Text = m_settings.SaveMePath;
+			m_ebCopyPath.Text = m_settings.CopyTargetPath;
+			m_ebScript.Text = m_settings.ScriptPath;
+			m_ebMovePath.Text = m_settings.MoveTargetPath;
+			m_cbCompareFiles.Checked = m_settings.RealFileDiffing;
 		}
 
 		void SyncSettingsWithUi()
@@ -171,6 +181,10 @@ namespace SList
 			m_settings.MarkFavored = m_cbMarkFavored.Checked;
 			m_settings.RetireMePath = m_ebRetireMePath.Text;
 			m_settings.SaveMePath = m_ebSaveMePath.Text;
+			m_settings.CopyTargetPath = m_ebCopyPath.Text;
+			m_settings.ScriptPath = m_ebScript.Text;
+			m_settings.MoveTargetPath = m_ebMovePath.Text;
+			m_settings.RealFileDiffing = m_cbCompareFiles.Checked;
 		}
 		// the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
 		// for all the list views in the designer and still have our switchable list views
@@ -178,7 +192,7 @@ namespace SList
 		{
 			m_rgslis = new SLISet[s_clvMax];
 
-			m_rgslis[s_ilvSource] = new SLISet();
+			m_rgslis[s_ilvSource] = new SLISet(FileList.Source);
 			m_rgslis[s_ilvSource].Lv = m_lv;
 			m_lv = null;
 
@@ -200,7 +214,7 @@ namespace SList
 				//m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
 				lv.Visible = false;
 				this.Controls.Add(lv);
-				m_rgslis[ilv] = new SLISet();
+				m_rgslis[ilv] = new SLISet((FileList) ilv);
 				m_rgslis[ilv].Lv = lv;
 			}
 		}
@@ -228,7 +242,7 @@ namespace SList
 			m_rgslis[ilv].Lv.FullRowSelect = true;
 			m_rgslis[ilv].Lv.MultiSelect = false;
 			m_rgslis[ilv].Lv.View = View.Details;
-			m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(1);
+			m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(2); // start with size
 			m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
 			m_rgslis[ilv].Lv.LabelEdit = true;
 		}
@@ -243,15 +257,36 @@ namespace SList
 			make the UI reflect what we want the sync target to be. Typically used
 			on initialization
         ----------------------------------------------------------------------------*/
-		void SyncSearchTargetUI(int ilv)
+		void SyncSearchTargetUI(FileList fileList)
 		{
-			m_cbxSearchTarget.SelectedIndex = ilv;
+			radioButton1.Checked = fileList == FileList.Source;
+			radioButton2.Checked = fileList == FileList.Destination;
 		}
 
+		int IlvFromFileList(FileList fileList)
+		{
+			return (int) fileList;
+		}
+
+		public FileList CurrentFileList()
+		{
+			if (radioButton1.Checked)
+				return FileList.Source;
+			else if (radioButton2.Checked)
+				return FileList.Destination;
+
+			throw new Exception("no file list selected");
+		}
+
+		private static int s_ilvSource = 0;
+		private static int s_ilvDest = 1;
+		private static int s_clvMax = 2;
 		private bool m_fSyncingSearchTarget = false;
 
-		public void ShowListView(int ilv)
+		public void ShowListView(FileList fileList)
 		{
+			int ilv = IlvFromFileList(fileList);
+
 			if (m_fSyncingSearchTarget)
 				return;
 
@@ -268,7 +303,7 @@ namespace SList
 			m_islisCur = ilv;
 
 			m_fSyncingSearchTarget = true;
-			SyncSearchTargetUI(ilv);
+			SyncSearchTargetUI(fileList);
 			m_fSyncingSearchTarget = false;
 			m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
 			m_cbRecurse.Checked = m_rgslis[ilv].Recurse;
@@ -361,8 +396,6 @@ namespace SList
 			this.m_pbRemove = new System.Windows.Forms.Button();
 			this.m_pbAddPath = new System.Windows.Forms.Button();
 			this.m_cbMarkFavored = new System.Windows.Forms.CheckBox();
-			this.label2 = new System.Windows.Forms.Label();
-			this.m_cbxSearchTarget = new System.Windows.Forms.ComboBox();
 			this.m_lv = new System.Windows.Forms.ListView();
 			this.m_pbValidateSrc = new System.Windows.Forms.Button();
 			this.m_cbxIgnoreList = new System.Windows.Forms.ComboBox();
@@ -379,17 +412,30 @@ namespace SList
 			this.label5 = new System.Windows.Forms.Label();
 			this.m_ebRetireMePath = new System.Windows.Forms.TextBox();
 			this.button1 = new System.Windows.Forms.Button();
+			this.radioButton1 = new System.Windows.Forms.RadioButton();
+			this.radioButton2 = new System.Windows.Forms.RadioButton();
+			this.panel1 = new System.Windows.Forms.Panel();
+			this.label2 = new System.Windows.Forms.Label();
+			this.m_ebCopyPath = new System.Windows.Forms.TextBox();
+			this.button2 = new System.Windows.Forms.Button();
+			this.m_cbGenerateScript = new System.Windows.Forms.CheckBox();
+			this.label6 = new System.Windows.Forms.Label();
+			this.m_ebScript = new System.Windows.Forms.TextBox();
+			this.menuItem8 = new System.Windows.Forms.MenuItem();
+			this.menuItem9 = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
+			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// m_cxtListView
 			// 
 			this.m_cxtListView.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem1,
-            this.menuItem2,
             this.menuItem6,
+            this.menuItem8,
+            this.menuItem2,
             this.menuItem4,
             this.menuItem5});
 			this.m_cxtListView.Popup += new System.EventHandler(this.EH_DoContextPopup);
@@ -402,7 +448,7 @@ namespace SList
 			// 
 			// menuItem2
 			// 
-			this.menuItem2.Index = 1;
+			this.menuItem2.Index = 3;
 			this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem3});
 			this.menuItem2.Text = "Add Preferred Path";
@@ -414,7 +460,7 @@ namespace SList
 			// 
 			// menuItem6
 			// 
-			this.menuItem6.Index = 2;
+			this.menuItem6.Index = 1;
 			this.menuItem6.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem7});
 			this.menuItem6.Text = "Remove Path";
@@ -426,13 +472,13 @@ namespace SList
 			// 
 			// menuItem4
 			// 
-			this.menuItem4.Index = 3;
+			this.menuItem4.Index = 4;
 			this.menuItem4.Text = "Select previous duplicate";
 			this.menuItem4.Click += new System.EventHandler(this.EH_SelectPrevDupe);
 			// 
 			// menuItem5
 			// 
-			this.menuItem5.Index = 4;
+			this.menuItem5.Index = 5;
 			this.menuItem5.Text = "Select next duplicate";
 			this.menuItem5.Click += new System.EventHandler(this.EH_SelectNextDupe);
 			// 
@@ -440,7 +486,7 @@ namespace SList
 			// 
 			this.m_ebSearchPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebSearchPath.Location = new System.Drawing.Point(171, 53);
+			this.m_ebSearchPath.Location = new System.Drawing.Point(176, 90);
 			this.m_ebSearchPath.Name = "m_ebSearchPath";
 			this.m_ebSearchPath.Size = new System.Drawing.Size(520, 26);
 			this.m_ebSearchPath.TabIndex = 2;
@@ -449,7 +495,7 @@ namespace SList
 			// m_pbSearch
 			// 
 			this.m_pbSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSearch.Location = new System.Drawing.Point(1190, 49);
+			this.m_pbSearch.Location = new System.Drawing.Point(1198, 88);
 			this.m_pbSearch.Name = "m_pbSearch";
 			this.m_pbSearch.Size = new System.Drawing.Size(115, 35);
 			this.m_pbSearch.TabIndex = 4;
@@ -458,7 +504,7 @@ namespace SList
 			// 
 			// m_lblSearch
 			// 
-			this.m_lblSearch.Location = new System.Drawing.Point(26, 58);
+			this.m_lblSearch.Location = new System.Drawing.Point(31, 95);
 			this.m_lblSearch.Name = "m_lblSearch";
 			this.m_lblSearch.Size = new System.Drawing.Size(115, 24);
 			this.m_lblSearch.TabIndex = 1;
@@ -469,7 +515,7 @@ namespace SList
 			this.m_cbRecurse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbRecurse.Checked = true;
 			this.m_cbRecurse.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbRecurse.Location = new System.Drawing.Point(700, 57);
+			this.m_cbRecurse.Location = new System.Drawing.Point(705, 94);
 			this.m_cbRecurse.Name = "m_cbRecurse";
 			this.m_cbRecurse.Size = new System.Drawing.Size(115, 23);
 			this.m_cbRecurse.TabIndex = 3;
@@ -478,7 +524,7 @@ namespace SList
 			// m_pbDuplicates
 			// 
 			this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDuplicates.Location = new System.Drawing.Point(1199, 347);
+			this.m_pbDuplicates.Location = new System.Drawing.Point(1207, 386);
 			this.m_pbDuplicates.Name = "m_pbDuplicates";
 			this.m_pbDuplicates.Size = new System.Drawing.Size(115, 35);
 			this.m_pbDuplicates.TabIndex = 9;
@@ -489,7 +535,7 @@ namespace SList
 			// 
 			this.m_lblFilterBanner.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_lblFilterBanner.Location = new System.Drawing.Point(22, 325);
+			this.m_lblFilterBanner.Location = new System.Drawing.Point(30, 364);
 			this.m_lblFilterBanner.Name = "m_lblFilterBanner";
 			this.m_lblFilterBanner.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblFilterBanner.TabIndex = 5;
@@ -501,7 +547,7 @@ namespace SList
 			// 
 			this.m_lblSearchCriteria.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_lblSearchCriteria.Location = new System.Drawing.Point(13, 23);
+			this.m_lblSearchCriteria.Location = new System.Drawing.Point(21, 62);
 			this.m_lblSearchCriteria.Name = "m_lblSearchCriteria";
 			this.m_lblSearchCriteria.Size = new System.Drawing.Size(1305, 24);
 			this.m_lblSearchCriteria.TabIndex = 0;
@@ -512,7 +558,7 @@ namespace SList
 			// m_cbCompareFiles
 			// 
 			this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_cbCompareFiles.Location = new System.Drawing.Point(839, 358);
+			this.m_cbCompareFiles.Location = new System.Drawing.Point(847, 397);
 			this.m_cbCompareFiles.Name = "m_cbCompareFiles";
 			this.m_cbCompareFiles.Size = new System.Drawing.Size(243, 24);
 			this.m_cbCompareFiles.TabIndex = 8;
@@ -573,14 +619,14 @@ namespace SList
 			// 
 			this.m_ebRegEx.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebRegEx.Location = new System.Drawing.Point(163, 354);
+			this.m_ebRegEx.Location = new System.Drawing.Point(171, 393);
 			this.m_ebRegEx.Name = "m_ebRegEx";
 			this.m_ebRegEx.Size = new System.Drawing.Size(666, 26);
 			this.m_ebRegEx.TabIndex = 7;
 			// 
 			// m_lblRegEx
 			// 
-			this.m_lblRegEx.Location = new System.Drawing.Point(35, 360);
+			this.m_lblRegEx.Location = new System.Drawing.Point(43, 399);
 			this.m_lblRegEx.Name = "m_lblRegEx";
 			this.m_lblRegEx.Size = new System.Drawing.Size(115, 58);
 			this.m_lblRegEx.TabIndex = 6;
@@ -588,10 +634,9 @@ namespace SList
 			// 
 			// m_pbMove
 			// 
-			this.m_pbMove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbMove.Location = new System.Drawing.Point(1070, 557);
+			this.m_pbMove.Location = new System.Drawing.Point(537, 559);
 			this.m_pbMove.Name = "m_pbMove";
-			this.m_pbMove.Size = new System.Drawing.Size(115, 35);
+			this.m_pbMove.Size = new System.Drawing.Size(62, 35);
 			this.m_pbMove.TabIndex = 18;
 			this.m_pbMove.Text = "Move";
 			this.m_pbMove.Click += new System.EventHandler(this.EH_DoMove);
@@ -609,7 +654,7 @@ namespace SList
 			// m_pbToggle
 			// 
 			this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbToggle.Location = new System.Drawing.Point(1199, 395);
+			this.m_pbToggle.Location = new System.Drawing.Point(1207, 434);
 			this.m_pbToggle.Name = "m_pbToggle";
 			this.m_pbToggle.Size = new System.Drawing.Size(115, 35);
 			this.m_pbToggle.TabIndex = 14;
@@ -619,7 +664,7 @@ namespace SList
 			// m_pbClear
 			// 
 			this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbClear.Location = new System.Drawing.Point(1071, 395);
+			this.m_pbClear.Location = new System.Drawing.Point(1079, 434);
 			this.m_pbClear.Name = "m_pbClear";
 			this.m_pbClear.Size = new System.Drawing.Size(115, 35);
 			this.m_pbClear.TabIndex = 13;
@@ -628,24 +673,22 @@ namespace SList
 			// 
 			// m_lblMoveTo
 			// 
-			this.m_lblMoveTo.Location = new System.Drawing.Point(34, 569);
+			this.m_lblMoveTo.Location = new System.Drawing.Point(34, 566);
 			this.m_lblMoveTo.Name = "m_lblMoveTo";
-			this.m_lblMoveTo.Size = new System.Drawing.Size(89, 23);
+			this.m_lblMoveTo.Size = new System.Drawing.Size(67, 23);
 			this.m_lblMoveTo.TabIndex = 16;
 			this.m_lblMoveTo.Text = "Move to";
 			// 
 			// m_ebMovePath
 			// 
-			this.m_ebMovePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebMovePath.Location = new System.Drawing.Point(162, 563);
+			this.m_ebMovePath.Location = new System.Drawing.Point(107, 563);
 			this.m_ebMovePath.Name = "m_ebMovePath";
-			this.m_ebMovePath.Size = new System.Drawing.Size(882, 26);
+			this.m_ebMovePath.Size = new System.Drawing.Size(424, 26);
 			this.m_ebMovePath.TabIndex = 17;
 			// 
 			// m_pbMatchRegex
 			// 
-			this.m_pbMatchRegex.Location = new System.Drawing.Point(163, 395);
+			this.m_pbMatchRegex.Location = new System.Drawing.Point(171, 434);
 			this.m_pbMatchRegex.Name = "m_pbMatchRegex";
 			this.m_pbMatchRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbMatchRegex.TabIndex = 10;
@@ -654,7 +697,7 @@ namespace SList
 			// 
 			// m_pbRemoveRegex
 			// 
-			this.m_pbRemoveRegex.Location = new System.Drawing.Point(291, 395);
+			this.m_pbRemoveRegex.Location = new System.Drawing.Point(299, 434);
 			this.m_pbRemoveRegex.Name = "m_pbRemoveRegex";
 			this.m_pbRemoveRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbRemoveRegex.TabIndex = 11;
@@ -663,7 +706,7 @@ namespace SList
 			// 
 			// m_pbCheckRegex
 			// 
-			this.m_pbCheckRegex.Location = new System.Drawing.Point(419, 395);
+			this.m_pbCheckRegex.Location = new System.Drawing.Point(427, 434);
 			this.m_pbCheckRegex.Name = "m_pbCheckRegex";
 			this.m_pbCheckRegex.Size = new System.Drawing.Size(128, 35);
 			this.m_pbCheckRegex.TabIndex = 12;
@@ -682,7 +725,7 @@ namespace SList
 			// 
 			// m_pbSmartMatch
 			// 
-			this.m_pbSmartMatch.Location = new System.Drawing.Point(547, 395);
+			this.m_pbSmartMatch.Location = new System.Drawing.Point(555, 434);
 			this.m_pbSmartMatch.Name = "m_pbSmartMatch";
 			this.m_pbSmartMatch.Size = new System.Drawing.Size(128, 35);
 			this.m_pbSmartMatch.TabIndex = 24;
@@ -697,14 +740,14 @@ namespace SList
 			// 
 			this.m_lbPrefPath.FormattingEnabled = true;
 			this.m_lbPrefPath.ItemHeight = 20;
-			this.m_lbPrefPath.Location = new System.Drawing.Point(179, 140);
+			this.m_lbPrefPath.Location = new System.Drawing.Point(171, 179);
 			this.m_lbPrefPath.Name = "m_lbPrefPath";
 			this.m_lbPrefPath.Size = new System.Drawing.Size(661, 84);
 			this.m_lbPrefPath.TabIndex = 25;
 			// 
 			// label1
 			// 
-			this.label1.Location = new System.Drawing.Point(34, 140);
+			this.label1.Location = new System.Drawing.Point(34, 179);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(136, 25);
 			this.label1.TabIndex = 26;
@@ -713,7 +756,7 @@ namespace SList
 			// m_pbRemove
 			// 
 			this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbRemove.Location = new System.Drawing.Point(863, 181);
+			this.m_pbRemove.Location = new System.Drawing.Point(847, 216);
 			this.m_pbRemove.Name = "m_pbRemove";
 			this.m_pbRemove.Size = new System.Drawing.Size(115, 35);
 			this.m_pbRemove.TabIndex = 27;
@@ -722,7 +765,7 @@ namespace SList
 			// m_pbAddPath
 			// 
 			this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbAddPath.Location = new System.Drawing.Point(863, 140);
+			this.m_pbAddPath.Location = new System.Drawing.Point(847, 175);
 			this.m_pbAddPath.Name = "m_pbAddPath";
 			this.m_pbAddPath.Size = new System.Drawing.Size(115, 35);
 			this.m_pbAddPath.TabIndex = 28;
@@ -731,32 +774,12 @@ namespace SList
 			// m_cbMarkFavored
 			// 
 			this.m_cbMarkFavored.AutoSize = true;
-			this.m_cbMarkFavored.Location = new System.Drawing.Point(22, 206);
+			this.m_cbMarkFavored.Location = new System.Drawing.Point(30, 245);
 			this.m_cbMarkFavored.Name = "m_cbMarkFavored";
 			this.m_cbMarkFavored.Size = new System.Drawing.Size(132, 24);
 			this.m_cbMarkFavored.TabIndex = 29;
 			this.m_cbMarkFavored.Text = "Mark Favored";
 			this.m_cbMarkFavored.UseVisualStyleBackColor = true;
-			// 
-			// label2
-			// 
-			this.label2.Location = new System.Drawing.Point(26, 95);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(115, 23);
-			this.label2.TabIndex = 30;
-			this.label2.Text = "File list";
-			// 
-			// m_cbxSearchTarget
-			// 
-			this.m_cbxSearchTarget.FormattingEnabled = true;
-			this.m_cbxSearchTarget.Items.AddRange(new object[] {
-            "Source",
-            "Destination"});
-			this.m_cbxSearchTarget.Location = new System.Drawing.Point(171, 92);
-			this.m_cbxSearchTarget.Name = "m_cbxSearchTarget";
-			this.m_cbxSearchTarget.Size = new System.Drawing.Size(194, 28);
-			this.m_cbxSearchTarget.TabIndex = 31;
-			this.m_cbxSearchTarget.SelectedIndexChanged += new System.EventHandler(this.DoSearchTargetChange);
 			// 
 			// m_lv
 			// 
@@ -766,18 +789,19 @@ namespace SList
 			this.m_lv.CheckBoxes = true;
 			this.m_lv.ContextMenu = this.m_cxtListView;
 			this.m_lv.HideSelection = false;
-			this.m_lv.Location = new System.Drawing.Point(26, 609);
+			this.m_lv.Location = new System.Drawing.Point(26, 642);
 			this.m_lv.Name = "m_lv";
-			this.m_lv.Size = new System.Drawing.Size(1279, 347);
+			this.m_lv.Size = new System.Drawing.Size(1279, 314);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
 			this.m_lv.Visible = false;
 			this.m_lv.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.EH_HandleEdit);
+			this.m_lv.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.EH_HandleColumnClick);
 			// 
 			// m_pbValidateSrc
 			// 
 			this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbValidateSrc.Location = new System.Drawing.Point(1071, 347);
+			this.m_pbValidateSrc.Location = new System.Drawing.Point(1079, 386);
 			this.m_pbValidateSrc.Name = "m_pbValidateSrc";
 			this.m_pbValidateSrc.Size = new System.Drawing.Size(118, 35);
 			this.m_pbValidateSrc.TabIndex = 33;
@@ -787,7 +811,7 @@ namespace SList
 			// m_cbxIgnoreList
 			// 
 			this.m_cbxIgnoreList.FormattingEnabled = true;
-			this.m_cbxIgnoreList.Location = new System.Drawing.Point(459, 92);
+			this.m_cbxIgnoreList.Location = new System.Drawing.Point(119, 128);
 			this.m_cbxIgnoreList.Name = "m_cbxIgnoreList";
 			this.m_cbxIgnoreList.Size = new System.Drawing.Size(194, 28);
 			this.m_cbxIgnoreList.TabIndex = 35;
@@ -795,7 +819,7 @@ namespace SList
 			// 
 			// label3
 			// 
-			this.label3.Location = new System.Drawing.Point(374, 95);
+			this.label3.Location = new System.Drawing.Point(34, 131);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(116, 23);
 			this.label3.TabIndex = 34;
@@ -806,7 +830,7 @@ namespace SList
 			this.m_cbAddToIgnoreList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbAddToIgnoreList.Checked = true;
 			this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1102, 136);
+			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1110, 175);
 			this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
 			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(216, 30);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
@@ -815,8 +839,7 @@ namespace SList
 			// 
 			// m_pbSaveList
 			// 
-			this.m_pbSaveList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSaveList.Location = new System.Drawing.Point(679, 92);
+			this.m_pbSaveList.Location = new System.Drawing.Point(319, 124);
 			this.m_pbSaveList.Name = "m_pbSaveList";
 			this.m_pbSaveList.Size = new System.Drawing.Size(116, 35);
 			this.m_pbSaveList.TabIndex = 37;
@@ -826,7 +849,7 @@ namespace SList
 			// m_pbLoadFromFile
 			// 
 			this.m_pbLoadFromFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbLoadFromFile.Location = new System.Drawing.Point(800, 51);
+			this.m_pbLoadFromFile.Location = new System.Drawing.Point(1017, 13);
 			this.m_pbLoadFromFile.Name = "m_pbLoadFromFile";
 			this.m_pbLoadFromFile.Size = new System.Drawing.Size(138, 35);
 			this.m_pbLoadFromFile.TabIndex = 38;
@@ -836,7 +859,7 @@ namespace SList
 			// m_pbSaveFileList
 			// 
 			this.m_pbSaveFileList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbSaveFileList.Location = new System.Drawing.Point(944, 50);
+			this.m_pbSaveFileList.Location = new System.Drawing.Point(1175, 14);
 			this.m_pbSaveFileList.Name = "m_pbSaveFileList";
 			this.m_pbSaveFileList.Size = new System.Drawing.Size(138, 35);
 			this.m_pbSaveFileList.TabIndex = 39;
@@ -847,7 +870,7 @@ namespace SList
 			// 
 			this.m_lblOneListActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_lblOneListActions.Location = new System.Drawing.Point(22, 447);
+			this.m_lblOneListActions.Location = new System.Drawing.Point(26, 470);
 			this.m_lblOneListActions.Name = "m_lblOneListActions";
 			this.m_lblOneListActions.Size = new System.Drawing.Size(1305, 23);
 			this.m_lblOneListActions.TabIndex = 40;
@@ -858,7 +881,7 @@ namespace SList
 			// m_pbShazaam
 			// 
 			this.m_pbShazaam.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbShazaam.Location = new System.Drawing.Point(1199, 473);
+			this.m_pbShazaam.Location = new System.Drawing.Point(1203, 496);
 			this.m_pbShazaam.Name = "m_pbShazaam";
 			this.m_pbShazaam.Size = new System.Drawing.Size(115, 35);
 			this.m_pbShazaam.TabIndex = 41;
@@ -867,7 +890,7 @@ namespace SList
 			// 
 			// label4
 			// 
-			this.label4.Location = new System.Drawing.Point(26, 257);
+			this.label4.Location = new System.Drawing.Point(34, 296);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(115, 24);
 			this.label4.TabIndex = 42;
@@ -877,7 +900,7 @@ namespace SList
 			// 
 			this.m_ebSaveMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebSaveMePath.Location = new System.Drawing.Point(171, 252);
+			this.m_ebSaveMePath.Location = new System.Drawing.Point(179, 291);
 			this.m_ebSaveMePath.Name = "m_ebSaveMePath";
 			this.m_ebSaveMePath.Size = new System.Drawing.Size(520, 26);
 			this.m_ebSaveMePath.TabIndex = 43;
@@ -885,7 +908,7 @@ namespace SList
 			// 
 			// label5
 			// 
-			this.label5.Location = new System.Drawing.Point(26, 289);
+			this.label5.Location = new System.Drawing.Point(34, 328);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(115, 24);
 			this.label5.TabIndex = 44;
@@ -895,7 +918,7 @@ namespace SList
 			// 
 			this.m_ebRetireMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebRetireMePath.Location = new System.Drawing.Point(171, 284);
+			this.m_ebRetireMePath.Location = new System.Drawing.Point(179, 323);
 			this.m_ebRetireMePath.Name = "m_ebRetireMePath";
 			this.m_ebRetireMePath.Size = new System.Drawing.Size(520, 26);
 			this.m_ebRetireMePath.TabIndex = 45;
@@ -904,18 +927,123 @@ namespace SList
 			// button1
 			// 
 			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button1.Location = new System.Drawing.Point(1190, 92);
+			this.button1.Location = new System.Drawing.Point(1070, 88);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(115, 35);
 			this.button1.TabIndex = 46;
 			this.button1.Text = "Append";
 			this.button1.Click += new System.EventHandler(this.EH_DoAppendSearch);
 			// 
+			// radioButton1
+			// 
+			this.radioButton1.AutoSize = true;
+			this.radioButton1.Checked = true;
+			this.radioButton1.Location = new System.Drawing.Point(10, 7);
+			this.radioButton1.Name = "radioButton1";
+			this.radioButton1.Size = new System.Drawing.Size(122, 24);
+			this.radioButton1.TabIndex = 47;
+			this.radioButton1.TabStop = true;
+			this.radioButton1.Text = "Source Files";
+			this.radioButton1.UseVisualStyleBackColor = true;
+			this.radioButton1.CheckedChanged += new System.EventHandler(this.DoSearchTargetChange);
+			// 
+			// radioButton2
+			// 
+			this.radioButton2.AutoSize = true;
+			this.radioButton2.Location = new System.Drawing.Point(157, 6);
+			this.radioButton2.Name = "radioButton2";
+			this.radioButton2.Size = new System.Drawing.Size(152, 24);
+			this.radioButton2.TabIndex = 48;
+			this.radioButton2.Text = "Destination Files";
+			this.radioButton2.UseVisualStyleBackColor = true;
+			// 
+			// panel1
+			// 
+			this.panel1.Controls.Add(this.radioButton1);
+			this.panel1.Controls.Add(this.radioButton2);
+			this.panel1.Location = new System.Drawing.Point(25, 12);
+			this.panel1.Name = "panel1";
+			this.panel1.Size = new System.Drawing.Size(346, 41);
+			this.panel1.TabIndex = 49;
+			// 
+			// label2
+			// 
+			this.label2.Location = new System.Drawing.Point(616, 566);
+			this.label2.Name = "label2";
+			this.label2.Size = new System.Drawing.Size(67, 23);
+			this.label2.TabIndex = 50;
+			this.label2.Text = "Copy To";
+			// 
+			// m_ebCopyPath
+			// 
+			this.m_ebCopyPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_ebCopyPath.Location = new System.Drawing.Point(689, 563);
+			this.m_ebCopyPath.Name = "m_ebCopyPath";
+			this.m_ebCopyPath.Size = new System.Drawing.Size(420, 26);
+			this.m_ebCopyPath.TabIndex = 51;
+			// 
+			// button2
+			// 
+			this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button2.Location = new System.Drawing.Point(1115, 559);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(62, 35);
+			this.button2.TabIndex = 52;
+			this.button2.Text = "Copy";
+			this.button2.Click += new System.EventHandler(this.DoCopy);
+			// 
+			// m_cbGenerateScript
+			// 
+			this.m_cbGenerateScript.AutoSize = true;
+			this.m_cbGenerateScript.Checked = true;
+			this.m_cbGenerateScript.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.m_cbGenerateScript.Location = new System.Drawing.Point(537, 600);
+			this.m_cbGenerateScript.Name = "m_cbGenerateScript";
+			this.m_cbGenerateScript.Size = new System.Drawing.Size(148, 24);
+			this.m_cbGenerateScript.TabIndex = 53;
+			this.m_cbGenerateScript.Text = "Generate Script";
+			this.m_cbGenerateScript.UseVisualStyleBackColor = true;
+			// 
+			// label6
+			// 
+			this.label6.Location = new System.Drawing.Point(34, 601);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(67, 23);
+			this.label6.TabIndex = 54;
+			this.label6.Text = "Script";
+			// 
+			// m_ebScript
+			// 
+			this.m_ebScript.Location = new System.Drawing.Point(107, 598);
+			this.m_ebScript.Name = "m_ebScript";
+			this.m_ebScript.Size = new System.Drawing.Size(424, 26);
+			this.m_ebScript.TabIndex = 55;
+			// 
+			// menuItem8
+			// 
+			this.menuItem8.Index = 2;
+			this.menuItem8.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem9});
+			this.menuItem8.Text = "Remove Type";
+			// 
+			// menuItem9
+			// 
+			this.menuItem9.Index = 0;
+			this.menuItem9.Text = "Placeholder";
+			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
 			this.ClientSize = new System.Drawing.Size(1331, 1000);
+			this.Controls.Add(this.label6);
+			this.Controls.Add(this.m_ebScript);
+			this.Controls.Add(this.m_cbGenerateScript);
+			this.Controls.Add(this.label2);
+			this.Controls.Add(this.m_ebCopyPath);
+			this.Controls.Add(this.button2);
+			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this.m_ebRetireMePath);
@@ -930,8 +1058,6 @@ namespace SList
 			this.Controls.Add(this.m_cbxIgnoreList);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.m_pbValidateSrc);
-			this.Controls.Add(this.m_cbxSearchTarget);
-			this.Controls.Add(this.label2);
 			this.Controls.Add(this.m_cbMarkFavored);
 			this.Controls.Add(this.m_pbAddPath);
 			this.Controls.Add(this.m_pbRemove);
@@ -971,6 +1097,8 @@ namespace SList
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
+			this.panel1.ResumeLayout(false);
+			this.panel1.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -988,7 +1116,7 @@ namespace SList
 
 		private void DoSearchTargetChange(object sender, EventArgs e)
 		{
-			ShowListView(m_cbxSearchTarget.SelectedIndex);
+			ShowListView(CurrentFileList());
 		}
 
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
@@ -1019,6 +1147,11 @@ namespace SList
 		private void EH_DoMove(object sender, System.EventArgs e)
 		{
 			SmartList.MoveSelectedFiles(LvCur, m_ebMovePath.Text, m_stbpMainStatus);
+		}
+
+		private void DoCopy(object sender, EventArgs e)
+		{
+			SmartList.CopySelectedFiles(LvCur, m_ebCopyPath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
 		}
 
 		private void EH_DoDelete(object sender, System.EventArgs e) { }
@@ -1121,6 +1254,12 @@ namespace SList
 			m_model.SaveFileListToFile(SlisCur);
 		}
 
+		void EH_RemoveType(object sender, EventArgs e)
+		{
+			MenuItem mni = (MenuItem)sender;
+			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (RemoveTypeInfo) mni.Tag);
+		}
+
 		void EH_RemovePath(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
@@ -1137,6 +1276,86 @@ namespace SList
 			m_model.AddPreferredPath(mni.Text);
 		}
 
+		void AddPreferredPathSubmenuItems(MenuItem mni, SLItem sli)
+		{
+			if (mni.Text != "Add Preferred Path")
+				throw new Exception("context menu structure changed!");
+
+			mni.MenuItems.Clear();
+			// break the path into pieces and add an item for each piece
+			Path.GetDirectoryName(sli.Path);
+			string[] rgs = sli.Path.Split('\\');
+
+			string sSub = "";
+			foreach (string s in rgs)
+			{
+				MenuItem mniNew = new MenuItem();
+
+				if (sSub != "")
+					sSub += "\\" + s;
+				else
+					sSub = s;
+
+				mniNew.Text = sSub;
+				mniNew.Click += new EventHandler(EH_AddPreferredPath);
+
+				mni.MenuItems.Add(mniNew);
+			}
+		}
+
+		void AddRemovePathSubmenuItems(MenuItem mni, SLItem sli)
+		{
+			if (mni.Text != "Remove Path")
+				throw new Exception("context menu structure changed!");
+
+			mni.MenuItems.Clear();
+
+			string sSub = "";
+			string[] rgs = sli.Path.Split('\\');
+
+			foreach (string s in rgs)
+			{
+				MenuItem mniNew = new MenuItem();
+
+				if (sSub != "")
+					sSub += "\\" + s;
+				else
+					sSub = s;
+
+				mniNew.Text = sSub;
+				mniNew.Click += new EventHandler(EH_RemovePath);
+				mniNew.Tag = sli;
+
+				mni.MenuItems.Add(mniNew);
+			}
+		}
+
+		void AddRemoveItemPatternSubmenuItems(MenuItem mni, SLItem sli)
+		{
+			if (mni.Text != "Remove Type")
+				throw new Exception("context menu structure changed!");
+
+			mni.MenuItems.Clear();
+
+			string sExt = sli.Extension;
+			string sSub = "";
+			string[] rgs = sli.Path.Split('\\');
+
+			foreach (string s in rgs)
+			{
+				MenuItem mniNew = new MenuItem();
+
+				if (sSub != "")
+					sSub += "\\" + s;
+				else
+					sSub = s;
+
+				mniNew.Text = $"{sSub}\\*.{sExt}";
+				mniNew.Click += new EventHandler(EH_RemoveType);
+				mniNew.Tag = new RemoveTypeInfo() {Extension = sExt, RootPath = sSub};
+				mni.MenuItems.Add(mniNew);
+			}
+		}
 		private void EH_DoContextPopup(object sender, EventArgs e)
 		{
 			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
@@ -1147,47 +1366,9 @@ namespace SList
 
 				ContextMenu cm = (ContextMenu)sender;
 
-				MenuItem mni = cm.MenuItems[1];
-
-				mni.MenuItems.Clear();
-				// break the path into pieces and add an item for each piece
-				Path.GetDirectoryName(sli.Path);
-				string[] rgs = sli.Path.Split('\\');
-
-				string sSub = "";
-				foreach (string s in rgs)
-				{
-					MenuItem mniNew = new MenuItem();
-
-					if (sSub != "")
-						sSub += "\\" + s;
-					else
-						sSub = s;
-
-					mniNew.Text = sSub;
-					mniNew.Click += new EventHandler(EH_AddPreferredPath);
-
-					mni.MenuItems.Add(mniNew);
-				}
-
-				mni = cm.MenuItems[2];
-				mni.MenuItems.Clear();
-
-				sSub = "";
-				foreach (string s in rgs)
-				{
-					MenuItem mniNew = new MenuItem();
-
-					if (sSub != "")
-						sSub += "\\" + s;
-					else
-						sSub = s;
-
-					mniNew.Text = sSub;
-					mniNew.Click += new EventHandler(EH_RemovePath);
-
-					mni.MenuItems.Add(mniNew);
-				}
+				AddRemovePathSubmenuItems(cm.MenuItems[1], sli);
+				AddRemoveItemPatternSubmenuItems(cm.MenuItems[2], sli);
+				AddPreferredPathSubmenuItems(cm.MenuItems[3], sli);
 			}
 		}
 
@@ -1296,6 +1477,22 @@ namespace SList
 
 		#region ISmartListUi
 
+		public string GetFileListDefaultName(FileList fileList)
+		{
+			if (fileList == FileList.Source)
+				return m_settings.SourceFilesListDefault;
+			else
+				return m_settings.DestFilesListDefault;
+		}
+
+		public void SetFileListDefaultName(FileList fileList, string filename)
+		{
+			if (fileList == FileList.Source)
+				m_settings.SourceFilesListDefault = filename;
+			else
+				m_settings.DestFilesListDefault = filename;
+		}
+
 		public Cursor SetCursor(Cursor cursor)
 		{
 			Cursor old = this.Cursor;
@@ -1317,8 +1514,9 @@ namespace SList
 			m_cbxIgnoreList.Items.Add(text);
 		}
 
-		public SLISet GetSliSet(int iListView)
+		public SLISet GetSliSet(FileList fileList)
 		{
+			int iListView = IlvFromFileList(fileList);
 			return m_rgslis[iListView];
 		}
 
@@ -1412,6 +1610,11 @@ namespace SList
 		private void DoShazaam(object sender, EventArgs e)
 		{
 
+		}
+
+		private void EH_HandleColumnClick(object sender, ColumnClickEventArgs e)
+		{
+			// ((SList.ListViewItemComparer)LvCur.ListViewItemSorter).SetColumn(e.Column);
 		}
 	}
 }

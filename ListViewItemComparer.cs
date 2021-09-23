@@ -80,9 +80,12 @@ namespace SList
 					n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareName, m_fReverse);
 					break;
 				case 1:
-					n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareSize, m_fReverse);
+					n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareType, m_fReverse);
 					break;
 				case 2:
+					n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.CompareSize, m_fReverse);
+					break;
+				case 3:
 					n = SLItem.Compare(sli1, sli2, SLItem.SLItemCompare.ComparePath, m_fReverse);
 					break;
 			}

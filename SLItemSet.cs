@@ -13,6 +13,8 @@ namespace SList
 		private ListView m_lv;
 		private string m_sSpec;
 
+		public SListApp.FileList FileListType { get; private set; }
+
 		public string PathSpec { get { return m_sSpec; } set { m_sSpec = value; } }
 		public bool Recurse { get; set; }
 
@@ -22,8 +24,9 @@ namespace SList
 			set { m_lv = value; }
 		}
 
-		public SLISet()
+		public SLISet(SListApp.FileList fileList)
 		{
+			FileListType = fileList;
 			m_items = new Dictionary<string, SLItem>();
 			m_plLvComparerStack = new List<IComparer>();
 		}
@@ -65,6 +68,50 @@ namespace SList
 			m_lv.Update();
 		}
 
+		void CleanupNullTags(ISmartListUi ui, int cRemove, int diSelStart)
+		{
+			// now go through and find all the null tags and remove them
+			SmartList.PerfTimer pt = new SmartList.PerfTimer();
+			pt.Start($"cleaning up null tags: {cRemove} items");
+			int i = 0;
+			int iSelCur = m_lv.SelectedIndices[0];
+
+			m_lv.SelectedIndices.Clear();
+
+			if (cRemove > 500)
+			{
+				ListViewItem[] rglvi = new ListViewItem[m_lv.Items.Count - cRemove];
+				
+				int isli = 0;
+				while (i < m_lv.Items.Count)
+				{
+					if (m_lv.Items[i].Tag != null)
+						rglvi[isli++] = m_lv.Items[i];
+					i++;
+				}
+				m_lv.Items.Clear();
+				m_lv.Items.AddRange(rglvi);
+			}
+			else
+			{
+				i = m_lv.Items.Count;
+				while (--i >= 0)
+				{
+					if (m_lv.Items[i].Tag == null)
+						m_lv.Items.RemoveAt(i);
+				}
+			}
+			iSelCur -= diSelStart;
+			if (iSelCur < 0)
+				iSelCur = 0;
+
+			m_lv.Items[iSelCur].Selected = true;
+			m_lv.Items[iSelCur].EnsureVisible();
+			pt.Stop();
+			pt.Report(10000);
+		}
+
+
 		public void Remove(string sPathRoot, ISmartListUi ui)
 		{
 			PauseListViewUpdate(false);
@@ -88,7 +135,7 @@ namespace SList
 				ui.UpdateProgressBar(ProgressBarType.Current, c - i, Application.DoEvents);
 
 				SLItem sli = (SLItem)m_lv.Items[i].Tag;
-				if (sli != null && sli.MatchesPrefPath(sPathRoot))
+				if (sli != null && sli.MatchesPathPrefix(sPathRoot))
 				{
 					m_items.Remove(sli.Hashkey);
 					cRemove++;
@@ -98,40 +145,50 @@ namespace SList
 				}
 			}
 
-			// now go through and find all the null tags and remove them
-			SmartList.PerfTimer pt = new SmartList.PerfTimer();
-			pt.Start(String.Format("remove {0} {1} times", sPathRoot, cRemove));
+			CleanupNullTags(ui, cRemove, diSelStart);
+			m_lv.EndUpdate();
+			ui.HideProgressBar(ProgressBarType.Current);
+			ResumeListViewUpdate();
+		}
 
-			if (cRemove > 500)
-			{
-				ListViewItem[] rglvi = new ListViewItem[m_lv.Items.Count - cRemove];
+		public void RemoveType(RemoveTypeInfo typeInfo, ISmartListUi ui)
+		{
+			PauseListViewUpdate(false);
 
-				i = 0;
-				int isli = 0;
-				while (i < m_lv.Items.Count)
-				{
-					if (m_lv.Items[i].Tag != null)
-						rglvi[isli++] = m_lv.Items[i];
-					i++;
-				}
-				int iCur = m_lv.SelectedIndices[0];
-				m_lv.Items.Clear();
-				m_lv.Items.AddRange(rglvi);
-				iCur -= diSelStart;
-				m_lv.Items[iCur].Selected = true;
-				m_lv.Items[iCur].EnsureVisible();
-			}
-			else
+			m_lv.BeginUpdate();
+			// walk through every list view item, find matching items, then remove them and remove them from the hash set
+			int i = m_lv.Items.Count;
+
+			ui.SetProgressBarMac(ProgressBarType.Current, i);
+			ui.ShowProgressBar(ProgressBarType.Current);
+			int c = i;
+			int cRemove = 0;
+
+			//int iRemoveStart = -1;
+			//int iRemovePrev = -1;
+			int iSelStart = m_lv.SelectedIndices[0];
+			int diSelStart = 0;
+
+			while (--i >= 0)
 			{
-				i = m_lv.Items.Count;
-				while (--i >= 0)
+				ui.UpdateProgressBar(ProgressBarType.Current, c - i, Application.DoEvents);
+
+				SLItem sli = (SLItem)m_lv.Items[i].Tag;
+				if (sli != null && sli.MatchesPathPrefix(typeInfo.RootPath))
 				{
-					if (m_lv.Items[i].Tag == null)
-						m_lv.Items.RemoveAt(i);
+					// now the extension has to match
+					if (string.Compare(sli.Extension, typeInfo.Extension, true) == 0)
+					{
+						m_items.Remove(sli.Hashkey);
+						cRemove++;
+						m_lv.Items[i].Tag = null;
+						if (i <= iSelStart)
+							diSelStart++;
+					}
 				}
 			}
-			pt.Stop();
-			pt.Report(10000);
+
+			CleanupNullTags(ui, cRemove, diSelStart);
 			m_lv.EndUpdate();
 			ui.HideProgressBar(ProgressBarType.Current);
 			ResumeListViewUpdate();

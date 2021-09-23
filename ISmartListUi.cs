@@ -21,13 +21,15 @@ namespace SList
 		bool FCompareFilesChecked();
 		void SetStatusText(string text);
 		void AddIgnoreListItem(string text);
-		void ShowListView(int iListView);
-		SLISet GetSliSet(int iListView);
+		void ShowListView(SListApp.FileList fileList);
+		SLISet GetSliSet(SListApp.FileList fileList);
 		string GetSearchPath();
 		bool FRecurseChecked();
 		IEnumerable GetPreferredPaths();
 		void AddPreferredPath(string path);
 		bool FMarkFavored();
+		string GetFileListDefaultName(SListApp.FileList fileList);
+		void SetFileListDefaultName(SListApp.FileList fileList, string sDefault);
 
 		ListView LvCur { get; }
 		SLISet SlisCur { get; }
