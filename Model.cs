@@ -1149,14 +1149,19 @@ namespace SList
 			slis.Remove(sPathRoot, m_ui);
 		}
 
-		internal void RemoveType(SLISet slis, string sMenuText, RemoveTypeInfo typeInfo)
+		internal void RemoveType(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
 		{
 			slis.RemoveType(typeInfo, m_ui);
 		}
 
-#endregion // Core Model (Compare Files, etc)
+		internal void RemovePattern(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
+		{
+			slis.RemovePattern(typeInfo, m_ui);
+		}
 
-#region List View Commands
+		#endregion // Core Model (Compare Files, etc)
+
+		#region List View Commands
 
 		internal void LaunchSli(SLItem sli)
 		{

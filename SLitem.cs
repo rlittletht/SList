@@ -169,7 +169,17 @@ namespace SList
 				return false;
 
 			if (Path.StartsWith(s, true /*ignoreCase*/, ci))
+			{
+				// make sure its a path subset, and not a part of another path
+				if (Path.Length > s.Length
+				    && Path[s.Length] != '\\'
+				    && Path[s.Length] != '/')
+				{
+					return false;
+				}
+
 				return true;
+			}
 
 			return false;
 		}

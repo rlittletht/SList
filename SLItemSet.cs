@@ -151,7 +151,7 @@ namespace SList
 			ResumeListViewUpdate();
 		}
 
-		public void RemoveType(RemoveTypeInfo typeInfo, ISmartListUi ui)
+		public void RemoveType(FilePatternInfo typeInfo, ISmartListUi ui)
 		{
 			PauseListViewUpdate(false);
 
@@ -177,7 +177,50 @@ namespace SList
 				if (sli != null && sli.MatchesPathPrefix(typeInfo.RootPath))
 				{
 					// now the extension has to match
-					if (string.Compare(sli.Extension, typeInfo.Extension, true) == 0)
+					if (string.Compare(sli.Extension, typeInfo.Pattern, true) == 0)
+					{
+						m_items.Remove(sli.Hashkey);
+						cRemove++;
+						m_lv.Items[i].Tag = null;
+						if (i <= iSelStart)
+							diSelStart++;
+					}
+				}
+			}
+
+			CleanupNullTags(ui, cRemove, diSelStart);
+			m_lv.EndUpdate();
+			ui.HideProgressBar(ProgressBarType.Current);
+			ResumeListViewUpdate();
+		}
+
+		public void RemovePattern(FilePatternInfo typeInfo, ISmartListUi ui)
+		{
+			PauseListViewUpdate(false);
+
+			m_lv.BeginUpdate();
+			// walk through every list view item, find matching items, then remove them and remove them from the hash set
+			int i = m_lv.Items.Count;
+
+			ui.SetProgressBarMac(ProgressBarType.Current, i);
+			ui.ShowProgressBar(ProgressBarType.Current);
+			int c = i;
+			int cRemove = 0;
+
+			//int iRemoveStart = -1;
+			//int iRemovePrev = -1;
+			int iSelStart = m_lv.SelectedIndices[0];
+			int diSelStart = 0;
+
+			while (--i >= 0)
+			{
+				ui.UpdateProgressBar(ProgressBarType.Current, c - i, Application.DoEvents);
+
+				SLItem sli = (SLItem)m_lv.Items[i].Tag;
+				if (sli != null && sli.MatchesPathPrefix(typeInfo.RootPath))
+				{
+					// now the extension has to match
+					if (string.Compare(sli.Name, typeInfo.Pattern, true) == 0)
 					{
 						m_items.Remove(sli.Hashkey);
 						cRemove++;

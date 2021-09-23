@@ -100,6 +100,8 @@ namespace SList
 		private TextBox m_ebScript;
 		private MenuItem menuItem8;
 		private MenuItem menuItem9;
+		private MenuItem menuItem10;
+		private MenuItem menuItem11;
 		private SmartListSettings m_settings;
 
 		public SListApp()
@@ -423,6 +425,8 @@ namespace SList
 			this.m_ebScript = new System.Windows.Forms.TextBox();
 			this.menuItem8 = new System.Windows.Forms.MenuItem();
 			this.menuItem9 = new System.Windows.Forms.MenuItem();
+			this.menuItem10 = new System.Windows.Forms.MenuItem();
+			this.menuItem11 = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -435,6 +439,7 @@ namespace SList
             this.menuItem1,
             this.menuItem6,
             this.menuItem8,
+            this.menuItem10,
             this.menuItem2,
             this.menuItem4,
             this.menuItem5});
@@ -448,7 +453,7 @@ namespace SList
 			// 
 			// menuItem2
 			// 
-			this.menuItem2.Index = 3;
+			this.menuItem2.Index = 4;
 			this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuItem3});
 			this.menuItem2.Text = "Add Preferred Path";
@@ -472,13 +477,13 @@ namespace SList
 			// 
 			// menuItem4
 			// 
-			this.menuItem4.Index = 4;
+			this.menuItem4.Index = 5;
 			this.menuItem4.Text = "Select previous duplicate";
 			this.menuItem4.Click += new System.EventHandler(this.EH_SelectPrevDupe);
 			// 
 			// menuItem5
 			// 
-			this.menuItem5.Index = 5;
+			this.menuItem5.Index = 6;
 			this.menuItem5.Text = "Select next duplicate";
 			this.menuItem5.Click += new System.EventHandler(this.EH_SelectNextDupe);
 			// 
@@ -1032,6 +1037,18 @@ namespace SList
 			this.menuItem9.Index = 0;
 			this.menuItem9.Text = "Placeholder";
 			// 
+			// menuItem10
+			// 
+			this.menuItem10.Index = 3;
+			this.menuItem10.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem11});
+			this.menuItem10.Text = "Remove File Pattern";
+			// 
+			// menuItem11
+			// 
+			this.menuItem11.Index = 0;
+			this.menuItem11.Text = "Placeholder";
+			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
@@ -1257,7 +1274,13 @@ namespace SList
 		void EH_RemoveType(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
-			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (RemoveTypeInfo) mni.Tag);
+			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo) mni.Tag);
+		}
+
+		void EH_RemovePattern(object sender, EventArgs e)
+		{
+			MenuItem mni = (MenuItem)sender;
+			m_model.RemovePattern(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo)mni.Tag);
 		}
 
 		void EH_RemovePath(object sender, EventArgs e)
@@ -1352,10 +1375,38 @@ namespace SList
 
 				mniNew.Text = $"{sSub}\\*.{sExt}";
 				mniNew.Click += new EventHandler(EH_RemoveType);
-				mniNew.Tag = new RemoveTypeInfo() {Extension = sExt, RootPath = sSub};
+				mniNew.Tag = new FilePatternInfo() {Pattern = sExt, RootPath = sSub};
 				mni.MenuItems.Add(mniNew);
 			}
 		}
+
+		void AddRemoveFilePatternSubmenuItems(MenuItem mni, SLItem sli)
+		{
+			if (mni.Text != "Remove File Pattern")
+				throw new Exception("context menu structure changed!");
+
+			mni.MenuItems.Clear();
+
+			string sName = sli.Name;
+			string sSub = "";
+			string[] rgs = sli.Path.Split('\\');
+
+			foreach (string s in rgs)
+			{
+				MenuItem mniNew = new MenuItem();
+
+				if (sSub != "")
+					sSub += "\\" + s;
+				else
+					sSub = s;
+
+				mniNew.Text = $"{sSub}\\{sName}";
+				mniNew.Click += new EventHandler(EH_RemovePattern);
+				mniNew.Tag = new FilePatternInfo() {Pattern = sName, RootPath = sSub};
+				mni.MenuItems.Add(mniNew);
+			}
+		}
+
 		private void EH_DoContextPopup(object sender, EventArgs e)
 		{
 			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
@@ -1368,7 +1419,8 @@ namespace SList
 
 				AddRemovePathSubmenuItems(cm.MenuItems[1], sli);
 				AddRemoveItemPatternSubmenuItems(cm.MenuItems[2], sli);
-				AddPreferredPathSubmenuItems(cm.MenuItems[3], sli);
+				AddRemoveFilePatternSubmenuItems(cm.MenuItems[3], sli);
+				AddPreferredPathSubmenuItems(cm.MenuItems[4], sli);
 			}
 		}
 
