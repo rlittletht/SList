@@ -36,6 +36,11 @@ namespace SList
 			m_items = new Dictionary<string, SLItem>();
 		}
 
+		public void AddInternal(SLItem sli)
+		{
+			m_items.Add(sli.Hashkey, sli);
+		}
+
 		public void Add(SLItem sli, bool duplicatesOK = false)
 		{
 			if (duplicatesOK && m_items.ContainsKey(sli.Hashkey))
@@ -66,6 +71,20 @@ namespace SList
 			m_plLvComparerStack.RemoveAt(m_plLvComparerStack.Count - 1);
 			m_lv.EndUpdate();
 			m_lv.Update();
+		}
+		
+		public void UpdateListViewFromSlis()
+		{
+			ListViewItem[] rglvi = new ListViewItem[m_items.Count];
+
+			int isli = 0;
+			foreach (SLItem sli in m_items.Values)
+				rglvi[isli++] = SmartList.LviCreateForSli(sli, false);
+
+			m_lv.Items.Clear();
+			m_lv.BeginUpdate();
+			m_lv.Items.AddRange(rglvi);
+			m_lv.EndUpdate();
 		}
 
 		void CleanupNullTags(ISmartListUi ui, int cRemove, int diSelStart)
@@ -105,8 +124,12 @@ namespace SList
 			if (iSelCur < 0)
 				iSelCur = 0;
 
-			m_lv.Items[iSelCur].Selected = true;
-			m_lv.Items[iSelCur].EnsureVisible();
+			if (m_lv.Items.Count > 0)
+			{
+				m_lv.Items[iSelCur].Selected = true;
+				m_lv.Items[iSelCur].EnsureVisible();
+			}
+
 			pt.Stop();
 			pt.Report(10000);
 		}
@@ -274,7 +297,7 @@ namespace SList
 			if (t.m_items == null)
 				t.m_items = new Dictionary<string, SLItem>();
 
-			t.Add(item);
+			t.AddInternal(item); // don't add to the list view yet...
 		}
 
 		static XmlDescription<SLISet> CreateXmlDescription()
@@ -315,6 +338,8 @@ namespace SList
 			{
 				readFile.DeSerialize(xml, slis);
 			}
+
+			slis.UpdateListViewFromSlis();
 		}
 
 		private static void SetSha256(SLISet t, string value, RepeatContext<SLISet>.RepeatItemContext repeatitemcontext)

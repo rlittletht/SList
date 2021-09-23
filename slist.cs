@@ -26,6 +26,7 @@ namespace SList
 		private System.Windows.Forms.StatusBarPanel m_stbpMainStatus;
 		private System.Windows.Forms.StatusBarPanel m_stbpFilterStatus;
 		private System.Windows.Forms.StatusBarPanel m_stbpSearch;
+		private System.Windows.Forms.StatusBarPanel m_stbpCount;
 		private System.Windows.Forms.Label m_lblActions;
 		private System.Windows.Forms.Button m_pbMove;
 		private System.Windows.Forms.Button m_pbDelete;
@@ -377,6 +378,7 @@ namespace SList
 			this.m_stbpMainStatus = new System.Windows.Forms.StatusBarPanel();
 			this.m_stbpFilterStatus = new System.Windows.Forms.StatusBarPanel();
 			this.m_stbpSearch = new System.Windows.Forms.StatusBarPanel();
+			this.m_stbpCount = new System.Windows.Forms.StatusBarPanel();
 			this.m_prbar = new System.Windows.Forms.ProgressBar();
 			this.m_lblActions = new System.Windows.Forms.Label();
 			this.m_ebRegEx = new System.Windows.Forms.TextBox();
@@ -430,6 +432,7 @@ namespace SList
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.m_stbpCount)).BeginInit();
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -579,7 +582,9 @@ namespace SList
 			this.m_stb.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
             this.m_stbpMainStatus,
             this.m_stbpFilterStatus,
-            this.m_stbpSearch});
+            this.m_stbpSearch,
+			this.m_stbpCount,
+			});
 			this.m_stb.ShowPanels = true;
 			this.m_stb.Size = new System.Drawing.Size(1331, 35);
 			this.m_stb.TabIndex = 9;
@@ -598,6 +603,11 @@ namespace SList
 			// 
 			this.m_stbpSearch.Name = "m_stbpSearch";
 			this.m_stbpSearch.Width = 200;
+			// 
+			// m_stbpCount
+			// 
+			this.m_stbpSearch.Name = "m_stbpCount";
+			this.m_stbpSearch.Width = 100;
 			// 
 			// m_prbar
 			// 
@@ -1114,6 +1124,7 @@ namespace SList
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.m_stbpCount)).EndInit();
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
 			this.ResumeLayout(false);
@@ -1264,6 +1275,7 @@ namespace SList
 		private void EH_LoadFileListFromFile(object sender, EventArgs e)
 		{
 			m_model.LoadFileListFromFile(SlisCur);
+			SetCount(SlisCur.Lv.Items.Count);
 		}
 
 		private void EH_SaveFileListToFile(object sender, EventArgs e)
@@ -1561,6 +1573,11 @@ namespace SList
 			m_stbpMainStatus.Text = text;
 		}
 
+		public void SetCount(int count)
+		{
+			m_stbpCount.Text = $"Files: {count}";
+		}
+
 		public void AddIgnoreListItem(string text)
 		{
 			m_cbxIgnoreList.Items.Add(text);
@@ -1668,6 +1685,8 @@ namespace SList
 		{
 			// ((SList.ListViewItemComparer)LvCur.ListViewItemSorter).SetColumn(e.Column);
 		}
+
+
 	}
 }
 

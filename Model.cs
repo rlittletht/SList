@@ -168,7 +168,7 @@ namespace SList
 			AddSliToListView(sli, lv, false);
 		}
 
-		static private void AddSliToListView(SLItem sli, ListView lv, bool fChecked)
+		public static ListViewItem LviCreateForSli(SLItem sli, bool fChecked)
 		{
 			ListViewItem lvi = new ListViewItem();
 
@@ -185,7 +185,15 @@ namespace SList
 
 			if (fChecked)
 				lvi.Checked = true;
-			lv.Items.Add(lvi);
+
+			return lvi;
+		}
+
+		private static void AddSliToListView(SLItem sli, ListView lv, bool fChecked, ISmartListUi ui = null)
+		{
+			lv.Items.Add(LviCreateForSli(sli, fChecked));
+			if (ui != null)
+				ui.SetCount(lv.Items.Count);
 		}
 
 		private void AddDirectory(DirectoryInfo di, SLISet slis, string sPattern, bool fRecurse, List<FileInfo> plfiTooLong, bool fAppend)
@@ -221,7 +229,7 @@ namespace SList
 				{
 					fTooLong = true;
 				}
-				if (fTooLong)
+				if (fTooLong && !di.FullName.Contains("WindowsApps"))
 					plfiTooLong.Add(rgfi[i]);
 
 				// Application.DoEvents();
@@ -316,6 +324,7 @@ namespace SList
 			pt.Report(0, m_ui);
 
 			m_ui.LvCur.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 			m_ui.LvCur.ListViewItemSorter = lvicSav;
 			m_ui.LvCur.Update();
 			m_ui.SetCursor(crsSav);
@@ -413,48 +422,86 @@ namespace SList
 			}
 			else
 			{
-				// parse a directory listing and add 
-				string sCurDirectory = null;
-				using (TextReader tr = new StreamReader(new FileStream(sFile, FileMode.Open, FileAccess.Read), Encoding.Default))
+				using (FileStream fs = new FileStream(sFile, FileMode.Open, FileAccess.Read))
 				{
-					string sLine = tr.ReadLine();
-					bool fInternalFormat = sLine == "[file.lst]";
+					m_ui.SetProgressBarMac(ProgressBarType.Overall, fs.Length);
+					m_ui.ShowProgressBar(ProgressBarType.Overall);
+					// parse a directory listing and add 
+					string sCurDirectory = null;
 
-					while ((sLine = tr.ReadLine()) != null)
+					using (StreamReader sr = new StreamReader(fs, Encoding.Default))
 					{
-						if (fInternalFormat)
+						using (TextReader tr = sr)
 						{
-							ParseFileListLine(sLine, out string sPath, out string sName, out long nSize);
-							SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
-							slis.Add(sli);
-							continue;
-						}
+							string sLine = tr.ReadLine();
+							bool fInternalFormat = sLine == "[file.lst]";
 
-						// figure out what this line is
-						if (sLine.Length < 14)
-							continue;
+							while ((sLine = tr.ReadLine()) != null)
+							{
+								m_ui.UpdateProgressBar(ProgressBarType.Overall, sr.BaseStream.Position, Application.DoEvents);
+								if (fInternalFormat)
+								{
+									ParseFileListLine(sLine, out string sPath, out string sName, out long nSize);
+									SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
+									slis.Add(sli);
+									continue;
+								}
 
-						if (sLine[2] == '/' && sLine[5] == '/')
-						{
-							// this is a leading date, which means this is either a directory or a file
-							if (sLine[24] == '<') // this is a directory
-								continue;
+								// figure out what this line is
+								if (sLine.Length < 14)
+									continue;
 
-							// ok, from [14,39] is the size, [40, ...] is filename
-							Int64 nSize = FileSizeFromDirectoryLine(sLine);
-							string sFileLine = FileNameFromDirectoryLine(sLine);
+								if (sLine[2] == '/' && sLine[5] == '/')
+								{
+									// this is a leading date, which means this is either a directory or a file
+									if (sLine.Substring(24, 5) == "<DIR>"
+									    || sLine.Substring(24, 10) == "<SYMLINKD>"
+									    || sLine.Substring(24, 10) == "<JUNCTION>") // this is a directory
+										continue;
 
-							SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory,
-								String.Concat(sCurDirectory, "/", sFileLine));
-							slis.Add(sli);
-						}
-						else if (sLine.StartsWith(" Directory of "))
-						{
-							sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+									// ok, from [14,39] is the size, [40, ...] is filename
+									Int64 nSize;
+									bool fReparsePoint = false;
+
+									if (sLine.Substring(24, 9) == "<SYMLINK>")
+									{
+										nSize = 0;
+										fReparsePoint = true;
+									}
+									else
+									{
+										nSize = FileSizeFromDirectoryLine(sLine);
+									}
+
+									string sFileLine = FileNameFromDirectoryLine(sLine);
+
+									if (fReparsePoint)
+										sFileLine = sFileLine.Substring(0, sFileLine.LastIndexOf('[') - 1);
+
+									SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory,
+										String.Concat(sCurDirectory, "/", sFileLine));
+
+									if (fReparsePoint)
+										SLItem.SetIsReparsePoint(sli, "true");
+
+									slis.Add(sli);
+								}
+								else if (sLine.StartsWith(" Directory of "))
+								{
+									sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+								}
+								else if (sLine.Contains("Volume")
+								         || sLine.Contains("File(s)")
+								         || sLine.Contains("Total Files")
+								         || sLine.Contains("bytes free"))
+									continue;
+								else
+									throw new Exception($"cannot parse {sLine}");
+							}
+
+							tr.Close();
 						}
 					}
-
-					tr.Close();
 				}
 			}
 
@@ -716,6 +763,7 @@ namespace SList
 				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
 			slisSrc.Lv.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 
@@ -1147,16 +1195,19 @@ namespace SList
 		internal void RemovePath(SLISet slis, string sPathRoot)
 		{
 			slis.Remove(sPathRoot, m_ui);
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 		}
 
 		internal void RemoveType(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
 		{
 			slis.RemoveType(typeInfo, m_ui);
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 		}
 
 		internal void RemovePattern(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
 		{
 			slis.RemovePattern(typeInfo, m_ui);
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 		}
 
 		#endregion // Core Model (Compare Files, etc)
@@ -1364,6 +1415,7 @@ namespace SList
 				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
 			slisSrc.Lv.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
 			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 
