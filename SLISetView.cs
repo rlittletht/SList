@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Media;
 using System.Windows.Forms;
 
 namespace SList
@@ -43,10 +44,37 @@ namespace SList
 			LvControl.Columns[3].Width = 512;
 
 			LvControl.FullRowSelect = true;
-			LvControl.MultiSelect = false;
+			LvControl.MultiSelect = true;
 			LvControl.View = System.Windows.Forms.View.Details;
 			LvControl.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
+			LvControl.KeyUp += new KeyEventHandler(EH_OnKeyUp);
 			LvControl.LabelEdit = true;
+		}
+
+		void EH_OnKeyUp(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode != Keys.Delete)
+				return;
+
+			if (LvControl.SelectedIndices.Count == 0)
+			{
+				SystemSounds.Beep.Play();
+				return;
+			}
+
+			List<int> deleting = new List<int>();
+
+			foreach (int i in LvControl.SelectedIndices)
+				deleting.Add(i);
+
+			deleting.Sort();
+
+			int isel = deleting[0];
+
+			for (int i = deleting.Count - 1; i >= 0; --i)
+				Remove(deleting[i]);
+
+			Select(isel);
 		}
 
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
@@ -131,6 +159,7 @@ namespace SList
 
 		public void Select(int i)
 		{
+			LvControl.SelectedIndices.Clear();
 			LvControl.Items[i].Selected = true;
 			LvControl.Select();
 			LvControl.Items[i].EnsureVisible();
