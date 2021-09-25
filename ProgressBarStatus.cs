@@ -38,6 +38,7 @@ namespace SList
 			m_msecBeforeShow = 0; // we always start as manual
 			MacProgressBarOverall = mac;
 			IncrementProgressBarOverall = Math.Max(1, mac / m_bar.Maximum);
+			LastProgressBarOverall = 0;
 			m_bar.Value = 0;
 			m_watch = new Stopwatch();
 			m_watch.Start();

@@ -380,134 +380,129 @@ namespace SList
 
 		internal void LoadFileListFromFile(SLISet slis)
 		{
-			string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
-			if (!InputBox.ShowInputBox("File list", sDefault, out string sFile))
-				return;
-
-			m_ui.SetFileListDefaultName(slis.FileListType, sFile);
-			PerfTimer pt = new PerfTimer();
-			pt.Start("load file list");
-			slis.PauseListViewUpdate(true);
-
-			if (sFile.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+			using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
 			{
-				SLISet.LoadFileListXml(slis, sFile);
-			}
-			else
-			{
-				using (FileStream fs = new FileStream(sFile, FileMode.Open, FileAccess.Read))
+				string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
+				if (!InputBox.ShowInputBox("File list", sDefault, out string sFile))
+					return;
+
+				m_ui.SetFileListDefaultName(slis.FileListType, sFile);
+				PerfTimer pt = new PerfTimer();
+				pt.Start("load file list");
+				slis.PauseListViewUpdate(true);
+
+				if (sFile.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
 				{
-					m_ui.SetProgressBarMac(ProgressBarType.Overall, fs.Length);
-					m_ui.ShowProgressBar(ProgressBarType.Overall);
-					// parse a directory listing and add 
-					string sCurDirectory = null;
-
-					using (StreamReader sr = new StreamReader(fs, Encoding.Default))
+					SLISet.LoadFileListXml(slis, sFile);
+					slis.View.UpdateAfterAdd();
+				}
+				else
+				{
+					using (FileStream fs = new FileStream(sFile, FileMode.Open, FileAccess.Read))
 					{
-						using (TextReader tr = sr)
+						m_ui.SetProgressBarMac(ProgressBarType.Overall, fs.Length);
+						m_ui.ShowProgressBar(ProgressBarType.Overall);
+						// parse a directory listing and add 
+						string sCurDirectory = null;
+
+						using (StreamReader sr = new StreamReader(fs, Encoding.Default))
 						{
-							string sLine = tr.ReadLine();
-							bool fInternalFormat = sLine == "[file.lst]";
-
-							while ((sLine = tr.ReadLine()) != null)
+							using (TextReader tr = sr)
 							{
-								m_ui.UpdateProgressBar(ProgressBarType.Overall, sr.BaseStream.Position, Application.DoEvents);
-								if (fInternalFormat)
-								{
-									ParseFileListLine(sLine, out string sPath, out string sName, out long nSize);
-									SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
-									slis.Add(sli);
-									continue;
-								}
+								string sLine = tr.ReadLine();
+								bool fInternalFormat = sLine == "[file.lst]";
 
-								// figure out what this line is
-								if (sLine.Length < 14)
-									continue;
-
-								if (sLine[2] == '/' && sLine[5] == '/')
+								while ((sLine = tr.ReadLine()) != null)
 								{
-									// this is a leading date, which means this is either a directory or a file
-									if (sLine.Substring(24, 5) == "<DIR>"
-									    || sLine.Substring(24, 10) == "<SYMLINKD>"
-									    || sLine.Substring(24, 10) == "<JUNCTION>") // this is a directory
+									m_ui.UpdateProgressBar(ProgressBarType.Overall, sr.BaseStream.Position,
+										Application.DoEvents);
+									if (fInternalFormat)
+									{
+										ParseFileListLine(sLine, out string sPath, out string sName, out long nSize);
+										SLItem sli = new SLItem(sName, nSize, sPath, String.Concat(sPath, "/", sName));
+										slis.Add(sli);
+										continue;
+									}
+
+									// figure out what this line is
+									if (sLine.Length < 14)
 										continue;
 
-									// ok, from [14,39] is the size, [40, ...] is filename
-									Int64 nSize;
-									bool fReparsePoint = false;
-
-									if (sLine.Substring(24, 9) == "<SYMLINK>")
+									if (sLine[2] == '/' && sLine[5] == '/')
 									{
-										nSize = 0;
-										fReparsePoint = true;
+										// this is a leading date, which means this is either a directory or a file
+										if (sLine.Substring(24, 5) == "<DIR>"
+										    || sLine.Substring(24, 10) == "<SYMLINKD>"
+										    || sLine.Substring(24, 10) == "<JUNCTION>") // this is a directory
+											continue;
+
+										// ok, from [14,39] is the size, [40, ...] is filename
+										Int64 nSize;
+										bool fReparsePoint = false;
+
+										if (sLine.Substring(24, 9) == "<SYMLINK>")
+										{
+											nSize = 0;
+											fReparsePoint = true;
+										}
+										else
+										{
+											nSize = FileSizeFromDirectoryLine(sLine);
+										}
+
+										string sFileLine = FileNameFromDirectoryLine(sLine);
+
+										if (fReparsePoint)
+											sFileLine = sFileLine.Substring(0, sFileLine.LastIndexOf('[') - 1);
+
+										SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory,
+											String.Concat(sCurDirectory, "/", sFileLine));
+
+										if (fReparsePoint)
+											SLItem.SetIsReparsePoint(sli, "true");
+
+										slis.Add(sli);
 									}
+									else if (sLine.StartsWith(" Directory of "))
+									{
+										sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
+									}
+									else if (sLine.Contains("Volume")
+									         || sLine.Contains("File(s)")
+									         || sLine.Contains("Total Files")
+									         || sLine.Contains("bytes free"))
+										continue;
 									else
-									{
-										nSize = FileSizeFromDirectoryLine(sLine);
-									}
-
-									string sFileLine = FileNameFromDirectoryLine(sLine);
-
-									if (fReparsePoint)
-										sFileLine = sFileLine.Substring(0, sFileLine.LastIndexOf('[') - 1);
-
-									SLItem sli = new SLItem(sFileLine, nSize, sCurDirectory,
-										String.Concat(sCurDirectory, "/", sFileLine));
-
-									if (fReparsePoint)
-										SLItem.SetIsReparsePoint(sli, "true");
-
-									slis.Add(sli);
+										throw new Exception($"cannot parse {sLine}");
 								}
-								else if (sLine.StartsWith(" Directory of "))
-								{
-									sCurDirectory = DirectoryNameFromDirectoryLine(sLine);
-								}
-								else if (sLine.Contains("Volume")
-								         || sLine.Contains("File(s)")
-								         || sLine.Contains("Total Files")
-								         || sLine.Contains("bytes free"))
-									continue;
-								else
-									throw new Exception($"cannot parse {sLine}");
+
+								tr.Close();
 							}
-
-							tr.Close();
 						}
 					}
 				}
+
+				slis.ResumeListViewUpdate();
+
+				pt.Stop();
+				pt.Report(0, m_ui);
 			}
-
-			slis.ResumeListViewUpdate();
-
-			pt.Stop();
-			pt.Report(0, m_ui);
 		}
 
 		internal void SaveFileListToFile(SLISet slis)
 		{
-			string sFile;
-			string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
-
-			if (!InputBox.ShowInputBox("File list", sDefault, out sFile))
-				return;
-
-			m_ui.SetFileListDefaultName(slis.FileListType, sFile);
-
-			SLISet.SaveFileListXml(slis, sFile);
-			return;
-#if no
-			TextWriter tr = new StreamWriter(new FileStream(sFile, FileMode.CreateNew, FileAccess.Write), Encoding.Default);
-
-			tr.WriteLine("[file.lst]"); // write something out so we know this is one of our files (we will parse it faster)
-			foreach (ListViewItem lvi in slis.Lv.Items)
+			using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
 			{
-				SLItem sli = (SLItem)lvi.Tag;
-				tr.WriteLine("{0}\t{1}\t{2}", sli.Path, sli.Name, sli.Size);
+				string sFile;
+				string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
+
+				if (!InputBox.ShowInputBox("File list", sDefault, out sFile))
+					return;
+
+				m_ui.SetFileListDefaultName(slis.FileListType, sFile);
+
+				SLISet.SaveFileListXml(slis, sFile);
 			}
-			tr.Flush();
-			tr.Close();
-#endif // no
 		}
 
 #endregion
@@ -516,6 +511,15 @@ namespace SList
 
 		private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
 		{
+			if (sli1.Size == 0 && !sli1.IsReparsePoint
+			                   && sli2.Size == 0 && !sli2.IsReparsePoint)
+			{
+				return true;
+			}
+
+			if (sli1.CannotOpen || sli2.CannotOpen)
+				return false;
+
 			if (sli1.FCanCompareSha256(sli2))
 				return sli1.IsEqualSha256(sli2);
 
@@ -527,57 +531,87 @@ namespace SList
 
 			try
 			{
-				bs1 = new FileStream(Path.Combine(sli1.Path, sli1.Name), FileMode.Open, FileAccess.Read, FileShare.Read,
-					8, false);
-				bs2 = new FileStream(Path.Combine(sli2.Path, sli2.Name), FileMode.Open, FileAccess.Read, FileShare.Read,
-					8, false);
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show(
-					$"failed to compare {sli1.Path}\\{sli1.Name} with {sli2.Path}\\{sli2.Name}. If this matters, write the name down so you can deal with it manually. Otherwise, we're going to assume they match\n\n{e.Message}",
-					"FAILED TO COMPARE");
-				return true;
-			}
-
-			int lcb = 16;
-
-			long icb = 0;
-			int i;
-			bool fProgress = true;
-			m_ui.SetProgressBarMac(ProgressBarType.Current, sli1.Size);
-
-			if (sli1.Size < 10000)
-				fProgress = false;
-
-			if (icb + lcb >= sli1.Size)
-				lcb = (int)(sli1.Size - icb);
-
-			m_ui.SetStatusText(sli1.Name);
-			if (fProgress)
-				m_ui.ShowProgressBar(ProgressBarType.Current);
-
-
-			while (lcb > 0)
-			{
-				// Application.DoEvents();
-				if (fProgress)
-					m_ui.UpdateProgressBar(ProgressBarType.Current, icb, null);
-				
-				bs1.Read(m_rgb1, 0, lcb);
-				bs2.Read(m_rgb2, 0, lcb);
-
-				icb += lcb;
-				i = 0;
-				while (i < lcb)
+				using (bs1 = new FileStream(Path.Combine(sli1.Path, sli1.Name), FileMode.Open, FileAccess.Read,
+					FileShare.Read,
+					8, false))
 				{
-					if (m_rgb1[i] != m_rgb2[i])
+					using (bs2 = new FileStream(Path.Combine(sli2.Path, sli2.Name), FileMode.Open, FileAccess.Read,
+						FileShare.Read,
+						8, false))
 					{
-						//					br1.Close();
-						//					br2.Close();
+						int lcb = 16;
+
+						long icb = 0;
+						int i;
+						bool fProgress = true;
+						m_ui.SetProgressBarMac(ProgressBarType.Current, sli1.Size);
+
+						if (sli1.Size < 10000)
+							fProgress = false;
+
+						if (icb + lcb >= sli1.Size)
+							lcb = (int) (sli1.Size - icb);
+
+						m_ui.SetStatusText(sli1.Name);
+						if (fProgress)
+							m_ui.ShowProgressBar(ProgressBarType.Current);
+
+
+						while (lcb > 0)
+						{
+							// Application.DoEvents();
+							if (fProgress)
+								m_ui.UpdateProgressBar(ProgressBarType.Current, icb, null);
+
+							bs1.Read(m_rgb1, 0, lcb);
+							bs2.Read(m_rgb2, 0, lcb);
+
+							icb += lcb;
+							i = 0;
+							while (i < lcb)
+							{
+								if (m_rgb1[i] != m_rgb2[i])
+								{
+									//					br1.Close();
+									//					br2.Close();
+									bs1.Close();
+									bs2.Close();
+
+									m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.Size, null);
+									nEnd = Environment.TickCount;
+
+									if ((nEnd - nStart) < min)
+										min = nEnd - nStart;
+
+									if ((nEnd - nStart) > max)
+										max = (nEnd - nStart);
+
+									sum += (nEnd - nStart);
+									return false;
+								}
+
+								i++;
+							}
+
+							if (lcb < lcbMax)
+							{
+								if ((int) (sli1.Size - icb - 1) == 0)
+									break;
+
+								lcb *= 2;
+								if (lcb > lcbMax)
+									lcb = lcbMax;
+							}
+
+							if (icb + lcb >= sli1.Size)
+								lcb = (int) (sli1.Size - icb - 1);
+
+						}
+
+						//		br1.Close();
+						//		br2.Close();
 						bs1.Close();
 						bs2.Close();
-
 						m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.Size, null);
 						nEnd = Environment.TickCount;
 
@@ -588,41 +622,28 @@ namespace SList
 							max = (nEnd - nStart);
 
 						sum += (nEnd - nStart);
-						return false;
+						return true;
 					}
-					i++;
 				}
-
-				if (lcb < lcbMax)
-				{
-					if ((int)(sli1.Size - icb - 1) == 0)
-						break;
-
-					lcb *= 2;
-					if (lcb > lcbMax)
-						lcb = lcbMax;
-				}
-
-				if (icb + lcb >= sli1.Size)
-					lcb = (int)(sli1.Size - icb - 1);
-
 			}
-			//		br1.Close();
-			//		br2.Close();
-			bs1.Close();
-			bs2.Close();
-			m_ui.UpdateProgressBar(ProgressBarType.Current, sli1.Size, null);
-			nEnd = Environment.TickCount;
+			catch (Exception e)
+			{
+				if (bs1 == null)
+					sli1.CannotOpen = true;
+				if (bs2 == null && bs1 != null)
+					sli2.CannotOpen = true;
 
-			if ((nEnd - nStart) < min)
-				min = nEnd - nStart;
+				if (bs1 != null)
+					bs1.Close();
+				if (bs2 != null)
+					bs2.Close();
 
-			if ((nEnd - nStart) > max)
-				max = (nEnd - nStart);
-
-			sum += (nEnd - nStart);
-			return true;
-
+				return false;
+				MessageBox.Show(
+					$"failed to compare {sli1.Path}\\{sli1.Name} with {sli2.Path}\\{sli2.Name}. If this matters, write the name down so you can deal with it manually. Otherwise, we're going to assume they match\n\n{e.Message}",
+					"FAILED TO COMPARE");
+				return true;
+			}
 		}
 
 		void AddSlisToRgsli(SLISet slis, SLItem[] rgsli, int iFirst, bool fDestOnly)
@@ -680,7 +701,7 @@ namespace SList
 				{
 					int iDupe, iDupeMac;
 
-					m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
+					m_ui.UpdateProgressBar(ProgressBarType.Overall, i, Application.DoEvents);
 
 					if (rgsli[i].IsMarked)
 						continue;

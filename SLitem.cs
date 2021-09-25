@@ -19,7 +19,7 @@ namespace SList
 		public bool IsMarked { get; set; }
 		public string Extension => System.IO.Path.GetExtension(Name);
 		public bool Checked { get; set; }
-
+		public bool CannotOpen { get; set; }
 		public bool IsReparsePoint { get; private set; }
 
 		// some items are intended only to matched *against*, but we shouldn't treat them as unique.  

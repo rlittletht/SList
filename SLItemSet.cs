@@ -105,8 +105,13 @@ namespace SList
 				}
 
 				iSelStart -= diSelStart;
+				iSelStart++;
+
 				if (iSelStart < 0)
 					iSelStart = 0;
+
+				if (iSelStart > View.Items.Count - 1)
+					iSelStart = View.Items.Count - 1;
 
 				if (View.Items.Count > 0)
 					View.Select(iSelStart);
