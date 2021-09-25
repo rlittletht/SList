@@ -645,109 +645,116 @@ namespace SList
 	    ----------------------------------------------------------------------------*/
 		public void BuildUniqueFileList()
 		{
-			int start, end, sum = 0;
-			int min = 999999, max = 0, c = 0;
-			SLISet slisSrc = m_ui.GetSliSet(SListApp.FileList.Source);
-			int cItems = slisSrc.View.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count;
-			SLItem[] rgsli = new SLItem[cItems];
-
-			start = Environment.TickCount;
-
-			AddSlisToRgsli(slisSrc, rgsli, 0, false);
-
-			if (m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count > 0)
+			using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
 			{
-				AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.View.Items.Count, true);
-			}
-			Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSize));
+				int start, end, sum = 0;
+				int min = 999999, max = 0, c = 0;
+				SLISet slisSrc = m_ui.GetSliSet(SListApp.FileList.Source);
+				int cItems = slisSrc.View.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count;
+				SLItem[] rgsli = new SLItem[cItems];
 
-			slisSrc.View.BeginUpdate();
-			slisSrc.View.Items.Clear();
+				start = Environment.TickCount;
 
-			int i = 0;
-			int iMac = rgsli.Length;
+				AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
-			m_ui.SetProgressBarMac(ProgressBarType.Overall, iMac);
-
-			Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
-
-			m_ui.ShowProgressBar(ProgressBarType.Overall);
-			for (; i < iMac; i++)
-			{
-				int iDupe, iDupeMac;
-
-				m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
-
-				if (rgsli[i].IsMarked)
-					continue;
-
-				// search forward for dupes
-				for (iDupe = i + 1, iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
+				if (m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count > 0)
 				{
-					if (rgsli[iDupe].IsMarked == true)
+					AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.View.Items.Count,
+						true);
+				}
+
+				Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSize));
+
+				slisSrc.View.BeginUpdate();
+				slisSrc.View.Items.Clear();
+
+				int i = 0;
+				int iMac = rgsli.Length;
+
+				m_ui.SetProgressBarMac(ProgressBarType.Overall, iMac);
+
+				Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
+
+				m_ui.ShowProgressBar(ProgressBarType.Overall);
+				for (; i < iMac; i++)
+				{
+					int iDupe, iDupeMac;
+
+					m_ui.UpdateProgressBar(ProgressBarType.Overall, i, null);
+
+					if (rgsli[i].IsMarked)
 						continue;
 
-					if (rgsli[i].Size == rgsli[iDupe].Size)
+					// search forward for dupes
+					for (iDupe = i + 1, iDupeMac = rgsli.Length; iDupe < iDupeMac; iDupe++)
 					{
-						if (m_ui.FCompareFilesChecked())
+						if (rgsli[iDupe].IsMarked == true)
+							continue;
+
+						if (rgsli[i].Size == rgsli[iDupe].Size)
 						{
-							c++;
-							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
+							if (m_ui.FCompareFilesChecked())
 							{
-								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
-									AddSliToListView(rgsli[i], slisSrc.View, true);
+								c++;
+								if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
+								{
+									if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
+										AddSliToListView(rgsli[i], slisSrc.View, true);
 
-								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
-									AddSliToListView(rgsli[iDupe], slisSrc.View);
+									if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
+										AddSliToListView(rgsli[iDupe], slisSrc.View);
 
-								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
-								rgsli[i].AddDupeToChain(rgsli[iDupe]);
+									rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
+									rgsli[i].AddDupeToChain(rgsli[iDupe]);
+								}
+							}
+							else
+							{
+								if (rgsli[i].Name == rgsli[iDupe].Name)
+								{
+									if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
+										AddSliToListView(rgsli[i], slisSrc.View);
+
+									if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
+										AddSliToListView(rgsli[iDupe], slisSrc.View);
+
+									rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
+									rgsli[i].AddDupeToChain(rgsli[iDupe]);
+								}
 							}
 						}
 						else
 						{
-							if (rgsli[i].Name == rgsli[iDupe].Name)
-							{
-								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
-									AddSliToListView(rgsli[i], slisSrc.View);
+							if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
+								// this was unique...
+								AddSliToListView(rgsli[i], slisSrc.View, true);
 
-								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
-									AddSliToListView(rgsli[iDupe], slisSrc.View);
-
-								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
-								rgsli[i].AddDupeToChain(rgsli[iDupe]);
-							}
+							break; // no reason to continue if the lengths changed; we sorted by length
 						}
 					}
-					else
-					{
-						if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
-							// this was unique...
-							AddSliToListView(rgsli[i], slisSrc.View, true);
-
-						break; // no reason to continue if the lengths changed; we sorted by length
-					}
 				}
+
+				m_ui.HideProgressBar(ProgressBarType.Current);
+				m_ui.HideProgressBar(ProgressBarType.Overall);
+				if (m_ui.FCompareFilesChecked())
+					m_ui.SetStatusText("Search complete.  Duplicates filtered by file compare.");
+				else
+					m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
+
+				slisSrc.View.EndUpdate();
+				m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
+				m_ui.SetCursor(crsSav);
+				end = Environment.TickCount;
+
+				int len = end - start;
+				if (c == 0)
+					c = 1;
+
+				int avg = len / c;
+				int avg2 = sum / c;
+				m_ui.SetStatusText(len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " +
+				                   avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")");
 			}
-			m_ui.HideProgressBar(ProgressBarType.Current);
-			m_ui.HideProgressBar(ProgressBarType.Overall);
-			if (m_ui.FCompareFilesChecked())
-				m_ui.SetStatusText("Search complete.  Duplicates filtered by file compare.");
-			else
-				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
-
-			slisSrc.View.EndUpdate();
-			m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
-			m_ui.SetCursor(crsSav);
-			end = Environment.TickCount;
-
-			int len = end - start;
-			if (c == 0)
-				c = 1;
-
-			int avg = len / c;
-			int avg2 = sum / c;
-			m_ui.SetStatusText(len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")");
 		}
 
 		/* A D J U S T  L I S T  V I E W  F O R  F A V O R E D  P A T H S */

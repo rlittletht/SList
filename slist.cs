@@ -805,7 +805,6 @@ namespace SList
 			this.m_lv.VirtualMode = true;
 			this.m_lv.Visible = false;
 			this.m_lv.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.EH_HandleEdit);
-			this.m_lv.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.EH_HandleColumnClick);
 			// 
 			// m_pbValidateSrc
 			// 
