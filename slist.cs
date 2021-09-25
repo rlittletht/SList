@@ -122,8 +122,6 @@ namespace SList
 			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
 
 			InitializeListViews();
-			InitializeListView(s_ilvSource);
-			InitializeListView(s_ilvDest);
 
 			m_settings = new SmartListSettings();
 			m_settings.Load();
@@ -206,6 +204,7 @@ namespace SList
 					continue; // skip, this is already initialized
 
 				ListView lv = new System.Windows.Forms.ListView();
+				lv.VirtualMode = true;
 				lv.Anchor = lvSource.Anchor;
 				lv.CheckBoxes = lvSource.CheckBoxes;
 
@@ -220,33 +219,6 @@ namespace SList
 				this.Controls.Add(lv);
 				m_rgslis[ilv] = new SLISet((FileList) ilv, lv);
 			}
-		}
-
-		private void InitializeListView(int ilv)
-		{
-			m_rgslis[ilv].LvControl.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].LvControl.Columns[0].Text = "    Name";
-			m_rgslis[ilv].LvControl.Columns[0].Width = 212;
-
-			m_rgslis[ilv].LvControl.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].LvControl.Columns[1].Text = "Type";
-			m_rgslis[ilv].LvControl.Columns[1].Width = 48;
-			m_rgslis[ilv].LvControl.Columns[1].TextAlign = HorizontalAlignment.Center;
-
-			m_rgslis[ilv].LvControl.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].LvControl.Columns[2].Text = "Size";
-			m_rgslis[ilv].LvControl.Columns[2].Width = 52;
-			m_rgslis[ilv].LvControl.Columns[2].TextAlign = HorizontalAlignment.Right;
-
-			m_rgslis[ilv].LvControl.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].LvControl.Columns[3].Text = "Location";
-			m_rgslis[ilv].LvControl.Columns[3].Width = 512;
-
-			m_rgslis[ilv].LvControl.FullRowSelect = true;
-			m_rgslis[ilv].LvControl.MultiSelect = false;
-			m_rgslis[ilv].LvControl.View =  System.Windows.Forms.View.Details;
-			m_rgslis[ilv].LvControl.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
-			m_rgslis[ilv].LvControl.LabelEdit = true;
 		}
 
 		private int m_islisCur = -1;

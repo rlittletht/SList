@@ -8,7 +8,7 @@ namespace SList
 	public class SLISetView
 	{
 		public List<SLItem> Items { get; private set; }
-		public ListView LvControl { get; private set; }
+		private ListView LvControl { get; set; }
 		public SLISetViewItemComparer Comparer { get; set; }
 
 		public int Count => Items.Count;
@@ -19,9 +19,47 @@ namespace SList
 			LvControl.RetrieveVirtualItem += new RetrieveVirtualItemEventHandler(RetrieveVirtualItem);
 			Items = new List<SLItem>();
 			Comparer = new SLISetViewItemComparer(2);
+			InitListView();
 		}
 
-		static ListViewItem LviCreateForSli(SLItem sli, bool fChecked)
+		void InitListView()
+		{
+			LvControl.Columns.Add(new ColumnHeader());
+			LvControl.Columns[0].Text = "    Name";
+			LvControl.Columns[0].Width = 212;
+
+			LvControl.Columns.Add(new ColumnHeader());
+			LvControl.Columns[1].Text = "Type";
+			LvControl.Columns[1].Width = 48;
+			LvControl.Columns[1].TextAlign = HorizontalAlignment.Center;
+
+			LvControl.Columns.Add(new ColumnHeader());
+			LvControl.Columns[2].Text = "Size";
+			LvControl.Columns[2].Width = 52;
+			LvControl.Columns[2].TextAlign = HorizontalAlignment.Right;
+
+			LvControl.Columns.Add(new ColumnHeader());
+			LvControl.Columns[3].Text = "Location";
+			LvControl.Columns[3].Width = 512;
+
+			LvControl.FullRowSelect = true;
+			LvControl.MultiSelect = false;
+			LvControl.View = System.Windows.Forms.View.Details;
+			LvControl.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
+			LvControl.LabelEdit = true;
+		}
+
+		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
+		{
+			if (Comparer == null)
+				Comparer = new SLISetViewItemComparer(e.Column);
+			else
+				Comparer.SetColumn(e.Column);
+
+			Sort();
+		}
+
+		static ListViewItem LviCreateForSli(SLItem sli)
 		{
 			ListViewItem lvi = new ListViewItem();
 
@@ -36,7 +74,7 @@ namespace SList
 			lvi.SubItems[1].Text = Path.GetExtension(sli.Name);
 			lvi.SubItems[0].Text = sli.Name;
 
-			if (fChecked)
+			if (sli.Checked)
 				lvi.Checked = true;
 
 			return lvi;
@@ -48,9 +86,18 @@ namespace SList
 			LvControl.VirtualListSize = 0;
 		}
 
-		public void Update()
+		public void UpdateAfterAdd()
 		{
-			LvControl.Update();
+			Items.Sort(Comparer);
+			Refresh();
+		}
+
+		public void Refresh()
+		{
+			if (Items.Count == 0)
+				LvControl.Items.Clear();
+			else
+				LvControl.RedrawItems(0, Items.Count - 1, true);
 		}
 
 		public void Sort()
@@ -82,12 +129,24 @@ namespace SList
 			Check(i, sli.IsMarked);
 		}
 
-		public void Select(SLItem sli)
+		public void Select(int i)
 		{
-			int i = GetItemIndex(sli);
-
 			LvControl.Items[i].Selected = true;
 			LvControl.Select();
+			LvControl.Items[i].EnsureVisible();
+		}
+
+		public void Select(SLItem sli)
+		{
+			Select(GetItemIndex(sli));
+		}
+
+		public int SelectedIndex()
+		{
+			if (LvControl.SelectedIndices.Count == 0)
+				return -1;
+
+			return LvControl.SelectedIndices[0];
 		}
 
 		public SLItem SelectedItem()
@@ -122,8 +181,9 @@ namespace SList
 
 		public void Add(SLItem sli, bool fChecked)
 		{
+			sli.Checked = fChecked;
 			Items.Add(sli);
-			LvControl.VirtualListSize++;
+			LvControl.VirtualListSize = Items.Count;
 		}
 
 		public void AddRange(IEnumerable<SLItem> items)
@@ -138,11 +198,13 @@ namespace SList
 
 		public void Check(int i, bool fChecked)
 		{
+			Items[i].Checked = fChecked;
+			LvControl.RedrawItems(i, i, true);
 		}
 
 		void RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
 		{
-			e.Item = LviCreateForSli(Items[e.ItemIndex], false);
+			e.Item = LviCreateForSli(Items[e.ItemIndex]);
 		}
 
 		void listView1_CacheVirtualItems(object sender, CacheVirtualItemsEventArgs e)

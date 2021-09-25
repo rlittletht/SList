@@ -283,10 +283,6 @@ namespace SList
 			// stop redrawing
 			m_ui.ViewCur.BeginUpdate();
 
-			// save off and reset the item sorter for faster adding
-//!!			IComparer lvicSav = m_ui.LvCur.ListViewItemSorter;
-//!!			m_ui.LvCur.ListViewItemSorter = null;
-
 			if (!fAppend)
 				m_ui.SlisCur.Clear();
 
@@ -303,8 +299,7 @@ namespace SList
 
 			m_ui.ViewCur.EndUpdate();
 			m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
-//!!			m_ui.LvCur.ListViewItemSorter = lvicSav;
-			m_ui.ViewCur.Update();
+			m_ui.ViewCur.UpdateAfterAdd();
 			m_ui.SetCursor(crsSav);
 		}
 

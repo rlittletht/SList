@@ -11,16 +11,12 @@ namespace SList
 	{
 		private Dictionary<string, SLItem> m_items;
 		public SLISetView View { get; private set; }
-		private ListView m_lv => View.LvControl;
 		private string m_sSpec;
 
 		public SListApp.FileList FileListType { get; private set; }
 
 		public string PathSpec { get { return m_sSpec; } set { m_sSpec = value; } }
 		public bool Recurse { get; set; }
-
-		public ListView LvControl => View.LvControl;
-		
 
 		public SLISet(SListApp.FileList fileList, ListView lv)
 		{
@@ -62,67 +58,14 @@ namespace SList
 		public void ResumeListViewUpdate(int colNew = -1)
 		{
 			View.EndUpdate();
-
-			if (View.Items.Count == 0)
-				View.LvControl.Items.Clear();
-			else
-				View.LvControl.RedrawItems(0, View.Items.Count - 1, true);
+			View.Refresh();
 		}
 		
 		public void UpdateListViewFromSlis()
 		{
 			View.AddRange(m_items.Values);
 		}
-
-#if no
-		void CleanupNullTags(ISmartListUi ui, int cRemove, int diSelStart)
-		{
-			// now go through and find all the null tags and remove them
-			SmartList.PerfTimer pt = new SmartList.PerfTimer();
-			pt.Start($"cleaning up null tags: {cRemove} items");
-			int i = 0;
-			int iSelCur = m_lv.SelectedIndices[0];
-
-			m_lv.SelectedIndices.Clear();
-
-			if (cRemove > 500)
-			{
-				ListViewItem[] rglvi = new ListViewItem[m_lv.Items.Count - cRemove];
-				
-				int isli = 0;
-				while (i < m_lv.Items.Count)
-				{
-					if (m_lv.Items[i].Tag != null)
-						rglvi[isli++] = m_lv.Items[i];
-					i++;
-				}
-				m_lv.Items.Clear();
-				m_lv.Items.AddRange(rglvi);
-			}
-			else
-			{
-				i = m_lv.Items.Count;
-				while (--i >= 0)
-				{
-					if (m_lv.Items[i].Tag == null)
-						m_lv.Items.RemoveAt(i);
-				}
-			}
-			iSelCur -= diSelStart;
-			if (iSelCur < 0)
-				iSelCur = 0;
-
-			if (m_lv.Items.Count > 0)
-			{
-				m_lv.Items[iSelCur].Selected = true;
-				m_lv.Items[iSelCur].EnsureVisible();
-			}
-
-			pt.Stop();
-			pt.Report(10000);
-		}
-#endif
-
+		
 		public delegate bool RemoveFilterDelegate(SLItem sli);
 
 		public void RemoveGeneric(ISmartListUi ui, RemoveFilterDelegate delRemove)
@@ -134,15 +77,15 @@ namespace SList
 
 				PauseListViewUpdate(false);
 
-				m_lv.BeginUpdate();
+				View.BeginUpdate();
 
 				// walk through every list view item, find matching items, then remove them and remove them from the hash set
-				int i = m_lv.Items.Count;
+				int i = View.Items.Count;
 
 				int c = i;
 				int cRemove = 0;
 
-				int iSelStart = m_lv.SelectedIndices[0];
+				int iSelStart = View.SelectedIndex();
 				int diSelStart = 0;
 
 				while (--i >= 0)
@@ -165,13 +108,10 @@ namespace SList
 				if (iSelStart < 0)
 					iSelStart = 0;
 
-				if (m_lv.Items.Count > 0)
-				{
-					m_lv.Items[iSelStart].Selected = true;
-					m_lv.Items[iSelStart].EnsureVisible();
-				}
+				if (View.Items.Count > 0)
+					View.Select(iSelStart);
 
-				m_lv.EndUpdate();
+				View.EndUpdate();
 				ui.HideProgressBar(ProgressBarType.Overall);
 				ResumeListViewUpdate();
 			}
