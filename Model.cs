@@ -122,33 +122,33 @@ namespace SList
         	
             Change the sort order for the given listview to sort by the given column
         ----------------------------------------------------------------------------*/
-		public void ChangeListViewSort(ListView lv, int iColSort)
+		public void ChangeListViewSort(SLISetView view, int iColSort)
 		{
-			if (lv.ListViewItemSorter == null)
-				lv.ListViewItemSorter = new ListViewItemComparer(iColSort);
+			if (view.Comparer == null)
+				view.Comparer = new SLISetViewItemComparer(iColSort);
 			else
-				((ListViewItemComparer)lv.ListViewItemSorter).SetColumn(iColSort);
+				view.Comparer.SetColumn(iColSort);
 
-			lv.Sort();
+			view.Sort();
 		}
 
-		public void ToggleAllListViewItems(ListView lvCur)
+		public void ToggleAllListViewItems(SLISetView view)
 		{
 			int i, iMac;
 
-			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.ViewCur.Items.Count; i < iMac; i++)
 			{
-				m_ui.LvCur.Items[i].Checked = !m_ui.LvCur.Items[i].Checked;
+				m_ui.ViewCur.Check(i, !m_ui.ViewCur.Items[i].Checked);
 			}
 		}
 
-		internal void UncheckAllListViewItems(ListView lvCur)
+		internal void UncheckAllListViewItems(SLISetView view)
 		{
 			int i, iMac;
 
-			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.ViewCur.Items.Count; i < iMac; i++)
 			{
-				m_ui.LvCur.Items[i].Checked = false;
+				m_ui.ViewCur.Check(i, false);
 			}
 		}
 
@@ -163,37 +163,17 @@ namespace SList
         	%%Contact: rlittle
         	
         ----------------------------------------------------------------------------*/
-		static public void AddSliToListView(SLItem sli, ListView lv)
+		public static void AddSliToListView(SLItem sli, SLISetView view)
 		{
-			AddSliToListView(sli, lv, false);
+			AddSliToListView(sli, view, false);
 		}
 
-		public static ListViewItem LviCreateForSli(SLItem sli, bool fChecked)
+
+		private static void AddSliToListView(SLItem sli, SLISetView view, bool fChecked, ISmartListUi ui = null)
 		{
-			ListViewItem lvi = new ListViewItem();
-
-			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
-			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
-			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
-			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
-
-			lvi.Tag = sli;
-			lvi.SubItems[3].Text = sli.Path;
-			lvi.SubItems[2].Text = sli.Size.ToString("###,###,###");
-			lvi.SubItems[1].Text = Path.GetExtension(sli.Name);
-			lvi.SubItems[0].Text = sli.Name;
-
-			if (fChecked)
-				lvi.Checked = true;
-
-			return lvi;
-		}
-
-		private static void AddSliToListView(SLItem sli, ListView lv, bool fChecked, ISmartListUi ui = null)
-		{
-			lv.Items.Add(LviCreateForSli(sli, fChecked));
+			view.Add(sli, fChecked);
 			if (ui != null)
-				ui.SetCount(lv.Items.Count);
+				ui.SetCount(view.Count);
 		}
 
 		private void AddDirectory(DirectoryInfo di, SLISet slis, string sPattern, bool fRecurse, List<FileInfo> plfiTooLong, bool fAppend)
@@ -225,8 +205,9 @@ namespace SList
 						slis.Add(sli, fAppend);
 					}
 				}
-				catch (Exception)
+				catch (Exception e)
 				{
+					MessageBox.Show($"exception: {e.Message}");
 					fTooLong = true;
 				}
 				if (fTooLong && !di.FullName.Contains("WindowsApps"))
@@ -300,17 +281,10 @@ namespace SList
 			Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
 
 			// stop redrawing
-			m_ui.LvCur.BeginUpdate();
-
-			// save off and reset the item sorter for faster adding
-			IComparer lvicSav = m_ui.LvCur.ListViewItemSorter;
-			m_ui.LvCur.ListViewItemSorter = null;
+			m_ui.ViewCur.BeginUpdate();
 
 			if (!fAppend)
-			{
-				m_ui.LvCur.Items.Clear();
 				m_ui.SlisCur.Clear();
-			}
 
 			List<FileInfo> plfiTooLong = new List<FileInfo>();
 
@@ -323,10 +297,9 @@ namespace SList
 			pt.Stop();
 			pt.Report(0, m_ui);
 
-			m_ui.LvCur.EndUpdate();
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
-			m_ui.LvCur.ListViewItemSorter = lvicSav;
-			m_ui.LvCur.Update();
+			m_ui.ViewCur.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
+			m_ui.ViewCur.UpdateAfterAdd();
 			m_ui.SetCursor(crsSav);
 		}
 
@@ -523,7 +496,7 @@ namespace SList
 
 			SLISet.SaveFileListXml(slis, sFile);
 			return;
-
+#if no
 			TextWriter tr = new StreamWriter(new FileStream(sFile, FileMode.CreateNew, FileAccess.Write), Encoding.Default);
 
 			tr.WriteLine("[file.lst]"); // write something out so we know this is one of our files (we will parse it faster)
@@ -534,6 +507,7 @@ namespace SList
 			}
 			tr.Flush();
 			tr.Close();
+#endif // no
 		}
 
 #endregion
@@ -655,9 +629,9 @@ namespace SList
 		{
 			int i, iMac;
 
-			for (i = 0, iMac = slis.Lv.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = slis.View.Items.Count; i < iMac; i++)
 			{
-				rgsli[iFirst + i] = (SLItem)slis.Lv.Items[i].Tag;
+				rgsli[iFirst + i] = slis.View.Items[i];
 				rgsli[iFirst + i].ClearDupeChain();
 				rgsli[iFirst + i].IsMarked = false;
 				rgsli[iFirst + i].IsDestOnly = fDestOnly;
@@ -674,21 +648,21 @@ namespace SList
 			int start, end, sum = 0;
 			int min = 999999, max = 0, c = 0;
 			SLISet slisSrc = m_ui.GetSliSet(SListApp.FileList.Source);
-			int cItems = slisSrc.Lv.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).Lv.Items.Count;
+			int cItems = slisSrc.View.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count;
 			SLItem[] rgsli = new SLItem[cItems];
 
 			start = Environment.TickCount;
 
 			AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
-			if (m_ui.GetSliSet(SListApp.FileList.Destination).Lv.Items.Count > 0)
+			if (m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count > 0)
 			{
-				AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.Lv.Items.Count, true);
+				AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.View.Items.Count, true);
 			}
 			Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSize));
 
-			slisSrc.Lv.BeginUpdate();
-			slisSrc.Lv.Items.Clear();
+			slisSrc.View.BeginUpdate();
+			slisSrc.View.Items.Clear();
 
 			int i = 0;
 			int iMac = rgsli.Length;
@@ -721,10 +695,10 @@ namespace SList
 							if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
 							{
 								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
-									AddSliToListView(rgsli[i], slisSrc.Lv, true);
+									AddSliToListView(rgsli[i], slisSrc.View, true);
 
 								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
-									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
+									AddSliToListView(rgsli[iDupe], slisSrc.View);
 
 								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
 								rgsli[i].AddDupeToChain(rgsli[iDupe]);
@@ -735,10 +709,10 @@ namespace SList
 							if (rgsli[i].Name == rgsli[iDupe].Name)
 							{
 								if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
-									AddSliToListView(rgsli[i], slisSrc.Lv);
+									AddSliToListView(rgsli[i], slisSrc.View);
 
 								if (rgsli[iDupe].IsMarked == false && !rgsli[iDupe].IsDestOnly)
-									AddSliToListView(rgsli[iDupe], slisSrc.Lv);
+									AddSliToListView(rgsli[iDupe], slisSrc.View);
 
 								rgsli[i].IsMarked = rgsli[iDupe].IsMarked = true;
 								rgsli[i].AddDupeToChain(rgsli[iDupe]);
@@ -749,7 +723,7 @@ namespace SList
 					{
 						if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
 							// this was unique...
-							AddSliToListView(rgsli[i], slisSrc.Lv, true);
+							AddSliToListView(rgsli[i], slisSrc.View, true);
 
 						break; // no reason to continue if the lengths changed; we sorted by length
 					}
@@ -762,8 +736,8 @@ namespace SList
 			else
 				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
-			slisSrc.Lv.EndUpdate();
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
+			slisSrc.View.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
 			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 
@@ -788,10 +762,8 @@ namespace SList
 	    ----------------------------------------------------------------------------*/
 		void AdjustListViewForFavoredPaths()
 		{
-			foreach (ListViewItem lvi in m_ui.LvCur.Items)
+			foreach (SLItem sli in m_ui.ViewCur.Items)
 			{
-				SLItem sli = (SLItem)lvi.Tag;
-
 				IEnumerator<string> e = (IEnumerator<string>)m_ui.GetPreferredPaths();
 
 				foreach (String s in m_ui.GetPreferredPaths())
@@ -839,14 +811,14 @@ namespace SList
 			writer.WriteLine($"robocopy \"{sourcePath}\" \"{destPath}\" \"sourceFile\"");
 		}
 
-		public static void CopySelectedFiles(ListView lvCur, string sDir, string sScript, StatusBarPanel stbp)
+		public static void CopySelectedFiles(SLISetView view, string sDir, string sScript, StatusBarPanel stbp)
 		{
 			if (sScript == null)
 				throw new Exception("nyi");
 
 			using (TextWriter tw = new StreamWriter(sScript))
 			{
-				IterateOverSelectedFiles(lvCur, sDir, stbp,
+				IterateOverSelectedFiles(view, sDir, stbp,
 					(string sourcePath, string destPath, string filename) =>
 					{
 						destPath = BuildRobocopyTargetPathFromPaths(sourcePath, destPath);
@@ -866,17 +838,17 @@ namespace SList
 
 		delegate IterateReturnVal IterateDoAction(string sourcePath, string destPath, string filename);
 
-		static void IterateOverSelectedFiles(ListView lvCur, string sDestPath, StatusBarPanel stbp, IterateDoAction del)
+		static void IterateOverSelectedFiles(SLISetView view, string sDestPath, StatusBarPanel stbp, IterateDoAction del)
 		{
 			// ok, iterate through all the items and find the ones that are checked
 			int i, iMac;
 
-			for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = view.Items.Count; i < iMac; i++)
 			{
-				if (!lvCur.Items[i].Checked)
+				if (!view.Items[i].Checked)
 					continue;
 
-				SLItem sli = (SLItem)(lvCur.Items[i].Tag);
+				SLItem sli = view.Items[i];
 
 				IterateReturnVal result;
 				int n = 0;
@@ -907,11 +879,11 @@ namespace SList
 					continue;
 				}
 
-				lvCur.Items[i].Checked = false;
+				view.Items[i].Checked = false;
 			}
 		}
 
-		public static void MoveSelectedFiles(ListView lvCur, string sDir, StatusBarPanel stbp)
+		public static void MoveSelectedFiles(SLISetView view, string sDir, StatusBarPanel stbp)
 		{
 			FileAttributes fa = 0;
 			bool fDirExists = false;
@@ -950,7 +922,7 @@ namespace SList
 			if (MessageBox.Show("Move selected files to " + sDir + "?", "SList", MessageBoxButtons.YesNo) == DialogResult.No)
 				return;
 
-			IterateOverSelectedFiles(lvCur, sDir, stbp,
+			IterateOverSelectedFiles(view, sDir, stbp,
 				(string sourcePath, string destPath, string filename) =>
 				{
 					string sSource = Path.GetFullPath(Path.Combine(sourcePath, filename));
@@ -1074,9 +1046,9 @@ namespace SList
 		{
 			SLISet slis = m_ui.SlisCur;
 
-			int colSav = ((ListViewItemComparer)slis.Lv.ListViewItemSorter).GetColumn();
-			((ListViewItemComparer)slis.Lv.ListViewItemSorter).SetColumn(-1);
-			slis.Lv.Sort();
+			int colSav = ((SLISetViewItemComparer)slis.View.ItemSorter).GetColumn();
+			((SLISetViewItemComparer)slis.View.ItemSorter).SetColumn(-1);
+			slis.View.Sort();
 
 			// otherwise, we're loading a new list
 			m_ign.LoadIgnoreList(sIgnoreList);
@@ -1123,9 +1095,9 @@ namespace SList
 
 			int i, iMac;
 
-			for (i = 0, iMac = m_ui.LvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = m_ui.ViewCur.Items.Count; i < iMac; i++)
 			{
-				SLItem sli = (SLItem)(m_ui.LvCur.Items[i].Tag);
+				SLItem sli = (SLItem)(m_ui.ViewCur.Items[i]);
 				string sPath = Path.GetFullPath(Path.Combine(sli.Path, sli.Name));
 				bool fMatch = false;
 
@@ -1135,12 +1107,12 @@ namespace SList
 				{
 					case RegexOp.Check:
 						if (fMatch)
-							m_ui.LvCur.Items[i].Checked = true;
+							m_ui.ViewCur.Items[i].Checked = true;
 						break;
 					case RegexOp.Filter:
 						if (fMatch)
 						{
-							m_ui.LvCur.Items[i].Remove();
+							m_ui.ViewCur.Remove(i);
 							iMac--;
 							i--;
 						}
@@ -1148,7 +1120,7 @@ namespace SList
 					case RegexOp.Match:
 						if (!fMatch)
 						{
-							m_ui.LvCur.Items[i].Remove();
+							m_ui.ViewCur.Remove(i);
 							iMac--;
 							i--;
 						}
@@ -1157,7 +1129,7 @@ namespace SList
 			}
 		}
 
-		public static string SCalcMatchingListViewItems(ListView lvCur, string sRegEx, string sCounts)
+		public static string SCalcMatchingListViewItems(SLISetView view, string sRegEx, string sCounts)
 		{
 			TextAtoms textAtoms = new TextAtoms(sRegEx);
 			string sMatch = String.Format("Matches for '{0}':\n\n", sRegEx);
@@ -1165,9 +1137,9 @@ namespace SList
 			int i, iMac;
 			int cMatch = 0;
 
-			for (i = 0, iMac = lvCur.Items.Count; i < iMac; i++)
+			for (i = 0, iMac = view.Items.Count; i < iMac; i++)
 			{
-				SLItem sli = (SLItem)(lvCur.Items[i].Tag);
+				SLItem sli = view.Items[i];
 
 				if (sli.Atoms == null)
 					sli.Atoms = new TextAtoms(sli.Name);
@@ -1195,24 +1167,24 @@ namespace SList
 		internal void RemovePath(SLISet slis, string sPathRoot)
 		{
 			slis.Remove(sPathRoot, m_ui);
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
+			m_ui.SetCount(m_ui.ViewCur.Items.Count);
 		}
 
 		internal void RemoveType(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
 		{
 			slis.RemoveType(typeInfo, m_ui);
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
+			m_ui.SetCount(m_ui.ViewCur.Items.Count);
 		}
 
 		internal void RemovePattern(SLISet slis, string sMenuText, FilePatternInfo typeInfo)
 		{
 			slis.RemovePattern(typeInfo, m_ui);
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
+			m_ui.SetCount(m_ui.ViewCur.Items.Count);
 		}
 
-		#endregion // Core Model (Compare Files, etc)
+#endregion // Core Model (Compare Files, etc)
 
-		#region List View Commands
+#region List View Commands
 
 		internal void LaunchSli(SLItem sli)
 		{
@@ -1254,19 +1226,7 @@ namespace SList
 
 		void UpdateMark(SLItem sli)
 		{
-			ListViewItem lvi = LviFromSli(sli);
-
-			lvi.Checked = sli.IsMarked;
-		}
-
-		ListViewItem LviFromSli(SLItem sli)
-		{
-			foreach (ListViewItem lvi in m_ui.LvCur.Items)
-			{
-				if (lvi.Tag == sli)
-					return lvi;
-			}
-			return null;
+			m_ui.ViewCur.UpdateMark(sli);
 		}
 
 		public void Select(SLItem sli)
@@ -1276,15 +1236,8 @@ namespace SList
 				SystemSounds.Beep.Play();
 				return;
 			}
-			ListViewItem lvi = LviFromSli(sli);
 
-			if (lvi != null)
-			{
-				lvi.Selected = true;
-				m_ui.LvCur.Select();
-				return;
-			}
-			SystemSounds.Beep.Play();
+			m_ui.ViewCur.Select(sli);
 		}
 
 		// we might not be at the beginning of the dupe list for this item -- we might
@@ -1312,20 +1265,20 @@ namespace SList
 
 			start = Environment.TickCount;
 
-			int cItems = slisSrc.Lv.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).Lv.Items.Count;
+			int cItems = slisSrc.View.Items.Count + m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count;
 
 			rgsli = new SLItem[cItems];
 
 			AddSlisToRgsli(slisSrc, rgsli, 0, false);
 
-			if (m_ui.GetSliSet(SListApp.FileList.Destination).Lv.Items.Count > 0)
+			if (m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count > 0)
 			{
-				AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.Lv.Items.Count, true);
+				AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.View.Items.Count, true);
 			}
 			Array.Sort(rgsli, new SLItemComparer(SLItem.SLItemCompare.CompareSizeDest));
 
-			slisSrc.Lv.BeginUpdate();
-			slisSrc.Lv.Items.Clear();
+			slisSrc.View.BeginUpdate();
+			slisSrc.View.Clear();
 
 			int i = 0;
 			int iMac = rgsli.Length;
@@ -1403,7 +1356,7 @@ namespace SList
 				// if its not set, then we didn't find this file in the destination.
 				if (rgsli[i].IsMarked == false)
 					// this was unique...
-					AddSliToListView(rgsli[i], slisSrc.Lv, true);
+					AddSliToListView(rgsli[i], slisSrc.View, true);
 
 
 			}
@@ -1414,8 +1367,8 @@ namespace SList
 			else
 				m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
 
-			slisSrc.Lv.EndUpdate();
-			m_ui.SetCount(m_ui.SlisCur.Lv.Items.Count);
+			slisSrc.View.EndUpdate();
+			m_ui.SetCount(m_ui.SlisCur.View.Items.Count);
 			m_ui.SetCursor(crsSav);
 			end = Environment.TickCount;
 

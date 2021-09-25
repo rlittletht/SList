@@ -83,7 +83,7 @@ namespace SList
 		private Label label5;
 		private TextBox m_ebRetireMePath;
 
-		public ListView LvCur => SlisCur.Lv;
+		public SLISetView ViewCur => SlisCur.View;
 		public SLISet SlisCur => m_rgslis[m_islisCur];
 
 		#region AppHost
@@ -122,8 +122,6 @@ namespace SList
 			m_progressBarStatusCurrent = new ProgressBarStatus(m_prbar);
 
 			InitializeListViews();
-			InitializeListView(s_ilvSource);
-			InitializeListView(s_ilvDest);
 
 			m_settings = new SmartListSettings();
 			m_settings.Load();
@@ -195,8 +193,9 @@ namespace SList
 		{
 			m_rgslis = new SLISet[s_clvMax];
 
-			m_rgslis[s_ilvSource] = new SLISet(FileList.Source);
-			m_rgslis[s_ilvSource].Lv = m_lv;
+			m_rgslis[s_ilvSource] = new SLISet(FileList.Source, m_lv);
+			ListView lvSource = m_lv;
+
 			m_lv = null;
 
 			for (int ilv = 0; ilv < s_clvMax; ilv++)
@@ -205,49 +204,21 @@ namespace SList
 					continue; // skip, this is already initialized
 
 				ListView lv = new System.Windows.Forms.ListView();
-				lv.Anchor = m_rgslis[s_ilvSource].Lv.Anchor;
-				lv.CheckBoxes = m_rgslis[s_ilvSource].Lv.CheckBoxes;
+				lv.VirtualMode = true;
+				lv.Anchor = lvSource.Anchor;
+				lv.CheckBoxes = lvSource.CheckBoxes;
 
-				lv.ContextMenu = m_rgslis[s_ilvSource].Lv.ContextMenu;
-				lv.Location = m_rgslis[s_ilvSource].Lv.Location;
+				lv.ContextMenu = lvSource.ContextMenu;
+				lv.Location = lvSource.Location;
 				lv.Name = String.Format("m_rglv{0}", ilv);
-				lv.Size = m_rgslis[s_ilvSource].Lv.Size;
-				lv.TabIndex = m_rgslis[s_ilvSource].Lv.TabIndex;
-				lv.UseCompatibleStateImageBehavior = m_rgslis[s_ilvSource].Lv.UseCompatibleStateImageBehavior;
+				lv.Size = lvSource.Size;
+				lv.TabIndex = lvSource.TabIndex;
+				lv.UseCompatibleStateImageBehavior = lvSource.UseCompatibleStateImageBehavior;
 				//m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
 				lv.Visible = false;
 				this.Controls.Add(lv);
-				m_rgslis[ilv] = new SLISet((FileList) ilv);
-				m_rgslis[ilv].Lv = lv;
+				m_rgslis[ilv] = new SLISet((FileList) ilv, lv);
 			}
-		}
-
-		private void InitializeListView(int ilv)
-		{
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[0].Text = "    Name";
-			m_rgslis[ilv].Lv.Columns[0].Width = 212;
-
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[1].Text = "Type";
-			m_rgslis[ilv].Lv.Columns[1].Width = 48;
-			m_rgslis[ilv].Lv.Columns[1].TextAlign = HorizontalAlignment.Center;
-
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[2].Text = "Size";
-			m_rgslis[ilv].Lv.Columns[2].Width = 52;
-			m_rgslis[ilv].Lv.Columns[2].TextAlign = HorizontalAlignment.Right;
-
-			m_rgslis[ilv].Lv.Columns.Add(new ColumnHeader());
-			m_rgslis[ilv].Lv.Columns[3].Text = "Location";
-			m_rgslis[ilv].Lv.Columns[3].Width = 512;
-
-			m_rgslis[ilv].Lv.FullRowSelect = true;
-			m_rgslis[ilv].Lv.MultiSelect = false;
-			m_rgslis[ilv].Lv.View = View.Details;
-			m_rgslis[ilv].Lv.ListViewItemSorter = new ListViewItemComparer(2); // start with size
-			m_rgslis[ilv].Lv.ColumnClick += new ColumnClickEventHandler(EH_ColumnClick);
-			m_rgslis[ilv].Lv.LabelEdit = true;
 		}
 
 		private int m_islisCur = -1;
@@ -301,7 +272,7 @@ namespace SList
 
 			for (int i = 0; i < s_clvMax; i++)
 			{
-				m_rgslis[i].Lv.Visible = (i == ilv);
+				m_rgslis[i].View.Visible = (i == ilv);
 			}
 			m_islisCur = ilv;
 
@@ -360,10 +331,14 @@ namespace SList
 			this.components = new System.ComponentModel.Container();
 			this.m_cxtListView = new System.Windows.Forms.ContextMenu();
 			this.menuItem1 = new System.Windows.Forms.MenuItem();
-			this.menuItem2 = new System.Windows.Forms.MenuItem();
-			this.menuItem3 = new System.Windows.Forms.MenuItem();
 			this.menuItem6 = new System.Windows.Forms.MenuItem();
 			this.menuItem7 = new System.Windows.Forms.MenuItem();
+			this.menuItem8 = new System.Windows.Forms.MenuItem();
+			this.menuItem9 = new System.Windows.Forms.MenuItem();
+			this.menuItem10 = new System.Windows.Forms.MenuItem();
+			this.menuItem11 = new System.Windows.Forms.MenuItem();
+			this.menuItem2 = new System.Windows.Forms.MenuItem();
+			this.menuItem3 = new System.Windows.Forms.MenuItem();
 			this.menuItem4 = new System.Windows.Forms.MenuItem();
 			this.menuItem5 = new System.Windows.Forms.MenuItem();
 			this.m_ebSearchPath = new System.Windows.Forms.TextBox();
@@ -425,10 +400,6 @@ namespace SList
 			this.m_cbGenerateScript = new System.Windows.Forms.CheckBox();
 			this.label6 = new System.Windows.Forms.Label();
 			this.m_ebScript = new System.Windows.Forms.TextBox();
-			this.menuItem8 = new System.Windows.Forms.MenuItem();
-			this.menuItem9 = new System.Windows.Forms.MenuItem();
-			this.menuItem10 = new System.Windows.Forms.MenuItem();
-			this.menuItem11 = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -454,18 +425,6 @@ namespace SList
 			this.menuItem1.Text = "Execute";
 			this.menuItem1.Click += new System.EventHandler(this.EH_HandleExecuteMenu);
 			// 
-			// menuItem2
-			// 
-			this.menuItem2.Index = 4;
-			this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem3});
-			this.menuItem2.Text = "Add Preferred Path";
-			// 
-			// menuItem3
-			// 
-			this.menuItem3.Index = 0;
-			this.menuItem3.Text = "Placeholder";
-			// 
 			// menuItem6
 			// 
 			this.menuItem6.Index = 1;
@@ -477,6 +436,42 @@ namespace SList
 			// 
 			this.menuItem7.Index = 0;
 			this.menuItem7.Text = "Placeholder";
+			// 
+			// menuItem8
+			// 
+			this.menuItem8.Index = 2;
+			this.menuItem8.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem9});
+			this.menuItem8.Text = "Remove Type";
+			// 
+			// menuItem9
+			// 
+			this.menuItem9.Index = 0;
+			this.menuItem9.Text = "Placeholder";
+			// 
+			// menuItem10
+			// 
+			this.menuItem10.Index = 3;
+			this.menuItem10.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem11});
+			this.menuItem10.Text = "Remove File Pattern";
+			// 
+			// menuItem11
+			// 
+			this.menuItem11.Index = 0;
+			this.menuItem11.Text = "Placeholder";
+			// 
+			// menuItem2
+			// 
+			this.menuItem2.Index = 4;
+			this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem3});
+			this.menuItem2.Text = "Add Preferred Path";
+			// 
+			// menuItem3
+			// 
+			this.menuItem3.Index = 0;
+			this.menuItem3.Text = "Placeholder";
 			// 
 			// menuItem4
 			// 
@@ -583,8 +578,7 @@ namespace SList
             this.m_stbpMainStatus,
             this.m_stbpFilterStatus,
             this.m_stbpSearch,
-			this.m_stbpCount,
-			});
+            this.m_stbpCount});
 			this.m_stb.ShowPanels = true;
 			this.m_stb.Size = new System.Drawing.Size(1331, 35);
 			this.m_stb.TabIndex = 9;
@@ -606,8 +600,7 @@ namespace SList
 			// 
 			// m_stbpCount
 			// 
-			this.m_stbpSearch.Name = "m_stbpCount";
-			this.m_stbpSearch.Width = 100;
+			this.m_stbpCount.Name = "m_stbpCount";
 			// 
 			// m_prbar
 			// 
@@ -809,6 +802,7 @@ namespace SList
 			this.m_lv.Size = new System.Drawing.Size(1279, 314);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
+			this.m_lv.VirtualMode = true;
 			this.m_lv.Visible = false;
 			this.m_lv.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.EH_HandleEdit);
 			this.m_lv.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.EH_HandleColumnClick);
@@ -1035,30 +1029,6 @@ namespace SList
 			this.m_ebScript.Size = new System.Drawing.Size(424, 26);
 			this.m_ebScript.TabIndex = 55;
 			// 
-			// menuItem8
-			// 
-			this.menuItem8.Index = 2;
-			this.menuItem8.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem9});
-			this.menuItem8.Text = "Remove Type";
-			// 
-			// menuItem9
-			// 
-			this.menuItem9.Index = 0;
-			this.menuItem9.Text = "Placeholder";
-			// 
-			// menuItem10
-			// 
-			this.menuItem10.Index = 3;
-			this.menuItem10.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem11});
-			this.menuItem10.Text = "Remove File Pattern";
-			// 
-			// menuItem11
-			// 
-			this.menuItem11.Index = 0;
-			this.menuItem11.Text = "Placeholder";
-			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
@@ -1149,7 +1119,7 @@ namespace SList
 
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
 		{
-			m_model.ChangeListViewSort((ListView)o, e.Column);
+			m_model.ChangeListViewSort(ViewCur, e.Column);
 		}
 
 		private void EH_Uniquify(object sender, System.EventArgs e)
@@ -1174,24 +1144,24 @@ namespace SList
 
 		private void EH_DoMove(object sender, System.EventArgs e)
 		{
-			SmartList.MoveSelectedFiles(LvCur, m_ebMovePath.Text, m_stbpMainStatus);
+			SmartList.MoveSelectedFiles(ViewCur, m_ebMovePath.Text, m_stbpMainStatus);
 		}
 
 		private void DoCopy(object sender, EventArgs e)
 		{
-			SmartList.CopySelectedFiles(LvCur, m_ebCopyPath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
+			SmartList.CopySelectedFiles(ViewCur, m_ebCopyPath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
 		}
 
 		private void EH_DoDelete(object sender, System.EventArgs e) { }
 
 		private void EH_ToggleAll(object sender, System.EventArgs e)
 		{
-			m_model.ToggleAllListViewItems(LvCur);
+			m_model.ToggleAllListViewItems(ViewCur);
 		}
 
 		private void EH_ClearAll(object sender, System.EventArgs e)
 		{
-			m_model.UncheckAllListViewItems(LvCur);
+			m_model.UncheckAllListViewItems(ViewCur);
 		}
 
 		private void EH_MatchRegex(object sender, System.EventArgs e)
@@ -1211,22 +1181,22 @@ namespace SList
 
 		private void EH_HandleExecuteMenu(object sender, System.EventArgs e)
 		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+			SLItem sli = ViewCur.SelectedItem();
 
-			if (slvic != null && slvic.Count >= 1)
+			if (sli != null)
 			{
-				m_model.LaunchSli((SLItem)slvic[0].Tag);
+				m_model.LaunchSli(sli);
 			}
 		}
 
 		private void EH_SmartMatchClick(object sender, System.EventArgs e)
 		{
-			sCancelled = SmartList.SCalcMatchingListViewItems(LvCur, m_ebRegEx.Text, sCancelled);
+			sCancelled = SmartList.SCalcMatchingListViewItems(ViewCur, m_ebRegEx.Text, sCancelled);
 		}
 
 		private void EH_HandleEdit(object sender, System.Windows.Forms.LabelEditEventArgs e)
 		{
-			SLItem sli = (SLItem)LvCur.Items[e.Item].Tag;
+			SLItem sli = ViewCur.Items[e.Item];
 
 			if (!SmartList.FRenameFile(sli.Path, sli.Name, sli.Path, e.Label))
 			{
@@ -1275,7 +1245,7 @@ namespace SList
 		private void EH_LoadFileListFromFile(object sender, EventArgs e)
 		{
 			m_model.LoadFileListFromFile(SlisCur);
-			SetCount(SlisCur.Lv.Items.Count);
+			SetCount(ViewCur.Items.Count);
 		}
 
 		private void EH_SaveFileListToFile(object sender, EventArgs e)
@@ -1421,12 +1391,10 @@ namespace SList
 
 		private void EH_DoContextPopup(object sender, EventArgs e)
 		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+			SLItem sli = ViewCur.SelectedItem();
 
-			if (slvic != null && slvic.Count >= 1)
+			if (sli != null)
 			{
-				SLItem sli = (SLItem)slvic[0].Tag;
-
 				ContextMenu cm = (ContextMenu)sender;
 
 				AddRemovePathSubmenuItems(cm.MenuItems[1], sli);
@@ -1514,12 +1482,10 @@ namespace SList
 
 		private void EH_SelectPrevDupe(object sender, EventArgs e)
 		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+			SLItem sli = ViewCur.SelectedItem();
 
-			if (slvic != null && slvic.Count >= 1)
+			if (sli != null)
 			{
-				SLItem sli = (SLItem)slvic[0].Tag;
-
 				SLItem sliSel = sli.Prev;
 				m_model.Select(sliSel);
 			}
@@ -1527,12 +1493,10 @@ namespace SList
 
 		private void EH_SelectNextDupe(object sender, EventArgs e)
 		{
-			ListView.SelectedListViewItemCollection slvic = LvCur.SelectedItems;
+			SLItem sli = ViewCur.SelectedItem();
 
-			if (slvic != null && slvic.Count >= 1)
+			if (sli != null)
 			{
-				SLItem sli = (SLItem)slvic[0].Tag;
-
 				SLItem sliSel = sli.Next;
 				m_model.Select(sliSel);
 			}
@@ -1604,48 +1568,6 @@ namespace SList
 			return m_lbPrefPath.Items;
 		}
 
-		class ProgressBarStatus
-		{
-			private ProgressBar m_bar;
-
-			public ProgressBarStatus(ProgressBar bar)
-			{
-				m_bar = bar;
-			}
-
-			public void Show()
-			{
-				m_bar.Show();
-			}
-
-			public void Hide()
-			{
-				m_bar.Hide();
-			}
-			public long MacProgressBarOverall { get; set; }
-			public long IncrementProgressBarOverall { get; set; }
-			private long LastProgressBarOverall { get; set; }
-
-			public void SetMacProgress(long mac)
-			{
-				MacProgressBarOverall = mac;
-				IncrementProgressBarOverall = Math.Max(1, mac / m_bar.Maximum);
-				m_bar.Value = 0;
-			}
-
-			public void Update(long i, OnProgressUpdateDelegate del)
-			{
-				if (LastProgressBarOverall + IncrementProgressBarOverall < i)
-				{
-					m_bar.Value = Math.Min(m_bar.Maximum, (int)(i / IncrementProgressBarOverall));
-					LastProgressBarOverall = m_bar.Value * IncrementProgressBarOverall;
-					m_bar.Update();
-					if (del != null)
-						del();
-				}
-			}
-		}
-
 		private ProgressBarStatus m_progressBarStatusOverall;
 		private ProgressBarStatus m_progressBarStatusCurrent;
 
@@ -1660,6 +1582,11 @@ namespace SList
 		public void SetProgressBarMac(ProgressBarType barType, long iMac)
 		{
 			BarFromType(barType).SetMacProgress(iMac);
+		}
+
+		public void SetProgressBarOnDemand(ProgressBarType barType, int msecBeforeShow)
+		{
+			BarFromType(barType).SetOnDemandStatusBar(msecBeforeShow);
 		}
 
 		public void ShowProgressBar(ProgressBarType barType)
@@ -1683,7 +1610,7 @@ namespace SList
 
 		private void EH_HandleColumnClick(object sender, ColumnClickEventArgs e)
 		{
-			// ((SList.ListViewItemComparer)LvCur.ListViewItemSorter).SetColumn(e.Column);
+			// ((SList.SLISetViewItemComparer)LvCur.ListViewItemSorter).SetColumn(e.Column);
 		}
 
 
