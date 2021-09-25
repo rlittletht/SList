@@ -1,21 +1,22 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace SList
 {
-	public class ListViewItemComparer : IComparer
+	public class SLISetViewItemComparer : IComparer<SLItem>
 	{
 		private int m_col;
 		private bool m_fReverse;
 
 		/* L I S T  V I E W  I T E M  C O M P A R E R */
 		/*----------------------------------------------------------------------------
-		%%Function: ListViewItemComparer
-		%%Qualified: SList.ListViewItemComparer.ListViewItemComparer
+		%%Function: SLISetViewItemComparer
+		%%Qualified: SList.SLISetViewItemComparer.SLISetViewItemComparer
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
-		public ListViewItemComparer()
+		public SLISetViewItemComparer()
 		{
 			m_col = 0;
 			m_fReverse = false;
@@ -23,12 +24,12 @@ namespace SList
 
 		/* L I S T  V I E W  I T E M  C O M P A R E R */
 		/*----------------------------------------------------------------------------
-		%%Function: ListViewItemComparer
-		%%Qualified: SList.ListViewItemComparer.ListViewItemComparer
+		%%Function: SLISetViewItemComparer
+		%%Qualified: SList.SLISetViewItemComparer.SLISetViewItemComparer
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
-		public ListViewItemComparer(int col)
+		public SLISetViewItemComparer(int col)
 		{
 			m_col = col;
 			m_fReverse = false;
@@ -37,7 +38,7 @@ namespace SList
 		/* S E T  C O L U M N */
 		/*----------------------------------------------------------------------------
 		%%Function: SetColumn
-		%%Qualified: SList.ListViewItemComparer.SetColumn
+		%%Qualified: SList.SLISetViewItemComparer.SetColumn
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
@@ -59,16 +60,12 @@ namespace SList
 		/* C O M P A R E */
 		/*----------------------------------------------------------------------------
 		%%Function: Compare
-		%%Qualified: SList.ListViewItemComparer.Compare
+		%%Qualified: SList.SLISetViewItemComparer.Compare
 		%%Contact: rlittle
 
 	----------------------------------------------------------------------------*/
-		public int Compare(object x, object y)
+		public int Compare(SLItem sli1, SLItem sli2)
 		{
-			ListViewItem lvi1 = (ListViewItem)x;
-			ListViewItem lvi2 = (ListViewItem)y;
-			SLItem sli1 = (SLItem)lvi1.Tag;
-			SLItem sli2 = (SLItem)lvi2.Tag;
 			int n = 0;
 
 			switch (m_col)

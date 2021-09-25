@@ -33,7 +33,7 @@ namespace SList
 		/* C O M P A R E */
 		/*----------------------------------------------------------------------------
 		    %%Function: Compare
-		    %%Qualified: SList.ListViewItemComparer.Compare
+		    %%Qualified: SList.SLISetViewItemComparer.Compare
 		    %%Contact: rlittle
 
 	    ----------------------------------------------------------------------------*/

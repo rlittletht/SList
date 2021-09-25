@@ -17,6 +17,7 @@ namespace SList
 		void ShowProgressBar(ProgressBarType barType);
 		void HideProgressBar(ProgressBarType barType);
 		void SetProgressBarMac(ProgressBarType barType, long iMac);
+		void SetProgressBarOnDemand(ProgressBarType barType, int msecBeforeShow);
 		void UpdateProgressBar(ProgressBarType barType, long i, OnProgressUpdateDelegate del);
 		bool FCompareFilesChecked();
 		void SetStatusText(string text);
@@ -32,7 +33,7 @@ namespace SList
 		string GetFileListDefaultName(SListApp.FileList fileList);
 		void SetFileListDefaultName(SListApp.FileList fileList, string sDefault);
 
-		ListView LvCur { get; }
+		SLISetView ViewCur { get; }
 		SLISet SlisCur { get; }
 
 	}

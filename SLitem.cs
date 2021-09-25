@@ -18,6 +18,7 @@ namespace SList
 		public string Path { get; private set; }
 		public bool IsMarked { get; set; }
 		public string Extension => System.IO.Path.GetExtension(Name);
+		public bool Checked { get; set; }
 
 		public bool IsReparsePoint { get; private set; }
 
