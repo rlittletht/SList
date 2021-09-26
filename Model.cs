@@ -383,7 +383,7 @@ namespace SList
 			using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
 			{
 				string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
-				if (!InputBox.ShowInputBox("File list", sDefault, out string sFile))
+				if (!InputBox.ShowInputBox("File list", sDefault, out string sFile, m_ui.TheForm))
 					return;
 
 				m_ui.SetFileListDefaultName(slis.FileListType, sFile);
@@ -496,7 +496,7 @@ namespace SList
 				string sFile;
 				string sDefault = m_ui.GetFileListDefaultName(slis.FileListType);
 
-				if (!InputBox.ShowInputBox("File list", sDefault, out sFile))
+				if (!InputBox.ShowInputBox("File list", sDefault, out sFile, m_ui.TheForm))
 					return;
 
 				m_ui.SetFileListDefaultName(slis.FileListType, sFile);
@@ -846,11 +846,13 @@ namespace SList
 
 			using (TextWriter tw = new StreamWriter(sScript))
 			{
+				tw.WriteLine("setlocal");
+				tw.WriteLine("chcp 65001");
 				IterateOverSelectedFiles(view, sDir, stbp,
 					(string sourcePath, string destPath, string filename) =>
 					{
 						destPath = BuildRobocopyTargetPathFromPaths(sourcePath, destPath);
-						tw.WriteLine($"robocopy \"{sourcePath}\" \"{destPath}\" \"{filename}\"");
+						tw.WriteLine($"robocopy \"{sourcePath}\" \"{destPath}\" \"{filename}\">NUL");
 						return IterateReturnVal.Succeed;
 					});
 			}
@@ -1263,6 +1265,17 @@ namespace SList
 			{
 				SystemSounds.Beep.Play();
 				return;
+			}
+
+			// check if we have to switch views
+			if (m_ui.SlisCur.FileListType == SListApp.FileList.Source && sli.IsDestOnly)
+			{
+				// switch to dest
+				m_ui.ShowListView(SListApp.FileList.Destination);
+			}
+			else if (m_ui.SlisCur.FileListType == SListApp.FileList.Destination && !sli.IsDestOnly)
+			{
+				m_ui.ShowListView(SListApp.FileList.Source);
 			}
 
 			m_ui.ViewCur.Select(sli);

@@ -11,11 +11,15 @@ namespace SList
 		public List<SLItem> Items { get; private set; }
 		private ListView LvControl { get; set; }
 		public SLISetViewItemComparer Comparer { get; set; }
+		private SLISet m_parent;
+		private ISmartListUi m_ui;
 
 		public int Count => Items.Count;
 
-		public SLISetView(ListView lvControl)
+		public SLISetView(ListView lvControl, SLISet parent, ISmartListUi ui)
 		{
+			m_parent = parent;
+			m_ui = ui;
 			LvControl = lvControl;
 			LvControl.RetrieveVirtualItem += new RetrieveVirtualItemEventHandler(RetrieveVirtualItem);
 			Items = new List<SLItem>();
@@ -31,12 +35,12 @@ namespace SList
 
 			LvControl.Columns.Add(new ColumnHeader());
 			LvControl.Columns[1].Text = "Type";
-			LvControl.Columns[1].Width = 48;
+			LvControl.Columns[1].Width = 98;
 			LvControl.Columns[1].TextAlign = HorizontalAlignment.Center;
 
 			LvControl.Columns.Add(new ColumnHeader());
 			LvControl.Columns[2].Text = "Size";
-			LvControl.Columns[2].Width = 52;
+			LvControl.Columns[2].Width = 92;
 			LvControl.Columns[2].TextAlign = HorizontalAlignment.Right;
 
 			LvControl.Columns.Add(new ColumnHeader());
@@ -65,16 +69,10 @@ namespace SList
 			List<int> deleting = new List<int>();
 
 			foreach (int i in LvControl.SelectedIndices)
-				deleting.Add(i);
+				Items[i].PendingRemove = true;
 
-			deleting.Sort();
-
-			int isel = deleting[0];
-
-			for (int i = deleting.Count - 1; i >= 0; --i)
-				Remove(deleting[i]);
-
-			Select(isel);
+			m_parent.RemovePendingItems(m_ui);
+			m_ui.SetCount(Items.Count);
 		}
 
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)

@@ -22,6 +22,8 @@ namespace SList
 		public bool CannotOpen { get; set; }
 		public bool IsReparsePoint { get; private set; }
 
+		public bool PendingRemove { get; set; }	 // this is marked as a pending remove
+
 		// some items are intended only to matched *against*, but we shouldn't treat them as unique.  
 		// (i.e. drive old and drive new.  we don't care to find dupes for items on drive new on 
 		// drive new; we only care about finding items from drive old that are on drive new.
@@ -325,8 +327,7 @@ namespace SList
 						fileStream.Close();
 					}
 				}
-				catch
-				{ }
+				catch { }
 			}
 		}
 

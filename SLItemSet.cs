@@ -18,10 +18,10 @@ namespace SList
 		public string PathSpec { get { return m_sSpec; } set { m_sSpec = value; } }
 		public bool Recurse { get; set; }
 
-		public SLISet(SListApp.FileList fileList, ListView lv)
+		public SLISet(SListApp.FileList fileList, ListView lv, ISmartListUi ui)
 		{
 			FileListType = fileList;
-			View = new SLISetView(lv);
+			View = new SLISetView(lv, this, ui);
 			m_items = new Dictionary<string, SLItem>();
 			m_plLvComparerStack = new List<IComparer>();
 		}
@@ -142,6 +142,12 @@ namespace SList
 				});
 		}
 
+		public void RemovePendingItems(ISmartListUi ui)
+		{
+			RemoveGeneric(
+				ui,
+				(sli) => sli != null && sli.PendingRemove);
+		}
 		public void RemovePattern(FilePatternInfo typeInfo, ISmartListUi ui)
 		{
 			RemoveGeneric(

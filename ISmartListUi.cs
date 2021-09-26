@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 
 namespace SList
@@ -32,7 +33,7 @@ namespace SList
 		bool FMarkFavored();
 		string GetFileListDefaultName(SListApp.FileList fileList);
 		void SetFileListDefaultName(SListApp.FileList fileList, string sDefault);
-
+		System.Windows.Forms.Form TheForm { get; }
 		SLISetView ViewCur { get; }
 		SLISet SlisCur { get; }
 

@@ -189,7 +189,7 @@ namespace SList
 		{
 			m_rgslis = new SLISet[s_clvMax];
 
-			m_rgslis[s_ilvSource] = new SLISet(FileList.Source, m_lv);
+			m_rgslis[s_ilvSource] = new SLISet(FileList.Source, m_lv, this);
 			ListView lvSource = m_lv;
 
 			m_lv = null;
@@ -214,7 +214,7 @@ namespace SList
 				//m_rglv[ilv].AfterLabelEdit += m_rglv[s_ilvSource].AfterLabelEdit;
 				lv.Visible = false;
 				this.Controls.Add(lv);
-				m_rgslis[ilv] = new SLISet((FileList) ilv, lv);
+				m_rgslis[ilv] = new SLISet((FileList) ilv, lv, this);
 			}
 		}
 
@@ -230,8 +230,10 @@ namespace SList
         ----------------------------------------------------------------------------*/
 		void SyncSearchTargetUI(FileList fileList)
 		{
+			fSyncing = true;
 			radioButton1.Checked = fileList == FileList.Source;
 			radioButton2.Checked = fileList == FileList.Destination;
+			fSyncing = false;
 		}
 
 		int IlvFromFileList(FileList fileList)
@@ -1127,9 +1129,11 @@ namespace SList
 			m_settings.Save();
 		}
 
+		private bool fSyncing = false;
 		private void DoSearchTargetChange(object sender, EventArgs e)
 		{
-			ShowListView(CurrentFileList());
+			if (!fSyncing)
+				ShowListView(CurrentFileList());
 		}
 
 		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
@@ -1241,7 +1245,7 @@ namespace SList
 			{
 				// this is "<Create...>" or "<Copy...>"
 				string sName;
-				if (TCore.UI.InputBox.ShowInputBox("New ignore list name", "Ignore list name", "", out sName))
+				if (TCore.UI.InputBox.ShowInputBox("New ignore list name", "Ignore list name", "", out sName, this))
 				{
 					m_model.CreateIgnoreList(sName, m_cbxIgnoreList.SelectedIndex == 1);
 					m_cbxIgnoreList.Items.Add(sName);
@@ -1519,6 +1523,8 @@ namespace SList
 		#endregion
 
 		#region ISmartListUi
+
+		public Form TheForm => this;
 
 		public string GetFileListDefaultName(FileList fileList)
 		{
