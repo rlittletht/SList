@@ -207,7 +207,8 @@ namespace SList
 				}
 				catch (Exception e)
 				{
-					MessageBox.Show($"exception: {e.Message}");
+					if (!rgfi[i].Directory.FullName.Contains("Packages"))
+						MessageBox.Show($"exception: {e.Message}");
 					fTooLong = true;
 				}
 				if (fTooLong && !di.FullName.Contains("WindowsApps"))
