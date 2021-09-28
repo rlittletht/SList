@@ -19,9 +19,12 @@ namespace SList
 	{
 		private ISmartListUi m_ui;
 
+		public PreferredPaths PreferredPaths { get; }
+
 		public SmartList(ISmartListUi ui)
 		{
 			m_ui = ui;
+			PreferredPaths = new PreferredPaths();
 
 			m_rgb1 = new byte[lcbMax];
 			m_rgb2 = new byte[lcbMax];
@@ -656,6 +659,7 @@ namespace SList
 				rgsli[iFirst + i] = slis.View.Items[i];
 				rgsli[iFirst + i].ClearDupeChain();
 				rgsli[iFirst + i].IsMarked = false;
+				rgsli[iFirst + i].Checked = false;
 				rgsli[iFirst + i].IsDestOnly = fDestOnly;
 			}
 		}
@@ -681,6 +685,7 @@ namespace SList
 
 				if (m_ui.GetSliSet(SListApp.FileList.Destination).View.Items.Count > 0)
 				{
+					// this also clears IsMarked...
 					AddSlisToRgsli(m_ui.GetSliSet(SListApp.FileList.Destination), rgsli, slisSrc.View.Items.Count,
 						true);
 				}
@@ -697,6 +702,7 @@ namespace SList
 
 				Cursor crsSav = m_ui.SetCursor(Cursors.WaitCursor);
 
+				// this dupe checking assumes that DestOnly files are always sorted to the front
 				m_ui.ShowProgressBar(ProgressBarType.Overall);
 				for (; i < iMac; i++)
 				{
@@ -789,19 +795,19 @@ namespace SList
 		    for dupe chains, and then favors marking/unmark items that match the paths
 		    in the preferred paths list (uses m_cbMarkFavored)
 	    ----------------------------------------------------------------------------*/
-		void AdjustListViewForFavoredPaths()
+		public void AdjustListViewForFavoredPaths()
 		{
-			foreach (SLItem sli in m_ui.ViewCur.Items)
-			{
-				IEnumerator<string> e = (IEnumerator<string>)m_ui.GetPreferredPaths();
+			m_ui.ViewCur.ClearMarks();
 
-				foreach (String s in m_ui.GetPreferredPaths())
+			foreach (String s in m_ui.GetPreferredPaths())
+			{
+				foreach (SLItem sli in m_ui.ViewCur.Items)
 				{
 					if (sli.MatchesPathPrefix(s))
-					{
 						UpdateForPrefPath(sli, s, m_ui.FMarkFavored());
-						break;
-					}
+					// can't break above since we have to process the whole list
+					// (IsMarked will keep us from dealing with items more than
+					// once)
 				}
 			}
 		}
@@ -1192,7 +1198,13 @@ namespace SList
 		internal void AddPreferredPath(string s)
 		{
 			m_ui.AddPreferredPath(s);
+			PreferredPaths.Add(s);
 			AdjustListViewForFavoredPaths();
+		}
+
+		internal void RemovePreferredPath(string s)
+		{
+			PreferredPaths.Remove(s);
 		}
 
 		internal void RemovePath(SLISet slis, string sPathRoot)
@@ -1224,40 +1236,98 @@ namespace SList
 
 #endregion // List View Commands
 
-		public void UpdateForPrefPath(SLItem sliMaster, string s, bool fMark)
+		/*----------------------------------------------------------------------------
+			%%Function: UpdateForPrefPath
+			%%Qualified: SList.SmartList.UpdateForPrefPath
+
+			we want to update this dupe chain for the preferred path in s.
+
+			BUT, do not change the relationship between DestOnly and non
+			DestOnly items. If none of the non-destonly items are checked, then
+			that will remain true.
+
+			NOTE: This does NOT work for Dest Only files
+
+			NOTENOTE: We will ensure that there are no more items checked when
+			we are finished adjusting. (if there was 1 item checked before, there
+			will be only 1 checked after.  if there were 2 checked, there will be
+			at least 1 and at most 2 items checked)
+		----------------------------------------------------------------------------*/
+		public void UpdateForPrefPath(SLItem sliMaster, string s, bool fCheckOnMatch)
 		{
+			if (sliMaster.IsDestOnly)
+				throw new Exception("should never have a master in DestOnly");
+
+			if (sliMaster.IsMarked)
+				return;
+
 			SLItem sli;
 
-			sliMaster.IsMarked = fMark;
-			UpdateMark(sliMaster);
+			// build a list of DestOnly files in the dupe chain
+			// and !DestOnly files
+			List<SLItem> destOnly = new List<SLItem>();
+			List<SLItem> notDestOnly = new List<SLItem>();
 
 			sli = sliMaster;
+			bool fNonDestMatchChecked = false;
 
-			while ((sli = sli.Prev) != null)
+			// get to the start of the dupe chain
+			while (sli.Prev != null)
+				sli = sli.Prev;
+
+			// now walk the entire chain
+			int cMatchChecked = 0;
+
+			while (sli != null)
 			{
-				if (sli.MatchesPathPrefix(s))
-					sli.IsMarked = fMark;
+				if (sli.IsDestOnly)
+				{
+					destOnly.Add(sli);
+				}
 				else
-					sli.IsMarked = !fMark;
+				{
+					notDestOnly.Add(sli);
+					if (sli.Checked == fCheckOnMatch)
+					{
+						fNonDestMatchChecked = true;
+						cMatchChecked++;
+					}
+				}
 
-				UpdateMark(sli);
+				sli = sli.Next;
 			}
 
-			sli = sliMaster;
+			if (destOnly.Count > 0 && !fNonDestMatchChecked)
+				return; // no work to do -- always favor destonly paths
 
-			while ((sli = sli.Next) != null)
+			// if we got here, then either we don't have destonly files, OR
+			// a non-destonly file has been checked. this means that we should
+			// evaluate the Favor path and check/uncheck the non-destonly paths
+			// accordingly
+
+			foreach (SLItem sliLoop in notDestOnly)
 			{
-				if (sli.MatchesPathPrefix(s))
-					sli.IsMarked = fMark;
+				if (sliLoop.MatchesPathPrefix(s))
+				{
+					if (cMatchChecked > 0)
+					{
+						sliLoop.Checked = fCheckOnMatch;
+						--cMatchChecked;
+					}
+				}
 				else
-					sli.IsMarked = !fMark;
-				UpdateMark(sli);
+				{
+					sliLoop.Checked = !fCheckOnMatch;
+				}
+
+				sliLoop.IsMarked = true;
+				UpdateChecked(sliLoop);
 			}
 		}
 
-		void UpdateMark(SLItem sli)
+		void UpdateChecked(SLItem sli)
 		{
-			m_ui.ViewCur.UpdateMark(sli);
+			m_ui.ViewCur.UpdateChecked(sli);
 		}
 
 		public void Select(SLItem sli)
@@ -1422,5 +1492,31 @@ namespace SList
 			int avg2 = sum / c;
 			m_ui.SetStatusText(len.ToString() + "ms, (" + min.ToString() + ", " + max.ToString() + ", " + avg.ToString() + ", " + avg2.ToString() + ", " + c.ToString() + ")");
 		}
+
+		internal void LoadPreferredPathsFromFile()
+		{
+			string sDefault = m_ui.GetPreferredPathListDefaultName();
+			if (!InputBox.ShowInputBox("Preferred Path file list", sDefault, out string sFile, m_ui.TheForm))
+				return;
+
+			m_ui.SetPreferredPathListDefaultName(sFile);
+
+			PreferredPaths.LoadPreferredPathListXml(PreferredPaths, sFile);
+			m_ui.ClearPreferredPaths();
+			foreach (PreferredPaths.PathItem item in PreferredPaths.Paths)
+				m_ui.AddPreferredPath(item.Path);
+		}
+
+		internal void SavePreferredPathsToFile()
+		{
+			string sDefault = m_ui.GetPreferredPathListDefaultName();
+			if (!InputBox.ShowInputBox("Preferred Path file list", sDefault, out string sFile, m_ui.TheForm))
+				return;
+
+			m_ui.SetPreferredPathListDefaultName(sFile);
+
+			PreferredPaths.SavePreferredPathListXml(PreferredPaths, sFile);
+		}
+
 	}
 }

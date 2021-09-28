@@ -148,11 +148,18 @@ namespace SList
 			return -1;
 		}
 
-		public void UpdateMark(SLItem sli)
+		public void ClearMarks()
+		{
+			foreach (SLItem sli in Items)
+				sli.IsMarked = false;
+		}
+
+		public void UpdateChecked(SLItem sli)
 		{
 			int i = GetItemIndex(sli);
-
-			Check(i, sli.IsMarked);
+			if (i == -1)
+				return; // its possible this sli is in a different view...
+			Check(i, sli.Checked);
 		}
 
 		public void Select(int i)
@@ -226,6 +233,7 @@ namespace SList
 		public void Check(int i, bool fChecked)
 		{
 			Items[i].Checked = fChecked;
+			LvControl.Items[i].Checked = fChecked;
 			LvControl.RedrawItems(i, i, true);
 		}
 

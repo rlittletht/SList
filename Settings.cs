@@ -19,6 +19,8 @@ namespace SList
 		[Setting("DestFilesListDefault", "", "")]		public string DestFilesListDefault { get; set; }
 		[Setting("RealFileDiffing", false, 0)]			public bool RealFileDiffing { get; set; }
 
+		[Setting("PreferredPathListDefault", "", "")]	public string PreferredPathListDefault { get; set; }
+
 		#region Model
 		private Settings m_settings;
 

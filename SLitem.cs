@@ -248,6 +248,12 @@ namespace SList
 
 					if (n == 0)
 					{
+						// they are the same, now look at DestOnly
+						if (sli1.IsDestOnly && !sli2.IsDestOnly)
+							return -1;
+						if (sli2.IsDestOnly && !sli1.IsDestOnly)
+							return 1;
+
 						// they are the same; now look at the name
 						n = String.Compare(sli1.Name, sli2.Name);
 

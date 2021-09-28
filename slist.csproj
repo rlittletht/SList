@@ -107,6 +107,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FilePatternInfo.cs" />
+    <Compile Include="PreferredPaths.cs" />
     <Compile Include="ProgressBarStatus.cs" />
     <Compile Include="RaiiWaitCursor.cs" />
     <Compile Include="Settings.cs" />

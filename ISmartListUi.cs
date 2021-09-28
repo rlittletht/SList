@@ -29,6 +29,9 @@ namespace SList
 		string GetSearchPath();
 		bool FRecurseChecked();
 		IEnumerable GetPreferredPaths();
+		string GetPreferredPathListDefaultName();
+		void SetPreferredPathListDefaultName(string name);
+		void ClearPreferredPaths();
 		void AddPreferredPath(string path);
 		bool FMarkFavored();
 		string GetFileListDefaultName(SListApp.FileList fileList);

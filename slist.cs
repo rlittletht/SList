@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Collections;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
 using System.Linq.Expressions;
+using NUnit.Framework;
 using TCore.UI;
 
 namespace SList
@@ -75,10 +77,6 @@ namespace SList
 		}
 
 		private ToolTip m_toolTip;
-		private Label label4;
-		private TextBox m_ebSaveMePath;
-		private Label label5;
-		private TextBox m_ebRetireMePath;
 
 		public SLISetView ViewCur => SlisCur.View;
 		public SLISet SlisCur => m_rgslis[m_islisCur];
@@ -101,6 +99,11 @@ namespace SList
 		private MenuItem menuItem10;
 		private MenuItem menuItem11;
 		private Label label1;
+		private Button m_pbLoadPreferredPaths;
+		private Button m_pbSavePreferredPaths;
+		private Button button3;
+		private Button button4;
+		private Button button5;
 		private SmartListSettings m_settings;
 
 		public SListApp()
@@ -148,8 +151,6 @@ namespace SList
 				m_cbRecurse.Checked = m_settings.RecurseDestinationSearch;
 			}
 			m_cbMarkFavored.Checked = m_settings.MarkFavored;
-			m_ebRetireMePath.Text = m_settings.RetireMePath;
-			m_ebSaveMePath.Text = m_settings.SaveMePath;
 			m_ebCopyPath.Text = m_settings.CopyTargetPath;
 			m_ebScript.Text = m_settings.ScriptPath;
 			m_ebMovePath.Text = m_settings.MoveTargetPath;
@@ -176,8 +177,6 @@ namespace SList
 			}
 
 			m_settings.MarkFavored = m_cbMarkFavored.Checked;
-			m_settings.RetireMePath = m_ebRetireMePath.Text;
-			m_settings.SaveMePath = m_ebSaveMePath.Text;
 			m_settings.CopyTargetPath = m_ebCopyPath.Text;
 			m_settings.ScriptPath = m_ebScript.Text;
 			m_settings.MoveTargetPath = m_ebMovePath.Text;
@@ -280,6 +279,7 @@ namespace SList
 			m_fSyncingSearchTarget = false;
 			m_ebSearchPath.Text = m_rgslis[ilv].PathSpec;
 			m_cbRecurse.Checked = m_rgslis[ilv].Recurse;
+			SetCount(ViewCur.Count);
 		}
 
 		/// <summary>
@@ -382,10 +382,6 @@ namespace SList
 			this.m_pbLoadFromFile = new System.Windows.Forms.Button();
 			this.m_pbSaveFileList = new System.Windows.Forms.Button();
 			this.m_toolTip = new System.Windows.Forms.ToolTip(this.components);
-			this.label4 = new System.Windows.Forms.Label();
-			this.m_ebSaveMePath = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
-			this.m_ebRetireMePath = new System.Windows.Forms.TextBox();
 			this.button1 = new System.Windows.Forms.Button();
 			this.radioButton1 = new System.Windows.Forms.RadioButton();
 			this.radioButton2 = new System.Windows.Forms.RadioButton();
@@ -397,6 +393,11 @@ namespace SList
 			this.label6 = new System.Windows.Forms.Label();
 			this.m_ebScript = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
+			this.m_pbLoadPreferredPaths = new System.Windows.Forms.Button();
+			this.m_pbSavePreferredPaths = new System.Windows.Forms.Button();
+			this.button3 = new System.Windows.Forms.Button();
+			this.button4 = new System.Windows.Forms.Button();
+			this.button5 = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -529,7 +530,7 @@ namespace SList
 			// 
 			this.m_pbDuplicates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbDuplicates.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbDuplicates.Location = new System.Drawing.Point(1270, 449);
+			this.m_pbDuplicates.Location = new System.Drawing.Point(1270, 395);
 			this.m_pbDuplicates.Name = "m_pbDuplicates";
 			this.m_pbDuplicates.Size = new System.Drawing.Size(115, 41);
 			this.m_pbDuplicates.TabIndex = 9;
@@ -541,7 +542,7 @@ namespace SList
 			this.m_lblFilterBanner.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_lblFilterBanner.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_lblFilterBanner.Location = new System.Drawing.Point(11, 415);
+			this.m_lblFilterBanner.Location = new System.Drawing.Point(11, 361);
 			this.m_lblFilterBanner.Name = "m_lblFilterBanner";
 			this.m_lblFilterBanner.Size = new System.Drawing.Size(1373, 31);
 			this.m_lblFilterBanner.TabIndex = 5;
@@ -566,7 +567,7 @@ namespace SList
 			// 
 			this.m_cbCompareFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_cbCompareFiles.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_cbCompareFiles.Location = new System.Drawing.Point(930, 452);
+			this.m_cbCompareFiles.Location = new System.Drawing.Point(930, 398);
 			this.m_cbCompareFiles.Name = "m_cbCompareFiles";
 			this.m_cbCompareFiles.Size = new System.Drawing.Size(243, 38);
 			this.m_cbCompareFiles.TabIndex = 8;
@@ -591,7 +592,7 @@ namespace SList
 			// m_stbpMainStatus
 			// 
 			this.m_stbpMainStatus.Name = "m_stbpMainStatus";
-			this.m_stbpMainStatus.Width = 300;
+			this.m_stbpMainStatus.Width = 200;
 			// 
 			// m_stbpFilterStatus
 			// 
@@ -609,10 +610,10 @@ namespace SList
 			// 
 			// m_prbar
 			// 
-			this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.m_prbar.Location = new System.Drawing.Point(179, 1143);
+			this.m_prbar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_prbar.Location = new System.Drawing.Point(962, 1143);
 			this.m_prbar.Name = "m_prbar";
-			this.m_prbar.Size = new System.Drawing.Size(304, 22);
+			this.m_prbar.Size = new System.Drawing.Size(210, 22);
 			this.m_prbar.TabIndex = 10;
 			this.m_prbar.Visible = false;
 			// 
@@ -621,7 +622,7 @@ namespace SList
 			this.m_lblActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_lblActions.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_lblActions.Location = new System.Drawing.Point(11, 563);
+			this.m_lblActions.Location = new System.Drawing.Point(11, 509);
 			this.m_lblActions.Name = "m_lblActions";
 			this.m_lblActions.Size = new System.Drawing.Size(1378, 28);
 			this.m_lblActions.TabIndex = 15;
@@ -634,7 +635,7 @@ namespace SList
 			this.m_ebRegEx.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebRegEx.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebRegEx.Location = new System.Drawing.Point(226, 453);
+			this.m_ebRegEx.Location = new System.Drawing.Point(226, 399);
 			this.m_ebRegEx.Name = "m_ebRegEx";
 			this.m_ebRegEx.Size = new System.Drawing.Size(690, 34);
 			this.m_ebRegEx.TabIndex = 7;
@@ -642,7 +643,7 @@ namespace SList
 			// m_lblRegEx
 			// 
 			this.m_lblRegEx.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_lblRegEx.Location = new System.Drawing.Point(33, 456);
+			this.m_lblRegEx.Location = new System.Drawing.Point(33, 402);
 			this.m_lblRegEx.Name = "m_lblRegEx";
 			this.m_lblRegEx.Size = new System.Drawing.Size(187, 36);
 			this.m_lblRegEx.TabIndex = 6;
@@ -651,7 +652,7 @@ namespace SList
 			// m_pbMove
 			// 
 			this.m_pbMove.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbMove.Location = new System.Drawing.Point(548, 589);
+			this.m_pbMove.Location = new System.Drawing.Point(548, 535);
 			this.m_pbMove.Name = "m_pbMove";
 			this.m_pbMove.Size = new System.Drawing.Size(84, 42);
 			this.m_pbMove.TabIndex = 18;
@@ -662,7 +663,7 @@ namespace SList
 			// 
 			this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbDelete.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbDelete.Location = new System.Drawing.Point(1274, 589);
+			this.m_pbDelete.Location = new System.Drawing.Point(1274, 535);
 			this.m_pbDelete.Name = "m_pbDelete";
 			this.m_pbDelete.Size = new System.Drawing.Size(115, 42);
 			this.m_pbDelete.TabIndex = 19;
@@ -673,7 +674,7 @@ namespace SList
 			// 
 			this.m_pbToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbToggle.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbToggle.Location = new System.Drawing.Point(1274, 505);
+			this.m_pbToggle.Location = new System.Drawing.Point(1274, 451);
 			this.m_pbToggle.Name = "m_pbToggle";
 			this.m_pbToggle.Size = new System.Drawing.Size(115, 41);
 			this.m_pbToggle.TabIndex = 14;
@@ -684,7 +685,7 @@ namespace SList
 			// 
 			this.m_pbClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbClear.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbClear.Location = new System.Drawing.Point(1146, 505);
+			this.m_pbClear.Location = new System.Drawing.Point(1146, 451);
 			this.m_pbClear.Name = "m_pbClear";
 			this.m_pbClear.Size = new System.Drawing.Size(115, 41);
 			this.m_pbClear.TabIndex = 13;
@@ -694,7 +695,7 @@ namespace SList
 			// m_lblMoveTo
 			// 
 			this.m_lblMoveTo.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_lblMoveTo.Location = new System.Drawing.Point(37, 597);
+			this.m_lblMoveTo.Location = new System.Drawing.Point(37, 543);
 			this.m_lblMoveTo.Name = "m_lblMoveTo";
 			this.m_lblMoveTo.Size = new System.Drawing.Size(89, 39);
 			this.m_lblMoveTo.TabIndex = 16;
@@ -703,7 +704,7 @@ namespace SList
 			// m_ebMovePath
 			// 
 			this.m_ebMovePath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebMovePath.Location = new System.Drawing.Point(132, 594);
+			this.m_ebMovePath.Location = new System.Drawing.Point(132, 540);
 			this.m_ebMovePath.Name = "m_ebMovePath";
 			this.m_ebMovePath.Size = new System.Drawing.Size(410, 34);
 			this.m_ebMovePath.TabIndex = 17;
@@ -711,7 +712,7 @@ namespace SList
 			// m_pbMatchRegex
 			// 
 			this.m_pbMatchRegex.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbMatchRegex.Location = new System.Drawing.Point(226, 505);
+			this.m_pbMatchRegex.Location = new System.Drawing.Point(226, 451);
 			this.m_pbMatchRegex.Name = "m_pbMatchRegex";
 			this.m_pbMatchRegex.Size = new System.Drawing.Size(147, 41);
 			this.m_pbMatchRegex.TabIndex = 10;
@@ -721,7 +722,7 @@ namespace SList
 			// m_pbRemoveRegex
 			// 
 			this.m_pbRemoveRegex.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbRemoveRegex.Location = new System.Drawing.Point(379, 505);
+			this.m_pbRemoveRegex.Location = new System.Drawing.Point(379, 451);
 			this.m_pbRemoveRegex.Name = "m_pbRemoveRegex";
 			this.m_pbRemoveRegex.Size = new System.Drawing.Size(128, 41);
 			this.m_pbRemoveRegex.TabIndex = 11;
@@ -731,7 +732,7 @@ namespace SList
 			// m_pbCheckRegex
 			// 
 			this.m_pbCheckRegex.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbCheckRegex.Location = new System.Drawing.Point(513, 505);
+			this.m_pbCheckRegex.Location = new System.Drawing.Point(513, 451);
 			this.m_pbCheckRegex.Name = "m_pbCheckRegex";
 			this.m_pbCheckRegex.Size = new System.Drawing.Size(131, 41);
 			this.m_pbCheckRegex.TabIndex = 12;
@@ -740,18 +741,18 @@ namespace SList
 			// 
 			// m_prbarOverall
 			// 
-			this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.m_prbarOverall.Location = new System.Drawing.Point(488, 1143);
+			this.m_prbarOverall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_prbarOverall.Location = new System.Drawing.Point(1179, 1143);
 			this.m_prbarOverall.Maximum = 1000;
 			this.m_prbarOverall.Name = "m_prbarOverall";
-			this.m_prbarOverall.Size = new System.Drawing.Size(304, 22);
+			this.m_prbarOverall.Size = new System.Drawing.Size(210, 22);
 			this.m_prbarOverall.TabIndex = 23;
 			this.m_prbarOverall.Visible = false;
 			// 
 			// m_pbSmartMatch
 			// 
 			this.m_pbSmartMatch.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbSmartMatch.Location = new System.Drawing.Point(650, 505);
+			this.m_pbSmartMatch.Location = new System.Drawing.Point(650, 451);
 			this.m_pbSmartMatch.Name = "m_pbSmartMatch";
 			this.m_pbSmartMatch.Size = new System.Drawing.Size(128, 41);
 			this.m_pbSmartMatch.TabIndex = 24;
@@ -769,26 +770,27 @@ namespace SList
 			this.m_lbPrefPath.ItemHeight = 28;
 			this.m_lbPrefPath.Location = new System.Drawing.Point(202, 211);
 			this.m_lbPrefPath.Name = "m_lbPrefPath";
-			this.m_lbPrefPath.Size = new System.Drawing.Size(694, 60);
+			this.m_lbPrefPath.Size = new System.Drawing.Size(823, 116);
 			this.m_lbPrefPath.TabIndex = 25;
 			// 
 			// m_pbRemove
 			// 
 			this.m_pbRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbRemove.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbRemove.Location = new System.Drawing.Point(917, 243);
+			this.m_pbRemove.Location = new System.Drawing.Point(1106, 246);
 			this.m_pbRemove.Name = "m_pbRemove";
-			this.m_pbRemove.Size = new System.Drawing.Size(115, 38);
+			this.m_pbRemove.Size = new System.Drawing.Size(115, 40);
 			this.m_pbRemove.TabIndex = 27;
 			this.m_pbRemove.Text = "Remove";
+			this.m_pbRemove.Click += new System.EventHandler(this.RemovePreferredPath);
 			// 
 			// m_pbAddPath
 			// 
 			this.m_pbAddPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbAddPath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbAddPath.Location = new System.Drawing.Point(917, 202);
+			this.m_pbAddPath.Location = new System.Drawing.Point(1106, 201);
 			this.m_pbAddPath.Name = "m_pbAddPath";
-			this.m_pbAddPath.Size = new System.Drawing.Size(115, 38);
+			this.m_pbAddPath.Size = new System.Drawing.Size(115, 39);
 			this.m_pbAddPath.TabIndex = 28;
 			this.m_pbAddPath.Text = "Add Path";
 			// 
@@ -796,7 +798,7 @@ namespace SList
 			// 
 			this.m_cbMarkFavored.AutoSize = true;
 			this.m_cbMarkFavored.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_cbMarkFavored.Location = new System.Drawing.Point(38, 282);
+			this.m_cbMarkFavored.Location = new System.Drawing.Point(38, 325);
 			this.m_cbMarkFavored.Name = "m_cbMarkFavored";
 			this.m_cbMarkFavored.Size = new System.Drawing.Size(158, 32);
 			this.m_cbMarkFavored.TabIndex = 29;
@@ -812,9 +814,9 @@ namespace SList
 			this.m_lv.ContextMenu = this.m_cxtListView;
 			this.m_lv.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.m_lv.HideSelection = false;
-			this.m_lv.Location = new System.Drawing.Point(25, 693);
+			this.m_lv.Location = new System.Drawing.Point(25, 628);
 			this.m_lv.Name = "m_lv";
-			this.m_lv.Size = new System.Drawing.Size(1347, 392);
+			this.m_lv.Size = new System.Drawing.Size(1347, 503);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
 			this.m_lv.VirtualMode = true;
@@ -824,7 +826,7 @@ namespace SList
 			// 
 			this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_pbValidateSrc.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbValidateSrc.Location = new System.Drawing.Point(1146, 449);
+			this.m_pbValidateSrc.Location = new System.Drawing.Point(1146, 395);
 			this.m_pbValidateSrc.Name = "m_pbValidateSrc";
 			this.m_pbValidateSrc.Size = new System.Drawing.Size(118, 41);
 			this.m_pbValidateSrc.TabIndex = 33;
@@ -856,7 +858,7 @@ namespace SList
 			this.m_cbAddToIgnoreList.Checked = true;
 			this.m_cbAddToIgnoreList.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.m_cbAddToIgnoreList.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(1065, 209);
+			this.m_cbAddToIgnoreList.Location = new System.Drawing.Point(201, 324);
 			this.m_cbAddToIgnoreList.Name = "m_cbAddToIgnoreList";
 			this.m_cbAddToIgnoreList.Size = new System.Drawing.Size(276, 34);
 			this.m_cbAddToIgnoreList.TabIndex = 36;
@@ -894,46 +896,6 @@ namespace SList
 			this.m_pbSaveFileList.TabIndex = 39;
 			this.m_pbSaveFileList.Text = "Save FileList";
 			this.m_pbSaveFileList.Click += new System.EventHandler(this.EH_SaveFileListToFile);
-			// 
-			// label4
-			// 
-			this.label4.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.label4.Location = new System.Drawing.Point(33, 323);
-			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(136, 32);
-			this.label4.TabIndex = 42;
-			this.label4.Text = "SaveMe Path";
-			// 
-			// m_ebSaveMePath
-			// 
-			this.m_ebSaveMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebSaveMePath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebSaveMePath.Location = new System.Drawing.Point(170, 320);
-			this.m_ebSaveMePath.Name = "m_ebSaveMePath";
-			this.m_ebSaveMePath.Size = new System.Drawing.Size(588, 34);
-			this.m_ebSaveMePath.TabIndex = 43;
-			this.m_ebSaveMePath.Text = "f:\\DeDupe\\Target\\SnatchedFromDestruction";
-			// 
-			// label5
-			// 
-			this.label5.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.label5.Location = new System.Drawing.Point(33, 368);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(140, 30);
-			this.label5.TabIndex = 44;
-			this.label5.Text = "RetireMe Path";
-			// 
-			// m_ebRetireMePath
-			// 
-			this.m_ebRetireMePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_ebRetireMePath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebRetireMePath.Location = new System.Drawing.Point(170, 365);
-			this.m_ebRetireMePath.Name = "m_ebRetireMePath";
-			this.m_ebRetireMePath.Size = new System.Drawing.Size(588, 34);
-			this.m_ebRetireMePath.TabIndex = 45;
-			this.m_ebRetireMePath.Text = "f:\\DeDupe\\RetireMe";
 			// 
 			// button1
 			// 
@@ -982,7 +944,7 @@ namespace SList
 			// label2
 			// 
 			this.label2.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.label2.Location = new System.Drawing.Point(634, 597);
+			this.label2.Location = new System.Drawing.Point(634, 543);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(93, 31);
 			this.label2.TabIndex = 50;
@@ -993,7 +955,7 @@ namespace SList
 			this.m_ebCopyPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebCopyPath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebCopyPath.Location = new System.Drawing.Point(733, 594);
+			this.m_ebCopyPath.Location = new System.Drawing.Point(733, 540);
 			this.m_ebCopyPath.Name = "m_ebCopyPath";
 			this.m_ebCopyPath.Size = new System.Drawing.Size(440, 34);
 			this.m_ebCopyPath.TabIndex = 51;
@@ -1002,7 +964,7 @@ namespace SList
 			// 
 			this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.button2.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.button2.Location = new System.Drawing.Point(1179, 589);
+			this.button2.Location = new System.Drawing.Point(1179, 535);
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(82, 42);
 			this.button2.TabIndex = 52;
@@ -1015,7 +977,7 @@ namespace SList
 			this.m_cbGenerateScript.Checked = true;
 			this.m_cbGenerateScript.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.m_cbGenerateScript.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_cbGenerateScript.Location = new System.Drawing.Point(554, 636);
+			this.m_cbGenerateScript.Location = new System.Drawing.Point(554, 582);
 			this.m_cbGenerateScript.Name = "m_cbGenerateScript";
 			this.m_cbGenerateScript.Size = new System.Drawing.Size(173, 32);
 			this.m_cbGenerateScript.TabIndex = 53;
@@ -1025,7 +987,7 @@ namespace SList
 			// label6
 			// 
 			this.label6.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.label6.Location = new System.Drawing.Point(42, 636);
+			this.label6.Location = new System.Drawing.Point(42, 582);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(76, 31);
 			this.label6.TabIndex = 54;
@@ -1034,7 +996,7 @@ namespace SList
 			// m_ebScript
 			// 
 			this.m_ebScript.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebScript.Location = new System.Drawing.Point(132, 633);
+			this.m_ebScript.Location = new System.Drawing.Point(132, 579);
 			this.m_ebScript.Name = "m_ebScript";
 			this.m_ebScript.Size = new System.Drawing.Size(410, 34);
 			this.m_ebScript.TabIndex = 55;
@@ -1048,11 +1010,75 @@ namespace SList
 			this.label1.TabIndex = 26;
 			this.label1.Text = "Preferred Paths";
 			// 
+			// m_pbLoadPreferredPaths
+			// 
+			this.m_pbLoadPreferredPaths.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbLoadPreferredPaths.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbLoadPreferredPaths.Location = new System.Drawing.Point(1237, 201);
+			this.m_pbLoadPreferredPaths.Name = "m_pbLoadPreferredPaths";
+			this.m_pbLoadPreferredPaths.Size = new System.Drawing.Size(147, 39);
+			this.m_pbLoadPreferredPaths.TabIndex = 56;
+			this.m_pbLoadPreferredPaths.Text = "Load Paths";
+			this.m_pbLoadPreferredPaths.Click += new System.EventHandler(this.EH_LoadPreferredPaths);
+			// 
+			// m_pbSavePreferredPaths
+			// 
+			this.m_pbSavePreferredPaths.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbSavePreferredPaths.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbSavePreferredPaths.Location = new System.Drawing.Point(1237, 246);
+			this.m_pbSavePreferredPaths.Name = "m_pbSavePreferredPaths";
+			this.m_pbSavePreferredPaths.Size = new System.Drawing.Size(147, 39);
+			this.m_pbSavePreferredPaths.TabIndex = 57;
+			this.m_pbSavePreferredPaths.Text = "Save Paths";
+			this.m_pbSavePreferredPaths.Click += new System.EventHandler(this.EH_SavePreferredPaths);
+			// 
+			// button3
+			// 
+			this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button3.FlatAppearance.BorderSize = 0;
+			this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.button3.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.button3.Location = new System.Drawing.Point(1031, 207);
+			this.button3.Name = "button3";
+			this.button3.Size = new System.Drawing.Size(27, 37);
+			this.button3.TabIndex = 58;
+			this.button3.Text = "∆";
+			this.button3.Click += new System.EventHandler(this.EH_NudgePreferredPathUp);
+			// 
+			// button4
+			// 
+			this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button4.FlatAppearance.BorderSize = 0;
+			this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.button4.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.button4.Location = new System.Drawing.Point(1031, 273);
+			this.button4.Name = "button4";
+			this.button4.Size = new System.Drawing.Size(27, 37);
+			this.button4.TabIndex = 59;
+			this.button4.Text = "∇";
+			this.button4.Click += new System.EventHandler(this.EH_NudgePreferredPathDown);
+			// 
+			// button5
+			// 
+			this.button5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button5.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.button5.Location = new System.Drawing.Point(991, 453);
+			this.button5.Name = "button5";
+			this.button5.Size = new System.Drawing.Size(149, 39);
+			this.button5.TabIndex = 60;
+			this.button5.Text = "Prefer Paths";
+			this.button5.Click += new System.EventHandler(this.EH_ApplyPreferredPaths);
+			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
 			this.ClientSize = new System.Drawing.Size(1399, 1169);
+			this.Controls.Add(this.button5);
+			this.Controls.Add(this.button4);
+			this.Controls.Add(this.button3);
+			this.Controls.Add(this.m_pbSavePreferredPaths);
+			this.Controls.Add(this.m_pbLoadPreferredPaths);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.m_ebScript);
 			this.Controls.Add(this.m_cbGenerateScript);
@@ -1061,10 +1087,6 @@ namespace SList
 			this.Controls.Add(this.button2);
 			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.button1);
-			this.Controls.Add(this.label5);
-			this.Controls.Add(this.m_ebRetireMePath);
-			this.Controls.Add(this.label4);
-			this.Controls.Add(this.m_ebSaveMePath);
 			this.Controls.Add(this.m_pbSaveFileList);
 			this.Controls.Add(this.m_pbLoadFromFile);
 			this.Controls.Add(this.m_pbSaveList);
@@ -1123,6 +1145,82 @@ namespace SList
 
 		#region EventHandlers
 
+		void EH_ApplyPreferredPaths(object sender, EventArgs e)
+		{
+			m_model.AdjustListViewForFavoredPaths();
+		}
+
+
+		void NudgePreferredPath(int di)
+		{
+			if (m_lbPrefPath.SelectedIndices.Count != 1)
+				return;
+
+			int sel = m_lbPrefPath.SelectedIndex;
+
+			if (sel + di < 0 || sel + di >= m_lbPrefPath.Items.Count)
+				return;
+
+			string s = (string)m_lbPrefPath.Items[sel];
+			m_lbPrefPath.Items.RemoveAt(sel);
+			PreferredPaths.PathItem item = m_model.PreferredPaths.Paths[sel];
+			m_model.PreferredPaths.Paths.RemoveAt(sel);
+
+			m_lbPrefPath.Items.Insert(sel + di, s);
+			m_model.PreferredPaths.Paths.Insert(sel + di, item);
+			m_lbPrefPath.SelectedIndex = sel + di;
+		}
+
+		void EH_NudgePreferredPathUp(object sender, EventArgs e)
+		{
+			NudgePreferredPath(-1);
+		}
+
+		void EH_NudgePreferredPathDown(object sender, EventArgs e)
+		{
+			NudgePreferredPath(1);
+		}
+		private void RemovePreferredPath(object sender, EventArgs e)
+		{
+			if (m_lbPrefPath.SelectedIndices.Count == 0)
+				return;
+
+			int sel = m_lbPrefPath.SelectedIndices[0];
+			int di = 0;
+
+			List<int> toRemove = new List<int>();
+
+			foreach (int i in m_lbPrefPath.SelectedIndices)
+				toRemove.Add(i);
+
+			toRemove.Sort();
+
+			for (int i = toRemove.Count - 1; i >= 0; --i)
+			{
+				if (i < sel)
+					di--;
+
+				m_model.RemovePreferredPath((string)m_lbPrefPath.Items[i]);
+				m_lbPrefPath.Items.RemoveAt(i);
+			}
+
+			m_lbPrefPath.SelectedIndices.Clear();
+			sel += di;
+
+			if (sel >= 0 && sel < m_lbPrefPath.Items.Count)
+				m_lbPrefPath.SelectedIndex = sel;
+		}
+
+		private void EH_LoadPreferredPaths(object sender, EventArgs e)
+		{
+			m_model.LoadPreferredPathsFromFile();
+		}
+
+		private void EH_SavePreferredPaths(object sender, EventArgs e)
+		{
+			m_model.SavePreferredPathsToFile();
+		}
+
 		private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
 		{
 			SyncSettingsWithUi();
@@ -1144,6 +1242,7 @@ namespace SList
 		private void EH_Uniquify(object sender, System.EventArgs e)
 		{
 			m_model.BuildUniqueFileList();
+			m_model.AdjustListViewForFavoredPaths();
 		}
 
 		private void EH_DoSearch(object sender, System.EventArgs e)
@@ -1264,6 +1363,7 @@ namespace SList
 		private void EH_LoadFileListFromFile(object sender, EventArgs e)
 		{
 			m_model.LoadFileListFromFile(SlisCur);
+			m_model.AdjustListViewForFavoredPaths();
 			SetCount(ViewCur.Items.Count);
 		}
 
@@ -1296,6 +1396,12 @@ namespace SList
 
 		private void EH_AddPreferredPath(object sender, EventArgs e)
 		{
+			if (SlisCur.FileListType == FileList.Destination)
+			{
+				MessageBox.Show("Add preferred path makes no sense with destination files. All destination paths are preferred");
+				return;
+			}
+
 			MenuItem mni = (MenuItem)sender;
 			m_model.AddPreferredPath(mni.Text);
 		}
@@ -1526,6 +1632,10 @@ namespace SList
 
 		public Form TheForm => this;
 
+		public string GetPreferredPathListDefaultName() => m_settings.PreferredPathListDefault;
+		public void SetPreferredPathListDefaultName(string name) => m_settings.PreferredPathListDefault = name;
+		public void ClearPreferredPaths() => m_lbPrefPath.Items.Clear();
+
 		public string GetFileListDefaultName(FileList fileList)
 		{
 			if (fileList == FileList.Source)
@@ -1624,15 +1734,7 @@ namespace SList
 
 		#endregion
 
-		private void DoShazaam(object sender, EventArgs e)
-		{
 
-		}
-
-		private void EH_HandleColumnClick(object sender, ColumnClickEventArgs e)
-		{
-			// ((SList.SLISetViewItemComparer)LvCur.ListViewItemSorter).SetColumn(e.Column);
-		}
 	}
 }
 
