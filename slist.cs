@@ -1197,11 +1197,11 @@ namespace SList
 
 			for (int i = toRemove.Count - 1; i >= 0; --i)
 			{
-				if (i < sel)
+				if (toRemove[i] < sel)
 					di--;
 
-				m_model.RemovePreferredPath((string)m_lbPrefPath.Items[i]);
-				m_lbPrefPath.Items.RemoveAt(i);
+				m_model.RemovePreferredPath((string)m_lbPrefPath.Items[toRemove[i]]);
+				m_lbPrefPath.Items.RemoveAt(toRemove[i]);
 			}
 
 			m_lbPrefPath.SelectedIndices.Clear();
