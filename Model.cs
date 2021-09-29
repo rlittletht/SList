@@ -1502,9 +1502,6 @@ namespace SList
 			m_ui.SetPreferredPathListDefaultName(sFile);
 
 			PreferredPaths.LoadPreferredPathListXml(PreferredPaths, sFile);
-			m_ui.ClearPreferredPaths();
-			foreach (PreferredPaths.PathItem item in PreferredPaths.Paths)
-				m_ui.AddPreferredPath(item.Path);
 		}
 
 		internal void SavePreferredPathsToFile()

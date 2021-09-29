@@ -1,17 +1,22 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
 using NUnit.Framework;
 using TCore.XmlSettings;
 
 namespace SList
 {
-	public class PreferredPaths
+	public class PreferredPaths : IList
 	{
 		public class PathItem
 		{
 			public string Path { get; set; }
 			public static string SetPath(PathItem item, string value) => item.Path = value;
 			public static string GetPath(PathItem item) => item.Path;
+
+			public override string ToString() => Path;
 		}
 
 		public List<PathItem> Paths { get; set; }
@@ -20,6 +25,7 @@ namespace SList
 		{
 			Paths = new List<PathItem>();
 		}
+
 		public void Add(string path)
 		{
 			Paths.Add(new PathItem() {Path = path});
@@ -34,11 +40,15 @@ namespace SList
 			return -1;
 		}
 
-		public void Remove(string path)
+		public bool Remove(string path)
 		{
 			int i = GetIndex(path);
 			if (i != -1)
+			{
 				Paths.RemoveAt(i);
+				return true;
+			}
+			return false;
 		}
 
 		public IEnumerator<PathItem> ItemEnumerator { get; set; }
@@ -114,5 +124,46 @@ namespace SList
 
 		private static void SetPath(PreferredPaths t, string value, RepeatContext<PreferredPaths>.RepeatItemContext repeatitemcontext) => PathItem.SetPath((PathItem)repeatitemcontext.RepeatKey, value);
 		private static string GetPath(PreferredPaths t, RepeatContext<PreferredPaths>.RepeatItemContext repeatitemcontext) => PathItem.GetPath((PathItem)repeatitemcontext.RepeatKey);
+
+		#region IList implementation
+
+		public IEnumerator<PathItem> GetEnumerator() => ItemEnumerator;
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+		public int Add(object item)
+		{
+			Paths.Add((PathItem) item);
+			return Paths.Count - 1;
+		}
+
+		public bool Contains(object value)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Clear() => Paths.Clear();
+		public void Remove(object item) => Remove(((PathItem)item).Path);
+		public void CopyTo(Array array, int index)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int Count => Paths.Count;
+		public object SyncRoot => this;
+		public bool IsSynchronized => false;
+		public bool IsReadOnly => false;
+		public bool IsFixedSize => false;
+		public int IndexOf(object item) => GetIndex(((PathItem)item).Path);
+		public void Insert(int index, object item) => Paths.Insert(index, (PathItem)item);
+		public void RemoveAt(int index) => Paths.RemoveAt(index);
+
+		object IList.this[int index]
+		{
+			get => Paths[index];
+			set => Paths[index] = (PathItem)value;
+		}
+
+		#endregion
+
 	}
 }
