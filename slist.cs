@@ -43,9 +43,6 @@ namespace SList
 		private System.Windows.Forms.ContextMenu m_cxtListView;
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.ProgressBar m_prbarOverall;
-
-		private System.Windows.Forms.Button m_pbSmartMatch;
-		private System.Windows.Forms.Timer m_tmr;
 		private ListBox m_lbPrefPath;
 		private Button m_pbRemove;
 		private Button m_pbAddPath;
@@ -366,8 +363,6 @@ namespace SList
 			this.m_pbRemoveRegex = new System.Windows.Forms.Button();
 			this.m_pbCheckRegex = new System.Windows.Forms.Button();
 			this.m_prbarOverall = new System.Windows.Forms.ProgressBar();
-			this.m_pbSmartMatch = new System.Windows.Forms.Button();
-			this.m_tmr = new System.Windows.Forms.Timer(this.components);
 			this.m_lbPrefPath = new System.Windows.Forms.ListBox();
 			this.m_pbRemove = new System.Windows.Forms.Button();
 			this.m_pbAddPath = new System.Windows.Forms.Button();
@@ -477,13 +472,13 @@ namespace SList
 			// 
 			this.menuItem4.Index = 5;
 			this.menuItem4.Text = "Select previous duplicate";
-			this.menuItem4.Click += new System.EventHandler(this.EH_SelectPrevDupe);
+			this.menuItem4.Click += new System.EventHandler(this.DoSelectPrevDupe);
 			// 
 			// menuItem5
 			// 
 			this.menuItem5.Index = 6;
 			this.menuItem5.Text = "Select next duplicate";
-			this.menuItem5.Click += new System.EventHandler(this.EH_SelectNextDupe);
+			this.menuItem5.Click += new System.EventHandler(this.DoSelectNextDupe);
 			// 
 			// m_ebSearchPath
 			// 
@@ -739,20 +734,6 @@ namespace SList
 			this.m_prbarOverall.Size = new System.Drawing.Size(210, 22);
 			this.m_prbarOverall.TabIndex = 23;
 			this.m_prbarOverall.Visible = false;
-			// 
-			// m_pbSmartMatch
-			// 
-			this.m_pbSmartMatch.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbSmartMatch.Location = new System.Drawing.Point(650, 451);
-			this.m_pbSmartMatch.Name = "m_pbSmartMatch";
-			this.m_pbSmartMatch.Size = new System.Drawing.Size(128, 41);
-			this.m_pbSmartMatch.TabIndex = 24;
-			this.m_pbSmartMatch.Text = "SmartMatch";
-			this.m_pbSmartMatch.Click += new System.EventHandler(this.DoSmartMatchAndReportMatches);
-			// 
-			// m_tmr
-			// 
-			this.m_tmr.Tick += new System.EventHandler(this.EH_Idle);
 			// 
 			// m_lbPrefPath
 			// 
@@ -1058,7 +1039,7 @@ namespace SList
 			this.m_pbNextDupe.Size = new System.Drawing.Size(145, 42);
 			this.m_pbNextDupe.TabIndex = 61;
 			this.m_pbNextDupe.Text = "Next Dupe";
-			this.m_pbNextDupe.Click += new System.EventHandler(this.EH_SelectNextDupe);
+			this.m_pbNextDupe.Click += new System.EventHandler(this.DoSelectNextDupe);
 			// 
 			// m_pbPreviousDupe
 			// 
@@ -1069,7 +1050,7 @@ namespace SList
 			this.m_pbPreviousDupe.Size = new System.Drawing.Size(143, 42);
 			this.m_pbPreviousDupe.TabIndex = 62;
 			this.m_pbPreviousDupe.Text = "Prev Dupe";
-			this.m_pbPreviousDupe.Click += new System.EventHandler(this.EH_SelectPrevDupe);
+			this.m_pbPreviousDupe.Click += new System.EventHandler(this.DoSelectPrevDupe);
 			// 
 			// m_pbPreviousChecked
 			// 
@@ -1080,7 +1061,7 @@ namespace SList
 			this.m_pbPreviousChecked.Size = new System.Drawing.Size(143, 42);
 			this.m_pbPreviousChecked.TabIndex = 63;
 			this.m_pbPreviousChecked.Text = "Prev Checked";
-			this.m_pbPreviousChecked.Click += new System.EventHandler(this.EH_SelectPreviousChecked);
+			this.m_pbPreviousChecked.Click += new System.EventHandler(this.DoSelectPreviousChecked);
 			// 
 			// m_pbNextChecked
 			// 
@@ -1091,7 +1072,7 @@ namespace SList
 			this.m_pbNextChecked.Size = new System.Drawing.Size(143, 42);
 			this.m_pbNextChecked.TabIndex = 64;
 			this.m_pbNextChecked.Text = "Next Checked";
-			this.m_pbNextChecked.Click += new System.EventHandler(this.EH_SelectNextChecked);
+			this.m_pbNextChecked.Click += new System.EventHandler(this.DoSelectNextChecked);
 			// 
 			// SListApp
 			// 
@@ -1126,7 +1107,6 @@ namespace SList
 			this.Controls.Add(this.m_pbRemove);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.m_lbPrefPath);
-			this.Controls.Add(this.m_pbSmartMatch);
 			this.Controls.Add(this.m_prbarOverall);
 			this.Controls.Add(this.m_pbCheckRegex);
 			this.Controls.Add(this.m_pbRemoveRegex);
@@ -1153,9 +1133,6 @@ namespace SList
 			this.Name = "SListApp";
 			this.Text = "SListApp";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EH_OnFormClosing);
-			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.HandleDrop);
-			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.HandleDragEnter);
-			this.DragLeave += new System.EventHandler(this.HandleDragLeave);
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
@@ -1474,6 +1451,10 @@ namespace SList
 			m_model.ApplyIgnoreList((string)m_cbxIgnoreList.SelectedItem);
 		}
 
+		private string sCancelled;
+
+		#endregion
+
 		#region Context Menu Commands
 
 		/*----------------------------------------------------------------------------
@@ -1483,7 +1464,7 @@ namespace SList
 		private void RemoveType(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
-			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo) mni.Tag);
+			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo)mni.Tag);
 		}
 
 		/*----------------------------------------------------------------------------
@@ -1614,7 +1595,7 @@ namespace SList
 
 				mniNew.Text = $"{sSub}\\*.{sExt}";
 				mniNew.Click += new EventHandler(RemoveType);
-				mniNew.Tag = new FilePatternInfo() {Pattern = sExt, RootPath = sSub};
+				mniNew.Tag = new FilePatternInfo() { Pattern = sExt, RootPath = sSub };
 				mni.MenuItems.Add(mniNew);
 			}
 		}
@@ -1645,7 +1626,7 @@ namespace SList
 
 				mniNew.Text = $"{sSub}\\{sName}";
 				mniNew.Click += new EventHandler(RemovePattern);
-				mniNew.Tag = new FilePatternInfo() {Pattern = sName, RootPath = sSub};
+				mniNew.Tag = new FilePatternInfo() { Pattern = sName, RootPath = sSub };
 				mni.MenuItems.Add(mniNew);
 			}
 		}
@@ -1668,85 +1649,12 @@ namespace SList
 				AddPreferredPathSubmenuItems(cm.MenuItems[4], sli);
 			}
 		}
-		#endregion
 
-		private string sCancelled;
-
-		/* E  H  _ I D L E */
 		/*----------------------------------------------------------------------------
-		    %%Function: EH_Idle
-		    %%Qualified: SList.SListApp.EH_Idle
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void EH_Idle(object sender, System.EventArgs e)
-		{
-			m_tmr.Enabled = false;
-			if (sCancelled.Length > 0)
-			{
-				MessageBox.Show(sCancelled, "Not Found");
-				sCancelled = "";
-			}
-		}
-
-		#endregion
-
-		#region ListView Handlers
-		/* H A N D L E  D R O P */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDrop
-		    %%Qualified: SList.SListApp.HandleDrop
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDrop(object sender, System.Windows.Forms.DragEventArgs e)
-		{
-			this.Activate();
-
-			m_tmr.Enabled = false;
-
-			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-			sCancelled = "";
-			foreach (string sFile in files)
-			{
-				m_ebRegEx.Text = Path.GetFileName(sFile);
-				DoSmartMatchAndReportMatches(null, null);
-			}
-			//		if (sCancelled.Length > 0)
-			//			MessageBox.Show(sCancelled, "Not Found");
-			m_tmr.Interval = 500;
-			m_tmr.Enabled = true;
-		}
-
-		/* H A N D L E  D R A G  E N T E R */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDragEnter
-		    %%Qualified: SList.SListApp.HandleDragEnter
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDragEnter(object sender, System.Windows.Forms.DragEventArgs e)
-		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
-			{
-				e.Effect = DragDropEffects.Copy;
-			}
-			else
-			{
-				e.Effect = DragDropEffects.None;
-			}
-		}
-
-		/* H A N D L E  D R A G  L E A V E */
-		/*----------------------------------------------------------------------------
-		    %%Function: HandleDragLeave
-		    %%Qualified: SList.SListApp.HandleDragLeave
-		    %%Contact: rlittle
-
-	    ----------------------------------------------------------------------------*/
-		private void HandleDragLeave(object sender, System.EventArgs e) { }
-
-		private void EH_SelectPrevDupe(object sender, EventArgs e)
+			%%Function: DoSelectPrevDupe
+			%%Qualified: SList.SListApp.DoSelectPrevDupe
+		----------------------------------------------------------------------------*/
+		private void DoSelectPrevDupe(object sender, EventArgs e)
 		{
 			SLItem sli = ViewCur.SelectedItem();
 
@@ -1757,7 +1665,11 @@ namespace SList
 			}
 		}
 
-		private void EH_SelectNextDupe(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSelectNextDupe
+			%%Qualified: SList.SListApp.DoSelectNextDupe
+		----------------------------------------------------------------------------*/
+		private void DoSelectNextDupe(object sender, EventArgs e)
 		{
 			SLItem sli = ViewCur.SelectedItem();
 
@@ -1768,35 +1680,64 @@ namespace SList
 			}
 		}
 
-
-		private void EH_SelectNextChecked(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSelectNextChecked
+			%%Qualified: SList.SListApp.DoSelectNextChecked
+		----------------------------------------------------------------------------*/
+		private void DoSelectNextChecked(object sender, EventArgs e)
 		{
 			m_model.SelectNextChecked(ViewCur.SelectedIndex() + 1);
 		}
 
-		private void EH_SelectPreviousChecked(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSelectPreviousChecked
+			%%Qualified: SList.SListApp.DoSelectPreviousChecked
+		----------------------------------------------------------------------------*/
+		private void DoSelectPreviousChecked(object sender, EventArgs e)
 		{
 			m_model.SelectPreviousChecked(ViewCur.SelectedIndex() - 1);
 		}
 
 		#endregion
 
-		#region ISmartListUi
+		#region ISmartListUi Implementation
 
 		public Form TheForm => this;
-
 		public string GetPreferredPathListDefaultName() => m_settings.PreferredPathListDefault;
 		public void SetPreferredPathListDefaultName(string name) => m_settings.PreferredPathListDefault = name;
 		public void ClearPreferredPaths() => m_lbPrefPath.Items.Clear();
+		public bool FCompareFilesChecked() => m_cbCompareFiles.Checked;
+		public void SetStatusText(string text) => m_stbpMainStatus.Text = text;
+		public void SetCount(int count) => m_stbpCount.Text = $"Files: {count}";
+		public void AddIgnoreListItem(string text) => m_cbxIgnoreList.Items.Add(text);
+		public SLISet GetSliSet(FileList fileList) => m_rgslis[IlvFromFileList(fileList)];
+		public string GetSearchPath() => m_ebSearchPath.Text;
+		public bool FRecurseChecked() => m_cbRecurse.Checked;
+		public bool FMarkFavored() => m_cbMarkFavored.Checked;
+		public void AddPreferredPath(string path) => m_lbPrefPath.Items.Add(path);
+		public IEnumerable GetPreferredPaths() => m_lbPrefPath.Items;
+		public void SetProgressBarMac(ProgressBarType barType, long iMac) => BarFromType(barType).SetMacProgress(iMac);
+		public void SetProgressBarOnDemand(ProgressBarType barType, int msecBeforeShow) => BarFromType(barType).SetOnDemandStatusBar(msecBeforeShow);
+		public void ShowProgressBar(ProgressBarType barType) => BarFromType(barType).Show();
+		public void UpdateProgressBar(ProgressBarType barType, long i, OnProgressUpdateDelegate del) => BarFromType(barType).Update(i, del);
+		public void HideProgressBar(ProgressBarType barType) => BarFromType(barType).Hide();
 
+		/*----------------------------------------------------------------------------
+			%%Function: GetFileListDefaultName
+			%%Qualified: SList.SListApp.GetFileListDefaultName
+		----------------------------------------------------------------------------*/
 		public string GetFileListDefaultName(FileList fileList)
 		{
 			if (fileList == FileList.Source)
 				return m_settings.SourceFilesListDefault;
-			else
-				return m_settings.DestFilesListDefault;
+
+			return m_settings.DestFilesListDefault;
 		}
 
+		/*----------------------------------------------------------------------------
+			%%Function: SetFileListDefaultName
+			%%Qualified: SList.SListApp.SetFileListDefaultName
+		----------------------------------------------------------------------------*/
 		public void SetFileListDefaultName(FileList fileList, string filename)
 		{
 			if (fileList == FileList.Source)
@@ -1805,6 +1746,10 @@ namespace SList
 				m_settings.DestFilesListDefault = filename;
 		}
 
+		/*----------------------------------------------------------------------------
+			%%Function: SetCursor
+			%%Qualified: SList.SListApp.SetCursor
+		----------------------------------------------------------------------------*/
 		public Cursor SetCursor(Cursor cursor)
 		{
 			Cursor old = this.Cursor;
@@ -1814,77 +1759,16 @@ namespace SList
 			return old;
 		}
 
-		public bool FCompareFilesChecked() => m_cbCompareFiles.Checked;
-
-		public void SetStatusText(string text)
-		{
-			m_stbpMainStatus.Text = text;
-		}
-
-		public void SetCount(int count)
-		{
-			m_stbpCount.Text = $"Files: {count}";
-		}
-
-		public void AddIgnoreListItem(string text)
-		{
-			m_cbxIgnoreList.Items.Add(text);
-		}
-
-		public SLISet GetSliSet(FileList fileList)
-		{
-			int iListView = IlvFromFileList(fileList);
-			return m_rgslis[iListView];
-		}
-
-		public string GetSearchPath() => m_ebSearchPath.Text;
-
-		public bool FRecurseChecked() => m_cbRecurse.Checked;
-		public bool FMarkFavored() => m_cbMarkFavored.Checked;
-
-		public void AddPreferredPath(string path)
-		{
-			m_lbPrefPath.Items.Add(path);
-		}
-
-		public IEnumerable GetPreferredPaths()
-		{
-			return m_lbPrefPath.Items;
-		}
-
-		private ProgressBarStatus m_progressBarStatusOverall;
-		private ProgressBarStatus m_progressBarStatusCurrent;
+		private readonly ProgressBarStatus m_progressBarStatusOverall;
+		private readonly ProgressBarStatus m_progressBarStatusCurrent;
 
 		private ProgressBarStatus BarFromType(ProgressBarType barType)
 		{
 			if (barType == ProgressBarType.Current)
 				return m_progressBarStatusCurrent;
-			else
-				return m_progressBarStatusOverall;
+
+			return m_progressBarStatusOverall;
 		}
-
-		public void SetProgressBarMac(ProgressBarType barType, long iMac)
-		{
-			BarFromType(barType).SetMacProgress(iMac);
-		}
-
-		public void SetProgressBarOnDemand(ProgressBarType barType, int msecBeforeShow)
-		{
-			BarFromType(barType).SetOnDemandStatusBar(msecBeforeShow);
-		}
-
-		public void ShowProgressBar(ProgressBarType barType)
-		{
-			BarFromType(barType).Show();
-		}
-
-		public void UpdateProgressBar(ProgressBarType barType, long i, OnProgressUpdateDelegate del)
-		{
-			BarFromType(barType).Update(i, del);
-		}
-
-		public void HideProgressBar(ProgressBarType barType) => BarFromType(barType).Hide();
-
 
 		#endregion
 	}
