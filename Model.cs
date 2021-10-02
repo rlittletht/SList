@@ -511,7 +511,7 @@ namespace SList
 
 #endregion
 
-#region Core Model (Compare Files, etc)
+		#region Core Model (Compare Files, etc)
 
 		private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
 		{
@@ -1248,14 +1248,14 @@ namespace SList
 
 #endregion // Core Model (Compare Files, etc)
 
-#region List View Commands
+		#region List View Commands
 
 		internal void LaunchSli(SLItem sli)
 		{
 			Process.Start(Path.Combine(sli.Path, sli.Name));
 		}
 
-#endregion // List View Commands
+		#endregion // List View Commands
 
 		/*----------------------------------------------------------------------------
 			%%Function: UpdateForPrefPath
