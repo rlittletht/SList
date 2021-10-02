@@ -4,10 +4,6 @@ VisualStudioVersion = 16.0.31313.79
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "slist", "slist.csproj", "{7CE88E80-DC67-489D-82C7-8E3D998D34AB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCore.XmlSettings", "..\liblet\cs\TCore.XmlSettings\TCore.XmlSettings\TCore.XmlSettings.csproj", "{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XMLIO", "..\liblet\cs\TCore.XMLIO\XMLIO\XMLIO.csproj", "{044279B4-A894-45F0-94EA-5C2CD60063B5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AzureRelease|Any CPU = AzureRelease|Any CPU
@@ -24,22 +20,6 @@ Global
 		{7CE88E80-DC67-489D-82C7-8E3D998D34AB}.LocalDebug|Any CPU.Build.0 = Debug|Any CPU
 		{7CE88E80-DC67-489D-82C7-8E3D998D34AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CE88E80-DC67-489D-82C7-8E3D998D34AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.AzureRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.AzureRelease|Any CPU.Build.0 = Release|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.LocalDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.LocalDebug|Any CPU.Build.0 = Debug|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5CE59A9-7F1C-4553-8937-0A52DCB245CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.AzureRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.AzureRelease|Any CPU.Build.0 = Release|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.LocalDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.LocalDebug|Any CPU.Build.0 = Debug|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{044279B4-A894-45F0-94EA-5C2CD60063B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

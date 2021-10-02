@@ -99,6 +99,12 @@
     <Reference Include="TCore.UI, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\TCore.UI.1.0.1\lib\net452\TCore.UI.dll</HintPath>
     </Reference>
+    <Reference Include="TCore.XmlSettings, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.XmlSettings.1.0.0\lib\netstandard2.0\TCore.XmlSettings.dll</HintPath>
+    </Reference>
+    <Reference Include="XMLIO, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.XMLIO.1.0.2\lib\netstandard2.0\XMLIO.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IgnoreList.cs" />
@@ -131,16 +137,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\liblet\cs\TCore.XMLIO\XMLIO\XMLIO.csproj">
-      <Project>{044279b4-a894-45f0-94ea-5c2cd60063b5}</Project>
-      <Name>XMLIO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\liblet\cs\TCore.XmlSettings\TCore.XmlSettings\TCore.XmlSettings.csproj">
-      <Project>{e5ce59a9-7f1c-4553-8937-0a52dcb245cc}</Project>
-      <Name>TCore.XmlSettings</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
