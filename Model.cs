@@ -920,8 +920,29 @@ namespace SList
 			}
 		}
 
-		public static void MoveSelectedFiles(SLISetView view, string sDir, StatusBarPanel stbp)
+		public static void MoveSelectedFiles_Script(SLISetView view, string sDir, string sScript, StatusBarPanel stbp)
 		{
+			using (TextWriter tw = new StreamWriter(sScript))
+			{
+				tw.WriteLine("setlocal");
+				tw.WriteLine("chcp 65001");
+				IterateOverSelectedFiles(view, sDir, stbp,
+					(string sourcePath, string destPath, string filename) =>
+					{
+						tw.WriteLine($"move \"{Path.Combine(sourcePath,filename)}\" \"{destPath}\">NUL");
+						return IterateReturnVal.Succeed;
+					});
+			}
+		}
+
+		public static void MoveSelectedFiles(SLISetView view, string sDir, string sScript, StatusBarPanel stbp)
+		{
+			if (sScript != null)
+			{
+				MoveSelectedFiles_Script(view, sDir, sScript, stbp);
+				return;
+			}
+
 			FileAttributes fa = 0;
 			bool fDirExists = false;
 			// let's see what they gave us.  First, see if its a directory
@@ -1328,6 +1349,28 @@ namespace SList
 		void UpdateChecked(SLItem sli)
 		{
 			m_ui.ViewCur.UpdateChecked(sli);
+		}
+
+		public void SelectNextChecked(int i)
+		{
+			while (i < m_ui.ViewCur.Count && !m_ui.ViewCur.Items[i].Checked)
+				i++;
+
+			if (i >= m_ui.ViewCur.Count)
+				SystemSounds.Beep.Play();
+			else
+				m_ui.ViewCur.Select(i);
+		}
+
+		public void SelectPreviousChecked(int i)
+		{
+			while (i >= 0 && !m_ui.ViewCur.Items[i].Checked)
+				--i;
+
+			if (i < 0)
+				SystemSounds.Beep.Play();
+			else
+				m_ui.ViewCur.Select(i);
 		}
 
 		public void Select(SLItem sli)

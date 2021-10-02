@@ -101,9 +101,13 @@ namespace SList
 		private Label label1;
 		private Button m_pbLoadPreferredPaths;
 		private Button m_pbSavePreferredPaths;
-		private Button button3;
-		private Button button4;
-		private Button button5;
+		private Button m_pbNudgePathUp;
+		private Button m_pbNudgePathDown;
+		private Button m_pbPreferPaths;
+		private Button m_pbNextDupe;
+		private Button m_pbPreviousDupe;
+		private Button m_pbPreviousChecked;
+		private Button m_pbNextChecked;
 		private SmartListSettings m_settings;
 
 		public SListApp()
@@ -395,9 +399,13 @@ namespace SList
 			this.label1 = new System.Windows.Forms.Label();
 			this.m_pbLoadPreferredPaths = new System.Windows.Forms.Button();
 			this.m_pbSavePreferredPaths = new System.Windows.Forms.Button();
-			this.button3 = new System.Windows.Forms.Button();
-			this.button4 = new System.Windows.Forms.Button();
-			this.button5 = new System.Windows.Forms.Button();
+			this.m_pbNudgePathUp = new System.Windows.Forms.Button();
+			this.m_pbNudgePathDown = new System.Windows.Forms.Button();
+			this.m_pbPreferPaths = new System.Windows.Forms.Button();
+			this.m_pbNextDupe = new System.Windows.Forms.Button();
+			this.m_pbPreviousDupe = new System.Windows.Forms.Button();
+			this.m_pbPreviousChecked = new System.Windows.Forms.Button();
+			this.m_pbNextChecked = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -814,9 +822,9 @@ namespace SList
 			this.m_lv.ContextMenu = this.m_cxtListView;
 			this.m_lv.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.m_lv.HideSelection = false;
-			this.m_lv.Location = new System.Drawing.Point(25, 628);
+			this.m_lv.Location = new System.Drawing.Point(25, 686);
 			this.m_lv.Name = "m_lv";
-			this.m_lv.Size = new System.Drawing.Size(1347, 503);
+			this.m_lv.Size = new System.Drawing.Size(1347, 445);
 			this.m_lv.TabIndex = 20;
 			this.m_lv.UseCompatibleStateImageBehavior = false;
 			this.m_lv.VirtualMode = true;
@@ -1032,51 +1040,99 @@ namespace SList
 			this.m_pbSavePreferredPaths.Text = "Save Paths";
 			this.m_pbSavePreferredPaths.Click += new System.EventHandler(this.EH_SavePreferredPaths);
 			// 
-			// button3
+			// m_pbNudgePathUp
 			// 
-			this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button3.FlatAppearance.BorderSize = 0;
-			this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.button3.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.button3.Location = new System.Drawing.Point(1031, 207);
-			this.button3.Name = "button3";
-			this.button3.Size = new System.Drawing.Size(27, 37);
-			this.button3.TabIndex = 58;
-			this.button3.Text = "∆";
-			this.button3.Click += new System.EventHandler(this.EH_NudgePreferredPathUp);
+			this.m_pbNudgePathUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbNudgePathUp.FlatAppearance.BorderSize = 0;
+			this.m_pbNudgePathUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.m_pbNudgePathUp.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.m_pbNudgePathUp.Location = new System.Drawing.Point(1031, 207);
+			this.m_pbNudgePathUp.Name = "m_pbNudgePathUp";
+			this.m_pbNudgePathUp.Size = new System.Drawing.Size(27, 37);
+			this.m_pbNudgePathUp.TabIndex = 58;
+			this.m_pbNudgePathUp.Text = "∆";
+			this.m_pbNudgePathUp.Click += new System.EventHandler(this.EH_NudgePreferredPathUp);
 			// 
-			// button4
+			// m_pbNudgePathDown
 			// 
-			this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button4.FlatAppearance.BorderSize = 0;
-			this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.button4.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.button4.Location = new System.Drawing.Point(1031, 273);
-			this.button4.Name = "button4";
-			this.button4.Size = new System.Drawing.Size(27, 37);
-			this.button4.TabIndex = 59;
-			this.button4.Text = "∇";
-			this.button4.Click += new System.EventHandler(this.EH_NudgePreferredPathDown);
+			this.m_pbNudgePathDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbNudgePathDown.FlatAppearance.BorderSize = 0;
+			this.m_pbNudgePathDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.m_pbNudgePathDown.Font = new System.Drawing.Font("Segoe UI Symbol", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.m_pbNudgePathDown.Location = new System.Drawing.Point(1031, 273);
+			this.m_pbNudgePathDown.Name = "m_pbNudgePathDown";
+			this.m_pbNudgePathDown.Size = new System.Drawing.Size(27, 37);
+			this.m_pbNudgePathDown.TabIndex = 59;
+			this.m_pbNudgePathDown.Text = "∇";
+			this.m_pbNudgePathDown.Click += new System.EventHandler(this.EH_NudgePreferredPathDown);
 			// 
-			// button5
+			// m_pbPreferPaths
 			// 
-			this.button5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button5.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.button5.Location = new System.Drawing.Point(991, 453);
-			this.button5.Name = "button5";
-			this.button5.Size = new System.Drawing.Size(149, 39);
-			this.button5.TabIndex = 60;
-			this.button5.Text = "Prefer Paths";
-			this.button5.Click += new System.EventHandler(this.EH_ApplyPreferredPaths);
+			this.m_pbPreferPaths.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbPreferPaths.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbPreferPaths.Location = new System.Drawing.Point(991, 453);
+			this.m_pbPreferPaths.Name = "m_pbPreferPaths";
+			this.m_pbPreferPaths.Size = new System.Drawing.Size(149, 39);
+			this.m_pbPreferPaths.TabIndex = 60;
+			this.m_pbPreferPaths.Text = "Prefer Paths";
+			this.m_pbPreferPaths.Click += new System.EventHandler(this.EH_ApplyPreferredPaths);
+			// 
+			// m_pbNextDupe
+			// 
+			this.m_pbNextDupe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbNextDupe.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbNextDupe.Location = new System.Drawing.Point(1227, 638);
+			this.m_pbNextDupe.Name = "m_pbNextDupe";
+			this.m_pbNextDupe.Size = new System.Drawing.Size(145, 42);
+			this.m_pbNextDupe.TabIndex = 61;
+			this.m_pbNextDupe.Text = "Next Dupe";
+			this.m_pbNextDupe.Click += new System.EventHandler(this.EH_SelectNextDupe);
+			// 
+			// m_pbPreviousDupe
+			// 
+			this.m_pbPreviousDupe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbPreviousDupe.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbPreviousDupe.Location = new System.Drawing.Point(1078, 638);
+			this.m_pbPreviousDupe.Name = "m_pbPreviousDupe";
+			this.m_pbPreviousDupe.Size = new System.Drawing.Size(143, 42);
+			this.m_pbPreviousDupe.TabIndex = 62;
+			this.m_pbPreviousDupe.Text = "Prev Dupe";
+			this.m_pbPreviousDupe.Click += new System.EventHandler(this.EH_SelectPrevDupe);
+			// 
+			// m_pbPreviousChecked
+			// 
+			this.m_pbPreviousChecked.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbPreviousChecked.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbPreviousChecked.Location = new System.Drawing.Point(680, 638);
+			this.m_pbPreviousChecked.Name = "m_pbPreviousChecked";
+			this.m_pbPreviousChecked.Size = new System.Drawing.Size(143, 42);
+			this.m_pbPreviousChecked.TabIndex = 63;
+			this.m_pbPreviousChecked.Text = "Prev Checked";
+			this.m_pbPreviousChecked.Click += new System.EventHandler(this.EH_SelectPreviousChecked);
+			// 
+			// m_pbNextChecked
+			// 
+			this.m_pbNextChecked.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.m_pbNextChecked.Font = new System.Drawing.Font("Segoe UI", 10F);
+			this.m_pbNextChecked.Location = new System.Drawing.Point(829, 638);
+			this.m_pbNextChecked.Name = "m_pbNextChecked";
+			this.m_pbNextChecked.Size = new System.Drawing.Size(143, 42);
+			this.m_pbNextChecked.TabIndex = 64;
+			this.m_pbNextChecked.Text = "Next Checked";
+			this.m_pbNextChecked.Click += new System.EventHandler(this.EH_SelectNextChecked);
 			// 
 			// SListApp
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
 			this.ClientSize = new System.Drawing.Size(1399, 1169);
-			this.Controls.Add(this.button5);
-			this.Controls.Add(this.button4);
-			this.Controls.Add(this.button3);
+			this.Controls.Add(this.m_pbNextChecked);
+			this.Controls.Add(this.m_pbPreviousChecked);
+			this.Controls.Add(this.m_pbPreviousDupe);
+			this.Controls.Add(this.m_pbNextDupe);
+			this.Controls.Add(this.m_pbPreferPaths);
+			this.Controls.Add(this.m_pbNudgePathDown);
+			this.Controls.Add(this.m_pbNudgePathUp);
 			this.Controls.Add(this.m_pbSavePreferredPaths);
 			this.Controls.Add(this.m_pbLoadPreferredPaths);
 			this.Controls.Add(this.label6);
@@ -1262,7 +1318,7 @@ namespace SList
 
 		private void EH_DoMove(object sender, System.EventArgs e)
 		{
-			SmartList.MoveSelectedFiles(ViewCur, m_ebMovePath.Text, m_stbpMainStatus);
+			SmartList.MoveSelectedFiles(ViewCur, m_ebMovePath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
 		}
 
 		private void DoCopy(object sender, EventArgs e)
@@ -1626,6 +1682,18 @@ namespace SList
 				m_model.Select(sliSel);
 			}
 		}
+
+
+		private void EH_SelectNextChecked(object sender, EventArgs e)
+		{
+			m_model.SelectNextChecked(ViewCur.SelectedIndex() + 1);
+		}
+
+		private void EH_SelectPreviousChecked(object sender, EventArgs e)
+		{
+			m_model.SelectPreviousChecked(ViewCur.SelectedIndex() - 1);
+		}
+
 		#endregion
 
 		#region ISmartListUi
@@ -1732,9 +1800,8 @@ namespace SList
 
 		public void HideProgressBar(ProgressBarType barType) => BarFromType(barType).Hide();
 
+
 		#endregion
-
-
 	}
 }
 
