@@ -31,7 +31,6 @@ namespace SList
 		private System.Windows.Forms.StatusBarPanel m_stbpCount;
 		private System.Windows.Forms.Label m_lblActions;
 		private System.Windows.Forms.Button m_pbMove;
-		private System.Windows.Forms.Button m_pbDelete;
 		private System.Windows.Forms.Button m_pbToggle;
 		private System.Windows.Forms.Button m_pbClear;
 		private System.Windows.Forms.TextBox m_ebRegEx;
@@ -55,7 +54,6 @@ namespace SList
 		private CheckBox m_cbMarkFavored;
 		private MenuItem menuItem4;
 		private MenuItem menuItem5;
-		private Button m_pbValidateSrc;
 		private MenuItem menuItem6;
 		private MenuItem menuItem7;
 		private ComboBox m_cbxIgnoreList;
@@ -137,7 +135,7 @@ namespace SList
 			//
 		}
 
-		void SyncUiWithSettings()
+		private void SyncUiWithSettings()
 		{
 			m_cbAddToIgnoreList.Checked = m_settings.AutomaticallyAddIgnore;
 			m_rgslis[s_ilvSource].PathSpec = m_settings.SourceSearchPath;
@@ -161,7 +159,7 @@ namespace SList
 			m_cbCompareFiles.Checked = m_settings.RealFileDiffing;
 		}
 
-		void SyncSettingsWithUi()
+		private void SyncSettingsWithUi()
 		{
 			m_settings.AutomaticallyAddIgnore = m_cbAddToIgnoreList.Checked;
 			m_settings.SourceSearchPath = m_rgslis[s_ilvSource].PathSpec;
@@ -188,7 +186,7 @@ namespace SList
 		}
 		// the designer initializes m_lv.  this will become m_rglv[s_ilvSource], and m_lv will be set to null. this allows us to create the templates
 		// for all the list views in the designer and still have our switchable list views
-		void InitializeListViews()
+		private void InitializeListViews()
 		{
 			m_rgslis = new SLISet[s_clvMax];
 
@@ -231,7 +229,7 @@ namespace SList
 			make the UI reflect what we want the sync target to be. Typically used
 			on initialization
         ----------------------------------------------------------------------------*/
-		void SyncSearchTargetUI(FileList fileList)
+		private void SyncSearchTargetUI(FileList fileList)
 		{
 			fSyncing = true;
 			radioButton1.Checked = fileList == FileList.Source;
@@ -239,7 +237,7 @@ namespace SList
 			fSyncing = false;
 		}
 
-		int IlvFromFileList(FileList fileList)
+		private int IlvFromFileList(FileList fileList)
 		{
 			return (int) fileList;
 		}
@@ -290,7 +288,7 @@ namespace SList
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
-		static void Main()
+		private static void Main()
 		{
 			Application.Run(new SListApp());
 		}
@@ -322,13 +320,11 @@ namespace SList
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
 		/// </summary>
-		/* I N I T I A L I Z E  C O M P O N E N T */
 		/*----------------------------------------------------------------------------
-		%%Function: InitializeComponent
-		%%Qualified: SList.SListApp.InitializeComponent
-		%%Contact: rlittle
+			%%Function: InitializeComponent
+			%%Qualified: SList.SListApp.InitializeComponent
 
-	----------------------------------------------------------------------------*/
+		----------------------------------------------------------------------------*/
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
@@ -362,7 +358,6 @@ namespace SList
 			this.m_ebRegEx = new System.Windows.Forms.TextBox();
 			this.m_lblRegEx = new System.Windows.Forms.Label();
 			this.m_pbMove = new System.Windows.Forms.Button();
-			this.m_pbDelete = new System.Windows.Forms.Button();
 			this.m_pbToggle = new System.Windows.Forms.Button();
 			this.m_pbClear = new System.Windows.Forms.Button();
 			this.m_lblMoveTo = new System.Windows.Forms.Label();
@@ -378,7 +373,6 @@ namespace SList
 			this.m_pbAddPath = new System.Windows.Forms.Button();
 			this.m_cbMarkFavored = new System.Windows.Forms.CheckBox();
 			this.m_lv = new System.Windows.Forms.ListView();
-			this.m_pbValidateSrc = new System.Windows.Forms.Button();
 			this.m_cbxIgnoreList = new System.Windows.Forms.ComboBox();
 			this.label3 = new System.Windows.Forms.Label();
 			this.m_cbAddToIgnoreList = new System.Windows.Forms.CheckBox();
@@ -423,13 +417,13 @@ namespace SList
             this.menuItem2,
             this.menuItem4,
             this.menuItem5});
-			this.m_cxtListView.Popup += new System.EventHandler(this.EH_DoContextPopup);
+			this.m_cxtListView.Popup += new System.EventHandler(this.DoContextPopup);
 			// 
 			// menuItem1
 			// 
 			this.menuItem1.Index = 0;
 			this.menuItem1.Text = "Execute";
-			this.menuItem1.Click += new System.EventHandler(this.EH_HandleExecuteMenu);
+			this.menuItem1.Click += new System.EventHandler(this.DoExecuteSelectedItem);
 			// 
 			// menuItem6
 			// 
@@ -511,7 +505,7 @@ namespace SList
 			this.m_pbSearch.Size = new System.Drawing.Size(114, 39);
 			this.m_pbSearch.TabIndex = 4;
 			this.m_pbSearch.Text = "Search";
-			this.m_pbSearch.Click += new System.EventHandler(this.EH_DoSearch);
+			this.m_pbSearch.Click += new System.EventHandler(this.DoSearch);
 			// 
 			// m_lblSearch
 			// 
@@ -543,7 +537,7 @@ namespace SList
 			this.m_pbDuplicates.Size = new System.Drawing.Size(115, 41);
 			this.m_pbDuplicates.TabIndex = 9;
 			this.m_pbDuplicates.Text = "Uniquify";
-			this.m_pbDuplicates.Click += new System.EventHandler(this.EH_Uniquify);
+			this.m_pbDuplicates.Click += new System.EventHandler(this.DoUniquify);
 			// 
 			// m_lblFilterBanner
 			// 
@@ -660,23 +654,12 @@ namespace SList
 			// m_pbMove
 			// 
 			this.m_pbMove.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbMove.Location = new System.Drawing.Point(548, 535);
+			this.m_pbMove.Location = new System.Drawing.Point(595, 535);
 			this.m_pbMove.Name = "m_pbMove";
 			this.m_pbMove.Size = new System.Drawing.Size(84, 42);
 			this.m_pbMove.TabIndex = 18;
 			this.m_pbMove.Text = "Move";
-			this.m_pbMove.Click += new System.EventHandler(this.EH_DoMove);
-			// 
-			// m_pbDelete
-			// 
-			this.m_pbDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbDelete.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbDelete.Location = new System.Drawing.Point(1274, 535);
-			this.m_pbDelete.Name = "m_pbDelete";
-			this.m_pbDelete.Size = new System.Drawing.Size(115, 42);
-			this.m_pbDelete.TabIndex = 19;
-			this.m_pbDelete.Text = "Delete";
-			this.m_pbDelete.Click += new System.EventHandler(this.EH_DoDelete);
+			this.m_pbMove.Click += new System.EventHandler(this.DoMove);
 			// 
 			// m_pbToggle
 			// 
@@ -687,7 +670,7 @@ namespace SList
 			this.m_pbToggle.Size = new System.Drawing.Size(115, 41);
 			this.m_pbToggle.TabIndex = 14;
 			this.m_pbToggle.Text = "Toggle All";
-			this.m_pbToggle.Click += new System.EventHandler(this.EH_ToggleAll);
+			this.m_pbToggle.Click += new System.EventHandler(this.ToggleAll);
 			// 
 			// m_pbClear
 			// 
@@ -698,7 +681,7 @@ namespace SList
 			this.m_pbClear.Size = new System.Drawing.Size(115, 41);
 			this.m_pbClear.TabIndex = 13;
 			this.m_pbClear.Text = "Clear All";
-			this.m_pbClear.Click += new System.EventHandler(this.EH_ClearAll);
+			this.m_pbClear.Click += new System.EventHandler(this.ClearAll);
 			// 
 			// m_lblMoveTo
 			// 
@@ -714,7 +697,7 @@ namespace SList
 			this.m_ebMovePath.Font = new System.Drawing.Font("Segoe UI", 10F);
 			this.m_ebMovePath.Location = new System.Drawing.Point(132, 540);
 			this.m_ebMovePath.Name = "m_ebMovePath";
-			this.m_ebMovePath.Size = new System.Drawing.Size(410, 34);
+			this.m_ebMovePath.Size = new System.Drawing.Size(457, 34);
 			this.m_ebMovePath.TabIndex = 17;
 			// 
 			// m_pbMatchRegex
@@ -725,7 +708,7 @@ namespace SList
 			this.m_pbMatchRegex.Size = new System.Drawing.Size(147, 41);
 			this.m_pbMatchRegex.TabIndex = 10;
 			this.m_pbMatchRegex.Text = "Match Regex";
-			this.m_pbMatchRegex.Click += new System.EventHandler(this.EH_MatchRegex);
+			this.m_pbMatchRegex.Click += new System.EventHandler(this.DoMatchListItemsWithRegex);
 			// 
 			// m_pbRemoveRegex
 			// 
@@ -735,7 +718,7 @@ namespace SList
 			this.m_pbRemoveRegex.Size = new System.Drawing.Size(128, 41);
 			this.m_pbRemoveRegex.TabIndex = 11;
 			this.m_pbRemoveRegex.Text = "Filter Regex";
-			this.m_pbRemoveRegex.Click += new System.EventHandler(this.EH_FilterRegex);
+			this.m_pbRemoveRegex.Click += new System.EventHandler(this.DoFilterListItemsToRegex);
 			// 
 			// m_pbCheckRegex
 			// 
@@ -745,7 +728,7 @@ namespace SList
 			this.m_pbCheckRegex.Size = new System.Drawing.Size(131, 41);
 			this.m_pbCheckRegex.TabIndex = 12;
 			this.m_pbCheckRegex.Text = "Check Regex";
-			this.m_pbCheckRegex.Click += new System.EventHandler(this.EH_CheckRegex);
+			this.m_pbCheckRegex.Click += new System.EventHandler(this.DoCheckListItemsMatchingRegex);
 			// 
 			// m_prbarOverall
 			// 
@@ -765,7 +748,7 @@ namespace SList
 			this.m_pbSmartMatch.Size = new System.Drawing.Size(128, 41);
 			this.m_pbSmartMatch.TabIndex = 24;
 			this.m_pbSmartMatch.Text = "SmartMatch";
-			this.m_pbSmartMatch.Click += new System.EventHandler(this.EH_SmartMatchClick);
+			this.m_pbSmartMatch.Click += new System.EventHandler(this.DoSmartMatchAndReportMatches);
 			// 
 			// m_tmr
 			// 
@@ -830,17 +813,6 @@ namespace SList
 			this.m_lv.VirtualMode = true;
 			this.m_lv.Visible = false;
 			// 
-			// m_pbValidateSrc
-			// 
-			this.m_pbValidateSrc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.m_pbValidateSrc.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_pbValidateSrc.Location = new System.Drawing.Point(1146, 395);
-			this.m_pbValidateSrc.Name = "m_pbValidateSrc";
-			this.m_pbValidateSrc.Size = new System.Drawing.Size(118, 41);
-			this.m_pbValidateSrc.TabIndex = 33;
-			this.m_pbValidateSrc.Text = "Validate Src";
-			this.m_pbValidateSrc.Click += new System.EventHandler(this.EH_ValidateSrc);
-			// 
 			// m_cbxIgnoreList
 			// 
 			this.m_cbxIgnoreList.Font = new System.Drawing.Font("Segoe UI", 10F);
@@ -881,7 +853,7 @@ namespace SList
 			this.m_pbSaveList.Size = new System.Drawing.Size(116, 41);
 			this.m_pbSaveList.TabIndex = 37;
 			this.m_pbSaveList.Text = "Save List";
-			this.m_pbSaveList.Click += new System.EventHandler(this.EH_DoSaveIgnoreList);
+			this.m_pbSaveList.Click += new System.EventHandler(this.DoSaveIgnoreList);
 			// 
 			// m_pbLoadFromFile
 			// 
@@ -892,7 +864,7 @@ namespace SList
 			this.m_pbLoadFromFile.Size = new System.Drawing.Size(138, 39);
 			this.m_pbLoadFromFile.TabIndex = 38;
 			this.m_pbLoadFromFile.Text = "Load FileList";
-			this.m_pbLoadFromFile.Click += new System.EventHandler(this.EH_LoadFileListFromFile);
+			this.m_pbLoadFromFile.Click += new System.EventHandler(this.DoLoadFileListFromFile);
 			// 
 			// m_pbSaveFileList
 			// 
@@ -903,7 +875,7 @@ namespace SList
 			this.m_pbSaveFileList.Size = new System.Drawing.Size(147, 39);
 			this.m_pbSaveFileList.TabIndex = 39;
 			this.m_pbSaveFileList.Text = "Save FileList";
-			this.m_pbSaveFileList.Click += new System.EventHandler(this.EH_SaveFileListToFile);
+			this.m_pbSaveFileList.Click += new System.EventHandler(this.DoSaveFileListToFile);
 			// 
 			// button1
 			// 
@@ -914,7 +886,7 @@ namespace SList
 			this.button1.Size = new System.Drawing.Size(115, 39);
 			this.button1.TabIndex = 46;
 			this.button1.Text = "Append";
-			this.button1.Click += new System.EventHandler(this.EH_DoAppendSearch);
+			this.button1.Click += new System.EventHandler(this.DoAppendSearch);
 			// 
 			// radioButton1
 			// 
@@ -927,7 +899,7 @@ namespace SList
 			this.radioButton1.TabStop = true;
 			this.radioButton1.Text = "Source Files";
 			this.radioButton1.UseVisualStyleBackColor = true;
-			this.radioButton1.CheckedChanged += new System.EventHandler(this.DoSearchTargetChange);
+			this.radioButton1.CheckedChanged += new System.EventHandler(this.EH_OnSearchTargetChange);
 			// 
 			// radioButton2
 			// 
@@ -952,7 +924,7 @@ namespace SList
 			// label2
 			// 
 			this.label2.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.label2.Location = new System.Drawing.Point(634, 543);
+			this.label2.Location = new System.Drawing.Point(685, 540);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(93, 31);
 			this.label2.TabIndex = 50;
@@ -963,16 +935,16 @@ namespace SList
 			this.m_ebCopyPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_ebCopyPath.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.m_ebCopyPath.Location = new System.Drawing.Point(733, 540);
+			this.m_ebCopyPath.Location = new System.Drawing.Point(781, 539);
 			this.m_ebCopyPath.Name = "m_ebCopyPath";
-			this.m_ebCopyPath.Size = new System.Drawing.Size(440, 34);
+			this.m_ebCopyPath.Size = new System.Drawing.Size(503, 34);
 			this.m_ebCopyPath.TabIndex = 51;
 			// 
 			// button2
 			// 
 			this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.button2.Font = new System.Drawing.Font("Segoe UI", 10F);
-			this.button2.Location = new System.Drawing.Point(1179, 535);
+			this.button2.Location = new System.Drawing.Point(1290, 535);
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(82, 42);
 			this.button2.TabIndex = 52;
@@ -1027,7 +999,7 @@ namespace SList
 			this.m_pbLoadPreferredPaths.Size = new System.Drawing.Size(147, 39);
 			this.m_pbLoadPreferredPaths.TabIndex = 56;
 			this.m_pbLoadPreferredPaths.Text = "Load Paths";
-			this.m_pbLoadPreferredPaths.Click += new System.EventHandler(this.EH_LoadPreferredPaths);
+			this.m_pbLoadPreferredPaths.Click += new System.EventHandler(this.LoadPreferredPaths);
 			// 
 			// m_pbSavePreferredPaths
 			// 
@@ -1038,7 +1010,7 @@ namespace SList
 			this.m_pbSavePreferredPaths.Size = new System.Drawing.Size(147, 39);
 			this.m_pbSavePreferredPaths.TabIndex = 57;
 			this.m_pbSavePreferredPaths.Text = "Save Paths";
-			this.m_pbSavePreferredPaths.Click += new System.EventHandler(this.EH_SavePreferredPaths);
+			this.m_pbSavePreferredPaths.Click += new System.EventHandler(this.SavePreferredPaths);
 			// 
 			// m_pbNudgePathUp
 			// 
@@ -1051,7 +1023,7 @@ namespace SList
 			this.m_pbNudgePathUp.Size = new System.Drawing.Size(27, 37);
 			this.m_pbNudgePathUp.TabIndex = 58;
 			this.m_pbNudgePathUp.Text = "∆";
-			this.m_pbNudgePathUp.Click += new System.EventHandler(this.EH_NudgePreferredPathUp);
+			this.m_pbNudgePathUp.Click += new System.EventHandler(this.NudgePreferredPathUp);
 			// 
 			// m_pbNudgePathDown
 			// 
@@ -1064,7 +1036,7 @@ namespace SList
 			this.m_pbNudgePathDown.Size = new System.Drawing.Size(27, 37);
 			this.m_pbNudgePathDown.TabIndex = 59;
 			this.m_pbNudgePathDown.Text = "∇";
-			this.m_pbNudgePathDown.Click += new System.EventHandler(this.EH_NudgePreferredPathDown);
+			this.m_pbNudgePathDown.Click += new System.EventHandler(this.NudgePreferredPathDown);
 			// 
 			// m_pbPreferPaths
 			// 
@@ -1075,7 +1047,7 @@ namespace SList
 			this.m_pbPreferPaths.Size = new System.Drawing.Size(149, 39);
 			this.m_pbPreferPaths.TabIndex = 60;
 			this.m_pbPreferPaths.Text = "Prefer Paths";
-			this.m_pbPreferPaths.Click += new System.EventHandler(this.EH_ApplyPreferredPaths);
+			this.m_pbPreferPaths.Click += new System.EventHandler(this.ApplyPreferredPaths);
 			// 
 			// m_pbNextDupe
 			// 
@@ -1149,7 +1121,6 @@ namespace SList
 			this.Controls.Add(this.m_cbAddToIgnoreList);
 			this.Controls.Add(this.m_cbxIgnoreList);
 			this.Controls.Add(this.label3);
-			this.Controls.Add(this.m_pbValidateSrc);
 			this.Controls.Add(this.m_cbMarkFavored);
 			this.Controls.Add(this.m_pbAddPath);
 			this.Controls.Add(this.m_pbRemove);
@@ -1164,7 +1135,6 @@ namespace SList
 			this.Controls.Add(this.m_ebMovePath);
 			this.Controls.Add(this.m_pbClear);
 			this.Controls.Add(this.m_pbToggle);
-			this.Controls.Add(this.m_pbDelete);
 			this.Controls.Add(this.m_pbMove);
 			this.Controls.Add(this.m_lblRegEx);
 			this.Controls.Add(this.m_ebRegEx);
@@ -1199,15 +1169,21 @@ namespace SList
 
 		#endregion
 
-		#region EventHandlers
-
-		void EH_ApplyPreferredPaths(object sender, EventArgs e)
+		#region Preferred Paths
+		/*----------------------------------------------------------------------------
+			%%Function: ApplyPreferredPaths
+			%%Qualified: SList.SListApp.ApplyPreferredPaths
+		----------------------------------------------------------------------------*/
+		private void ApplyPreferredPaths(object sender, EventArgs e)
 		{
 			m_model.AdjustListViewForFavoredPaths();
 		}
 
-
-		void NudgePreferredPath(int di)
+		/*----------------------------------------------------------------------------
+			%%Function: NudgePreferredPath
+			%%Qualified: SList.SListApp.NudgePreferredPath
+		----------------------------------------------------------------------------*/
+		private void NudgePreferredPath(int di)
 		{
 			if (m_lbPrefPath.SelectedIndices.Count != 1)
 				return;
@@ -1227,15 +1203,28 @@ namespace SList
 			m_lbPrefPath.SelectedIndex = sel + di;
 		}
 
-		void EH_NudgePreferredPathUp(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: NudgePreferredPathUp
+			%%Qualified: SList.SListApp.NudgePreferredPathUp
+		----------------------------------------------------------------------------*/
+		private void NudgePreferredPathUp(object sender, EventArgs e)
 		{
 			NudgePreferredPath(-1);
 		}
 
-		void EH_NudgePreferredPathDown(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: NudgePreferredPathDown
+			%%Qualified: SList.SListApp.NudgePreferredPathDown
+		----------------------------------------------------------------------------*/
+		private void NudgePreferredPathDown(object sender, EventArgs e)
 		{
 			NudgePreferredPath(1);
 		}
+
+		/*----------------------------------------------------------------------------
+			%%Function: RemovePreferredPath
+			%%Qualified: SList.SListApp.RemovePreferredPath
+		----------------------------------------------------------------------------*/
 		private void RemovePreferredPath(object sender, EventArgs e)
 		{
 			if (m_lbPrefPath.SelectedIndices.Count == 0)
@@ -1267,93 +1256,119 @@ namespace SList
 				m_lbPrefPath.SelectedIndex = sel;
 		}
 
-		private void EH_LoadPreferredPaths(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: LoadPreferredPaths
+			%%Qualified: SList.SListApp.LoadPreferredPaths
+		----------------------------------------------------------------------------*/
+		private void LoadPreferredPaths(object sender, EventArgs e)
 		{
 			m_model.LoadPreferredPathsFromFile();
 		}
 
-		private void EH_SavePreferredPaths(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: SavePreferredPaths
+			%%Qualified: SList.SListApp.SavePreferredPaths
+		----------------------------------------------------------------------------*/
+		private void SavePreferredPaths(object sender, EventArgs e)
 		{
 			m_model.SavePreferredPathsToFile();
 		}
+		#endregion
 
-		private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
-		{
-			SyncSettingsWithUi();
-			m_settings.Save();
-		}
+		#region Search & Action Commands
 
-		private bool fSyncing = false;
-		private void DoSearchTargetChange(object sender, EventArgs e)
-		{
-			if (!fSyncing)
-				ShowListView(CurrentFileList());
-		}
-
-		private void EH_ColumnClick(object o, ColumnClickEventArgs e)
-		{
-			m_model.ChangeListViewSort(ViewCur, e.Column);
-		}
-
-		private void EH_Uniquify(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoUniquify
+			%%Qualified: SList.SListApp.DoUniquify
+		----------------------------------------------------------------------------*/
+		private void DoUniquify(object sender, System.EventArgs e)
 		{
 			m_model.BuildUniqueFileList();
 			m_model.AdjustListViewForFavoredPaths();
 		}
 
-		private void EH_DoSearch(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSearch
+			%%Qualified: SList.SListApp.DoSearch
+		----------------------------------------------------------------------------*/
+		private void DoSearch(object sender, System.EventArgs e)
 		{
 			m_model.BuildFileList();
 		}
 
-		private void EH_DoAppendSearch(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoAppendSearch
+			%%Qualified: SList.SListApp.DoAppendSearch
+		----------------------------------------------------------------------------*/
+		private void DoAppendSearch(object sender, System.EventArgs e)
 		{
 			m_model.BuildFileList(true /*fAppend*/);
 		}
 
-		private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
-		{
-			RenderSupp.RenderHeadingLine(sender, e);
-		}
-
-		private void EH_DoMove(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoMove
+			%%Qualified: SList.SListApp.DoMove
+		----------------------------------------------------------------------------*/
+		private void DoMove(object sender, System.EventArgs e)
 		{
 			SmartList.MoveSelectedFiles(ViewCur, m_ebMovePath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
 		}
 
+		/*----------------------------------------------------------------------------
+			%%Function: DoCopy
+			%%Qualified: SList.SListApp.DoCopy
+		----------------------------------------------------------------------------*/
 		private void DoCopy(object sender, EventArgs e)
 		{
 			SmartList.CopySelectedFiles(ViewCur, m_ebCopyPath.Text, m_cbGenerateScript.Checked ? m_ebScript.Text : null, m_stbpMainStatus);
 		}
 
-		private void EH_DoDelete(object sender, System.EventArgs e) { }
-
-		private void EH_ToggleAll(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: ToggleAll
+			%%Qualified: SList.SListApp.ToggleAll
+		----------------------------------------------------------------------------*/
+		private void ToggleAll(object sender, System.EventArgs e)
 		{
 			m_model.ToggleAllListViewItems(ViewCur);
 		}
 
-		private void EH_ClearAll(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: ClearAll
+			%%Qualified: SList.SListApp.ClearAll
+		----------------------------------------------------------------------------*/
+		private void ClearAll(object sender, System.EventArgs e)
 		{
 			m_model.UncheckAllListViewItems(ViewCur);
 		}
 
-		private void EH_MatchRegex(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoMatchListItemsWithRegex
+			%%Qualified: SList.SListApp.DoMatchListItemsWithRegex
+		----------------------------------------------------------------------------*/
+		private void DoMatchListItemsWithRegex(object sender, System.EventArgs e)
 		{
 			m_model.DoRegex(SmartList.RegexOp.Match, m_ebRegEx.Text);
 		}
 
-		private void EH_FilterRegex(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoFilterListItemsToRegex
+			%%Qualified: SList.SListApp.DoFilterListItemsToRegex
+		----------------------------------------------------------------------------*/
+		private void DoFilterListItemsToRegex(object sender, System.EventArgs e)
 		{
 			m_model.DoRegex(SmartList.RegexOp.Filter, m_ebRegEx.Text);
 		}
 
-		private void EH_CheckRegex(object sender, System.EventArgs e)
+		private void DoCheckListItemsMatchingRegex(object sender, System.EventArgs e)
 		{
 			m_model.DoRegex(SmartList.RegexOp.Check, m_ebRegEx.Text);
 		}
 
-		private void EH_HandleExecuteMenu(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoExecuteSelectedItem
+			%%Qualified: SList.SListApp.DoExecuteSelectedItem
+		----------------------------------------------------------------------------*/
+		private void DoExecuteSelectedItem(object sender, System.EventArgs e)
 		{
 			SLItem sli = ViewCur.SelectedItem();
 
@@ -1363,28 +1378,76 @@ namespace SList
 			}
 		}
 
-		private void EH_SmartMatchClick(object sender, System.EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSmartMatchAndReportMatches
+			%%Qualified: SList.SListApp.DoSmartMatchAndReportMatches
+		----------------------------------------------------------------------------*/
+		private void DoSmartMatchAndReportMatches(object sender, System.EventArgs e)
 		{
 			sCancelled = SmartList.SCalcMatchingListViewItems(ViewCur, m_ebRegEx.Text, sCancelled);
 		}
 
-		private void EH_HandleEdit(object sender, System.Windows.Forms.LabelEditEventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoSaveIgnoreList
+			%%Qualified: SList.SListApp.DoSaveIgnoreList
+		----------------------------------------------------------------------------*/
+		private void DoSaveIgnoreList(object sender, EventArgs e)
 		{
-			SLItem sli = ViewCur.Items[e.Item];
-
-			if (!SmartList.FRenameFile(sli.Path, sli.Name, sli.Path, e.Label))
-			{
-				e.CancelEdit = true;
-			}
-			else
-			{
-				sli.Rename(e.Label);
-			}
+			m_model.EnsureIgnoreListSaved();
 		}
 
-		private void EH_ValidateSrc(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoLoadFileListFromFile
+			%%Qualified: SList.SListApp.DoLoadFileListFromFile
+		----------------------------------------------------------------------------*/
+		private void DoLoadFileListFromFile(object sender, EventArgs e)
 		{
-			m_model.BuildMissingFileList();
+			m_model.LoadFileListFromFile(SlisCur);
+			m_model.AdjustListViewForFavoredPaths();
+			SetCount(ViewCur.Items.Count);
+		}
+
+		/*----------------------------------------------------------------------------
+			%%Function: DoSaveFileListToFile
+			%%Qualified: SList.SListApp.DoSaveFileListToFile
+		----------------------------------------------------------------------------*/
+		private void DoSaveFileListToFile(object sender, EventArgs e)
+		{
+			m_model.SaveFileListToFile(SlisCur);
+		}
+
+		#endregion
+
+		#region EventHandlers
+
+		/*----------------------------------------------------------------------------
+			%%Function: EH_OnFormClosing
+			%%Qualified: SList.SListApp.EH_OnFormClosing
+		----------------------------------------------------------------------------*/
+		private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
+		{
+			SyncSettingsWithUi();
+			m_settings.Save();
+		}
+
+		private bool fSyncing = false;
+		/*----------------------------------------------------------------------------
+			%%Function: EH_OnSearchTargetChange
+			%%Qualified: SList.SListApp.EH_OnSearchTargetChange
+		----------------------------------------------------------------------------*/
+		private void EH_OnSearchTargetChange(object sender, EventArgs e)
+		{
+			if (!fSyncing)
+				ShowListView(CurrentFileList());
+		}
+
+		/*----------------------------------------------------------------------------
+			%%Function: EH_RenderHeadingLine
+			%%Qualified: SList.SListApp.EH_RenderHeadingLine
+		----------------------------------------------------------------------------*/
+		private void EH_RenderHeadingLine(object sender, System.Windows.Forms.PaintEventArgs e)
+		{
+			RenderSupp.RenderHeadingLine(sender, e);
 		}
 
 		/* E  H _  H A N D L E  I G N O R E  L I S T  S E L E C T */
@@ -1411,36 +1474,33 @@ namespace SList
 			m_model.ApplyIgnoreList((string)m_cbxIgnoreList.SelectedItem);
 		}
 
-		private void EH_DoSaveIgnoreList(object sender, EventArgs e)
-		{
-			m_model.EnsureIgnoreListSaved();
-		}
+		#region Context Menu Commands
 
-		private void EH_LoadFileListFromFile(object sender, EventArgs e)
-		{
-			m_model.LoadFileListFromFile(SlisCur);
-			m_model.AdjustListViewForFavoredPaths();
-			SetCount(ViewCur.Items.Count);
-		}
-
-		private void EH_SaveFileListToFile(object sender, EventArgs e)
-		{
-			m_model.SaveFileListToFile(SlisCur);
-		}
-
-		void EH_RemoveType(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: RemoveType
+			%%Qualified: SList.SListApp.RemoveType
+		----------------------------------------------------------------------------*/
+		private void RemoveType(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
 			m_model.RemoveType(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo) mni.Tag);
 		}
 
-		void EH_RemovePattern(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: RemovePattern
+			%%Qualified: SList.SListApp.RemovePattern
+		----------------------------------------------------------------------------*/
+		private void RemovePattern(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
 			m_model.RemovePattern(m_rgslis[m_islisCur], mni.Text, (FilePatternInfo)mni.Tag);
 		}
 
-		void EH_RemovePath(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: RemovePath
+			%%Qualified: SList.SListApp.RemovePath
+		----------------------------------------------------------------------------*/
+		private void RemovePath(object sender, EventArgs e)
 		{
 			MenuItem mni = (MenuItem)sender;
 			m_model.RemovePath(m_rgslis[m_islisCur], mni.Text);
@@ -1450,7 +1510,11 @@ namespace SList
 			}
 		}
 
-		private void EH_AddPreferredPath(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: AddPreferredPath
+			%%Qualified: SList.SListApp.AddPreferredPath
+		----------------------------------------------------------------------------*/
+		private void AddPreferredPath(object sender, EventArgs e)
 		{
 			if (SlisCur.FileListType == FileList.Destination)
 			{
@@ -1462,7 +1526,11 @@ namespace SList
 			m_model.AddPreferredPath(mni.Text);
 		}
 
-		void AddPreferredPathSubmenuItems(MenuItem mni, SLItem sli)
+		/*----------------------------------------------------------------------------
+			%%Function: AddPreferredPathSubmenuItems
+			%%Qualified: SList.SListApp.AddPreferredPathSubmenuItems
+		----------------------------------------------------------------------------*/
+		private void AddPreferredPathSubmenuItems(MenuItem mni, SLItem sli)
 		{
 			if (mni.Text != "Add Preferred Path")
 				throw new Exception("context menu structure changed!");
@@ -1483,13 +1551,17 @@ namespace SList
 					sSub = s;
 
 				mniNew.Text = sSub;
-				mniNew.Click += new EventHandler(EH_AddPreferredPath);
+				mniNew.Click += new EventHandler(AddPreferredPath);
 
 				mni.MenuItems.Add(mniNew);
 			}
 		}
 
-		void AddRemovePathSubmenuItems(MenuItem mni, SLItem sli)
+		/*----------------------------------------------------------------------------
+			%%Function: AddRemovePathSubmenuItems
+			%%Qualified: SList.SListApp.AddRemovePathSubmenuItems
+		----------------------------------------------------------------------------*/
+		private void AddRemovePathSubmenuItems(MenuItem mni, SLItem sli)
 		{
 			if (mni.Text != "Remove Path")
 				throw new Exception("context menu structure changed!");
@@ -1509,14 +1581,18 @@ namespace SList
 					sSub = s;
 
 				mniNew.Text = sSub;
-				mniNew.Click += new EventHandler(EH_RemovePath);
+				mniNew.Click += new EventHandler(RemovePath);
 				mniNew.Tag = sli;
 
 				mni.MenuItems.Add(mniNew);
 			}
 		}
 
-		void AddRemoveItemPatternSubmenuItems(MenuItem mni, SLItem sli)
+		/*----------------------------------------------------------------------------
+			%%Function: AddRemoveItemPatternSubmenuItems
+			%%Qualified: SList.SListApp.AddRemoveItemPatternSubmenuItems
+		----------------------------------------------------------------------------*/
+		private void AddRemoveItemPatternSubmenuItems(MenuItem mni, SLItem sli)
 		{
 			if (mni.Text != "Remove Type")
 				throw new Exception("context menu structure changed!");
@@ -1537,13 +1613,17 @@ namespace SList
 					sSub = s;
 
 				mniNew.Text = $"{sSub}\\*.{sExt}";
-				mniNew.Click += new EventHandler(EH_RemoveType);
+				mniNew.Click += new EventHandler(RemoveType);
 				mniNew.Tag = new FilePatternInfo() {Pattern = sExt, RootPath = sSub};
 				mni.MenuItems.Add(mniNew);
 			}
 		}
 
-		void AddRemoveFilePatternSubmenuItems(MenuItem mni, SLItem sli)
+		/*----------------------------------------------------------------------------
+			%%Function: AddRemoveFilePatternSubmenuItems
+			%%Qualified: SList.SListApp.AddRemoveFilePatternSubmenuItems
+		----------------------------------------------------------------------------*/
+		private void AddRemoveFilePatternSubmenuItems(MenuItem mni, SLItem sli)
 		{
 			if (mni.Text != "Remove File Pattern")
 				throw new Exception("context menu structure changed!");
@@ -1564,13 +1644,17 @@ namespace SList
 					sSub = s;
 
 				mniNew.Text = $"{sSub}\\{sName}";
-				mniNew.Click += new EventHandler(EH_RemovePattern);
+				mniNew.Click += new EventHandler(RemovePattern);
 				mniNew.Tag = new FilePatternInfo() {Pattern = sName, RootPath = sSub};
 				mni.MenuItems.Add(mniNew);
 			}
 		}
 
-		private void EH_DoContextPopup(object sender, EventArgs e)
+		/*----------------------------------------------------------------------------
+			%%Function: DoContextPopup
+			%%Qualified: SList.SListApp.DoContextPopup
+		----------------------------------------------------------------------------*/
+		private void DoContextPopup(object sender, EventArgs e)
 		{
 			SLItem sli = ViewCur.SelectedItem();
 
@@ -1584,8 +1668,9 @@ namespace SList
 				AddPreferredPathSubmenuItems(cm.MenuItems[4], sli);
 			}
 		}
+		#endregion
 
-		string sCancelled;
+		private string sCancelled;
 
 		/* E  H  _ I D L E */
 		/*----------------------------------------------------------------------------
@@ -1625,7 +1710,7 @@ namespace SList
 			foreach (string sFile in files)
 			{
 				m_ebRegEx.Text = Path.GetFileName(sFile);
-				EH_SmartMatchClick(null, null);
+				DoSmartMatchAndReportMatches(null, null);
 			}
 			//		if (sCancelled.Length > 0)
 			//			MessageBox.Show(sCancelled, "Not Found");
@@ -1770,7 +1855,7 @@ namespace SList
 		private ProgressBarStatus m_progressBarStatusOverall;
 		private ProgressBarStatus m_progressBarStatusCurrent;
 
-		ProgressBarStatus BarFromType(ProgressBarType barType)
+		private ProgressBarStatus BarFromType(ProgressBarType barType)
 		{
 			if (barType == ProgressBarType.Current)
 				return m_progressBarStatusCurrent;
