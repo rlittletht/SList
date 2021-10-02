@@ -1,29 +1,31 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace SList
 {
 
-	public enum ATMT
+	public enum TextAtomType
 	{
 		TitleWord,
 		OtherWord,
 		Separator
 	};
 
-	public class ATM
+	public class TextAtom
 	{
-		ATMT m_atmt;
+		TextAtomType m_atomType;
 		string m_sWord;
 		char m_chSep;
 
-		public ATMT Atmt
+		public TextAtomType TextAtomType
 		{
-			get { return m_atmt; }
-			set { m_atmt = value; }
+			get { return m_atomType; }
+			set { m_atomType = value; }
 		}
 
-		public ATM(ATMT atmt, string sWord)
+		public TextAtom(TextAtomType atomType, string sWord)
 		{
 			// strip out ' and "
 			int ich = 0, ichNext = 0, ichCur = 0, ichMax = sWord.Length;
@@ -55,39 +57,39 @@ namespace SList
 			// figure out the next segment
 			m_sWord += sWord.Substring(ich);
 
-			m_atmt = atmt;
+			m_atomType = atomType;
 			m_chSep = '\0';
 		}
 
-		public ATM(ATMT atmt, char chSep)
+		public TextAtom(TextAtomType atomType, char chSep)
 		{
 			m_sWord = null;
-			m_atmt = atmt;
+			m_atomType = atomType;
 			m_chSep = chSep;
 		}
 
-		public bool FMatch(ATM atm)
+		public bool FMatch(TextAtom textAtom)
 		{
-			if (m_atmt != atm.m_atmt)
+			if (m_atomType != textAtom.m_atomType)
 				return false;
 
-			if (m_atmt == ATMT.Separator)
+			if (m_atomType == TextAtomType.Separator)
 				return true; // separators match, even if they're not the same
 
-			return String.Compare(m_sWord, atm.m_sWord, true) == 0;
+			return String.Compare(m_sWord, textAtom.m_sWord, true) == 0;
 		}
 	}
 
-	public class ATMC // ATM Collection
+	public class TextAtoms // ATM Collection
 	{
-		ArrayList m_platm;
+		List<TextAtom> m_atoms;
 		int m_cWords;
 
 		public int CountWords
 		{
 			get
 			{
-				if (m_cWords == -1) return (m_cWords = CTitleWordsInPlatm(m_platm));
+				if (m_cWords == -1) return (m_cWords = CTitleWordsInPlatm(m_atoms));
 				else return m_cWords;
 			}
 		}
@@ -95,36 +97,36 @@ namespace SList
 
 		public int Count
 		{
-			get { return m_platm.Count; }
+			get { return m_atoms.Count; }
 		}
 
-		public ATMC(string sName)
+		public TextAtoms(string sName)
 		{
 			m_cWords = -1;
-			m_platm = PlatmBuildFromString(sName);
+			m_atoms = AtomsFromString(sName);
 		}
 
-		public ATM this[int i]
+		public TextAtom this[int i]
 		{
-			get { return (ATM)m_platm[i]; }
-			set { m_platm[i] = value; }
+			get { return (TextAtom)m_atoms[i]; }
+			set { m_atoms[i] = value; }
 		}
 
 		/* P L A T M  B U I L D  F R O M  S T R I N G */
 		/*----------------------------------------------------------------------------
-		    %%Function: PlatmBuildFromString
-		    %%Qualified: SList.SListApp:ATMC.PlatmBuildFromString
+		    %%Function: AtomsFromString
+		    %%Qualified: SList.SListApp:TextAtoms.AtomsFromString
 		    %%Contact: rlittle
 
-		    Build platm from the given sName
+		    Build atoms from the given sName
 	    ----------------------------------------------------------------------------*/
-		ArrayList PlatmBuildFromString(string sName)
+		List<TextAtom> AtomsFromString(string sName)
 		{
-			ArrayList platm = new ArrayList();
+			List<TextAtom> atoms = new List<TextAtom>();
 			int ich = 0;
 			int ichFirst = -1;
 			int ichMax;
-			ATMT atmtCur = ATMT.TitleWord;
+			TextAtomType atomTypeCur = TextAtomType.TitleWord;
 			bool fCollecting = false;
 			bool fEndWord = false;
 
@@ -138,9 +140,9 @@ namespace SList
 			{
 				if (fEndWord)
 				{
-					// end the word and add it as atmtCur
-					ATM atm = new ATM(atmtCur, sName.Substring(ichFirst, ich - ichFirst));
-					platm.Add(atm);
+					// end the word and add it as atomTypeCur
+					TextAtom textAtom = new TextAtom(atomTypeCur, sName.Substring(ichFirst, ich - ichFirst));
+					atoms.Add(textAtom);
 					fEndWord = false;
 					fCollecting = false;
 					ichFirst = -1;
@@ -173,7 +175,7 @@ namespace SList
 							fEndWord = true;
 							continue;
 						}
-						atmtCur = ATMT.OtherWord;
+						atomTypeCur = TextAtomType.OtherWord;
 						break;
 					case ')':
 					case ']':
@@ -183,7 +185,7 @@ namespace SList
 							fEndWord = true;
 							continue;
 						}
-						atmtCur = ATMT.TitleWord; // we don't handle nested parens, we always go back to the title
+						atomTypeCur = TextAtomType.TitleWord; // we don't handle nested parens, we always go back to the title
 						break;
 					case '-':
 					case '=':
@@ -194,14 +196,14 @@ namespace SList
 							continue;
 						}
 						// all collected words before this now become OtherWord
-						foreach (ATM atm in platm)
+						foreach (TextAtom atm in atoms)
 						{
-							if (atm.Atmt == ATMT.TitleWord)
-								atm.Atmt = ATMT.OtherWord;
+							if (atm.TextAtomType == TextAtomType.TitleWord)
+								atm.TextAtomType = TextAtomType.OtherWord;
 						}
 						{
-							ATM atm = new ATM(ATMT.Separator, ch);
-							platm.Add(atm);
+							TextAtom textAtom = new TextAtom(TextAtomType.Separator, ch);
+							atoms.Add(textAtom);
 						}
 						break;
 					case '\'':
@@ -222,32 +224,32 @@ namespace SList
 			}
 			if (fCollecting)
 			{
-				ATM atm = new ATM(atmtCur, sName.Substring(ichFirst, ich - ichFirst));
-				platm.Add(atm);
+				TextAtom textAtom = new TextAtom(atomTypeCur, sName.Substring(ichFirst, ich - ichFirst));
+				atoms.Add(textAtom);
 			}
 
 			// before we're done, make sure there are *some* title words
-			if (CTitleWordsInPlatm(platm) == 0)
+			if (CTitleWordsInPlatm(atoms) == 0)
 			{
 				// work backwards and make title words until we hit a separator
-				int i = platm.Count - 1;
+				int i = atoms.Count - 1;
 
 				while (i >= 0)
 				{
 					// skip trailing seps
-					while (i >= 0 && ((ATM)platm[i]).Atmt == ATMT.Separator)
+					while (i >= 0 && ((TextAtom)atoms[i]).TextAtomType == TextAtomType.Separator)
 						i--;
 
 					if (i < 0)
 						break;
 
-					while (i >= 0 && ((ATM)platm[i]).Atmt != ATMT.Separator)
-						((ATM)platm[i--]).Atmt = ATMT.TitleWord;
+					while (i >= 0 && ((TextAtom)atoms[i]).TextAtomType != TextAtomType.Separator)
+						((TextAtom)atoms[i--]).TextAtomType = TextAtomType.TitleWord;
 
 					break;
 				}
 			}
-			return platm;
+			return atoms;
 		}
 
 
@@ -258,13 +260,13 @@ namespace SList
 		    %%Contact: rlittle
 
 	    ----------------------------------------------------------------------------*/
-		int CTitleWordsInPlatm(ArrayList platm)
+		int CTitleWordsInPlatm(List<TextAtom> atoms)
 		{
 			int c = 0;
 
-			foreach (ATM atm in platm)
+			foreach (TextAtom atm in atoms)
 			{
-				if (atm.Atmt == ATMT.TitleWord)
+				if (atm.TextAtomType == TextAtomType.TitleWord)
 					c++;
 			}
 			return c;
@@ -280,9 +282,9 @@ namespace SList
 
 		    (confidence is the number of matched words / the number of words in platm1)
 	    ----------------------------------------------------------------------------*/
-		public int NMatch(ATMC atmc)
+		public int NMatch(TextAtoms textAtoms)
 		{
-			int i1 = this.Count - 1, i2 = atmc.Count - 1;
+			int i1 = this.Count - 1, i2 = textAtoms.Count - 1;
 			int cMatch = 0;
 
 			if (i1 < 0 || i2 < 0)
@@ -291,19 +293,19 @@ namespace SList
 			while (i1 >= 0 && i2 >= 0)
 			{
 				// find the first titleword
-				while (i2 >= 0 && atmc[i2].Atmt != ATMT.TitleWord)
+				while (i2 >= 0 && textAtoms[i2].TextAtomType != TextAtomType.TitleWord)
 					i2--;
 
 				if (i2 < 0)
 					break;
 
-				while (i1 >= 0 && this[i1].Atmt != ATMT.TitleWord)
+				while (i1 >= 0 && this[i1].TextAtomType != TextAtomType.TitleWord)
 					i1--;
 
 				if (i1 < 0)
 					break;
 
-				if (!this[i1].FMatch(atmc[i2]))
+				if (!this[i1].FMatch(textAtoms[i2]))
 					break;
 
 				cMatch++;

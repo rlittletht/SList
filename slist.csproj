@@ -27,7 +27,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -93,6 +93,18 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
+    <Reference Include="TCore.Settings, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.Settings.1.1.0\lib\net45\TCore.Settings.dll</HintPath>
+    </Reference>
+    <Reference Include="TCore.UI, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.UI.1.0.1\lib\net452\TCore.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="TCore.XmlSettings, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.XmlSettings.1.0.0\lib\netstandard2.0\TCore.XmlSettings.dll</HintPath>
+    </Reference>
+    <Reference Include="XMLIO, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TCore.XMLIO.1.0.2\lib\netstandard2.0\XMLIO.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IgnoreList.cs" />
@@ -100,8 +112,14 @@
     <Compile Include="Model.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SLIBucket.cs" />
+    <Compile Include="FilePatternInfo.cs" />
+    <Compile Include="PreferredPaths.cs" />
+    <Compile Include="ProgressBarStatus.cs" />
+    <Compile Include="RaiiWaitCursor.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="SLISetView.cs" />
     <Compile Include="SLitem.cs" />
+    <Compile Include="SLItemComparer.cs" />
     <Compile Include="SLItemSet.cs" />
     <Compile Include="ISmartListUi.cs" />
     <Compile Include="SmartMatch.cs" />
@@ -119,16 +137,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\liblet\cs\TCore.Settings\TCore.Settings.csproj">
-      <Project>{cf92fd1e-ce88-492e-a7c6-c4d29d908a22}</Project>
-      <Name>TCore.Settings</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\liblet\cs\TCore.UI\TCore.UI.csproj">
-      <Project>{9213a90f-a23f-4bc5-827c-164ecb6c6cc2}</Project>
-      <Name>TCore.UI</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
