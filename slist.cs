@@ -1356,15 +1356,6 @@ namespace SList
 		}
 
 		/*----------------------------------------------------------------------------
-			%%Function: DoSmartMatchAndReportMatches
-			%%Qualified: SList.SListApp.DoSmartMatchAndReportMatches
-		----------------------------------------------------------------------------*/
-		private void DoSmartMatchAndReportMatches(object sender, System.EventArgs e)
-		{
-			sCancelled = SmartList.SCalcMatchingListViewItems(ViewCur, m_ebRegEx.Text, sCancelled);
-		}
-
-		/*----------------------------------------------------------------------------
 			%%Function: DoSaveIgnoreList
 			%%Qualified: SList.SListApp.DoSaveIgnoreList
 		----------------------------------------------------------------------------*/
@@ -1450,8 +1441,6 @@ namespace SList
 			}
 			m_model.ApplyIgnoreList((string)m_cbxIgnoreList.SelectedItem);
 		}
-
-		private string sCancelled;
 
 		#endregion
 
