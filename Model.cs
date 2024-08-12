@@ -452,7 +452,11 @@ namespace SList
 										else
 										{
 											nSize = FileSizeFromDirectoryLine(sLine);
-										}
+											// cloud file "ghosts" are reported with (size) which we see as negative
+
+                                            if (nSize < 0)
+                                                nSize = Math.Abs(nSize);
+                                        }
 
 										string sFileLine = FileNameFromDirectoryLine(sLine);
 
