@@ -17,7 +17,8 @@ namespace SList
 		[Setting("MoveTargetPath", "", "")]				public string MoveTargetPath { get; set; }
 		[Setting("SourceFilesListDefault", "", "")]		public string SourceFilesListDefault { get; set; }
 		[Setting("DestFilesListDefault", "", "")]		public string DestFilesListDefault { get; set; }
-		[Setting("RealFileDiffing", false, 0)]			public bool RealFileDiffing { get; set; }
+        [Setting("StateDefault", "", "")]				public string StateDefault { get; set; }
+        [Setting("RealFileDiffing", false, 0)]			public bool RealFileDiffing { get; set; }
 
 		[Setting("PreferredPathListDefault", "", "")]	public string PreferredPathListDefault { get; set; }
 

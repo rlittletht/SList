@@ -86,14 +86,21 @@ namespace SList
 		public static string GetName(SLItem item) => item.Name;
 		public static string SetName(SLItem item, string value) => item.Name = value;
 
-		public static string GetItemHashKey(SLItem item) => item.Hashkey;
+        public static string GetIsMarked(SLItem item) => item.IsMarked.ToString();
+        public static string GetChecked(SLItem item) => item.Checked.ToString();
+        public static string GetCannotOpen(SLItem item) => item.CannotOpen.ToString();
+
+        public static string GetItemHashKey(SLItem item) => item.Hashkey;
 		public static string SetItemHashKey(SLItem item, string value) => item.m_sFiName = value;
 		public static string GetIsReparsePoint(SLItem item) => item.IsReparsePoint ? "true" : null;
 		public static void SetIsReparsePoint(SLItem item, string value) => item.IsReparsePoint = (value == null || value != "true") ? false : true;
 		public static string GetSize(SLItem item) => item.Size.ToString();
 		public static void SetSize(SLItem item, string value) => item.Size = Int64.Parse(value);
+        public static void SetIsMarked(SLItem item, string value) => item.IsMarked = bool.Parse(value);
+		public static void SetChecked(SLItem item, string value) => item.Checked = bool.Parse(value);
+        public static void SetCannotOpen(SLItem item, string value) => item.CannotOpen = bool.Parse(value);
 
-		public static void SetSha256(SLItem item, string value)
+        public static void SetSha256(SLItem item, string value)
 		{
 			byte[] bytes = new byte[value.Length / 2];
 
@@ -359,6 +366,7 @@ namespace SList
 
 			return true;
 		}
+		
 	};
 
 }

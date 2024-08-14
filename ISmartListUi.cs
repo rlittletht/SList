@@ -36,9 +36,14 @@ namespace SList
 		bool FMarkFavored();
 		string GetFileListDefaultName(SListApp.FileList fileList);
 		void SetFileListDefaultName(SListApp.FileList fileList, string sDefault);
+        string GetStateDefaultName();
+        void SetStateDefaultName(string sDefault);
 		System.Windows.Forms.Form TheForm { get; }
 		SLISetView ViewCur { get; }
 		SLISet SlisCur { get; }
-
-	}
+        SLISet SourceSet { get; }
+        SLISet DestinationSet { get; }
+        void ReplaceDestination(SLISet set);
+        void ReplaceSource(SLISet set);
+    }
 }

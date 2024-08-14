@@ -117,6 +117,7 @@
     <Compile Include="ProgressBarStatus.cs" />
     <Compile Include="RaiiWaitCursor.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SLISets.cs" />
     <Compile Include="SLISetView.cs" />
     <Compile Include="SLitem.cs" />
     <Compile Include="SLItemComparer.cs" />

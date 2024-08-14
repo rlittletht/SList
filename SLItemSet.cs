@@ -8,17 +8,48 @@ using TCore.XmlSettings;
 namespace SList
 {
 	public class SLISet
-	{
+    {
+        public Dictionary<string, SLItem> ItemsInternal => m_items;
+
+        public void ReplaceFromSet(SLISet setOther)
+        {
+            m_items = setOther.ItemsInternal;
+        }
+
 		private Dictionary<string, SLItem> m_items;
 		public SLISetView View { get; private set; }
 		private string m_sSpec;
+
+        public string Name => FileListType == SListApp.FileList.Destination ? "Destination" : "Source";
 
 		public SListApp.FileList FileListType { get; private set; }
 
 		public string PathSpec { get { return m_sSpec; } set { m_sSpec = value; } }
 		public bool Recurse { get; set; }
 
-		public SLISet(SListApp.FileList fileList, ListView lv, ISmartListUi ui)
+        public SLISet()
+        {
+            m_items = new Dictionary<string, SLItem>();
+            m_plLvComparerStack = new List<IComparer>();
+        }
+
+        public void AtachUI(ListView lv, ISmartListUi ui)
+        {
+            View = new SLISetView(lv, this, ui);
+            lv.Tag = this;
+        }
+
+        public void SetTypeFromState(string type)
+        {
+			if (type == "Destination")
+				FileListType = SListApp.FileList.Destination;
+			else if (type == "Source")
+                FileListType = SListApp.FileList.Source;
+			else
+                throw new Exception($"unknown type: {type}");
+        }
+
+        public SLISet(SListApp.FileList fileList, ListView lv, ISmartListUi ui)
 		{
 			FileListType = fileList;
 			View = new SLISetView(lv, this, ui);
@@ -182,7 +213,7 @@ namespace SList
 				});
 		}
 
-		public IEnumerator<string> ItemEnumerator { get; set; }
+		public IEnumerator<string> FilesListItemEnumerator { get; set; }
 
 		static RepeatContext<SLISet>.RepeatItemContext CreateFileRepeatItemContext(
 			SLISet slis,
@@ -190,12 +221,12 @@ namespace SList
 			RepeatContext<SLISet>.RepeatItemContext parent)
 		{
 			// for write...
-			if (slis.m_items != null && slis.ItemEnumerator != null)
+			if (slis.m_items != null && slis.FilesListItemEnumerator != null)
 			{
 				return new RepeatContext<SLISet>.RepeatItemContext(
 					element,
 					parent,
-					slis.m_items[slis.ItemEnumerator.Current]);
+					slis.m_items[slis.FilesListItemEnumerator.Current]);
 			}
 
 			// for read
@@ -207,10 +238,10 @@ namespace SList
 			if (t.m_items == null || t.m_items.Count == 0)
 				return false;
 
-			if (t.ItemEnumerator == null)
-				t.ItemEnumerator = t.m_items.Keys.GetEnumerator();
+			if (t.FilesListItemEnumerator == null)
+				t.FilesListItemEnumerator = t.m_items.Keys.GetEnumerator();
 
-			return t.ItemEnumerator.MoveNext();
+			return t.FilesListItemEnumerator.MoveNext();
 		}
 
 		private static void CommitFileRepeatItemContext(SLISet t, RepeatContext<SLISet>.RepeatItemContext itemcontext)
@@ -222,7 +253,7 @@ namespace SList
 			t.AddInternal(item); // don't add to the list view yet...
 		}
 
-		static XmlDescription<SLISet> CreateXmlDescription()
+        static XmlDescription<SLISet> CreateXmlDescription()
 		{
 			return XmlDescriptionBuilder<SLISet>
 				.Build("http://www.thetasoft.com/scehmas/SList/filelist/2020", "FileList")
@@ -245,7 +276,7 @@ namespace SList
 		{
 			XmlDescription<SLISet> xml = CreateXmlDescription();
 
-			slis.ItemEnumerator = null;				
+			slis.FilesListItemEnumerator = null;				
 			using (WriteFile<SLISet> writeFile = WriteFile<SLISet>.CreateSettingsFile(xml, outfile, slis))
 			{
 				writeFile.SerializeSettings(xml, slis);

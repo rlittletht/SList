@@ -12,6 +12,7 @@ using NUnit.Framework;
 using NUnit.Framework.Internal;
 using TCore.UI;
 using TCore.XmlSettings;
+using System.ComponentModel;
 
 namespace SList
 {
@@ -513,11 +514,49 @@ namespace SList
 			}
 		}
 
-#endregion
+        internal void SaveStateToFile(SLISet source, SLISet destination)
+        {
+            using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
+            {
+                string sFile;
+                string sDefault = m_ui.GetStateDefaultName();
 
-		#region Core Model (Compare Files, etc)
+                if (!InputBox.ShowInputBox("Saved state", sDefault, out sFile, m_ui.TheForm))
+                    return;
 
-		private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
+                m_ui.SetStateDefaultName(sFile);
+
+                SLISets.SaveState(source, destination, sFile);
+            }
+        }
+
+        internal void LoadStateFromFile()
+        {
+            using (new RaiiWaitCursor(m_ui, Cursors.WaitCursor))
+            {
+                string sFile;
+                string sDefault = m_ui.GetStateDefaultName();
+
+                if (!InputBox.ShowInputBox("Saved state", sDefault, out sFile, m_ui.TheForm))
+                    return;
+
+                m_ui.SetStateDefaultName(sFile);
+
+				SLISets.LoadState(sFile, out SLISet source, out SLISet destination);
+
+                m_ui.ReplaceDestination(destination);
+                m_ui.DestinationSet.UpdateListViewFromSlis();
+
+                m_ui.ReplaceSource(source);
+                m_ui.SourceSet.UpdateListViewFromSlis();
+            }
+        }
+
+        #endregion
+
+        #region Core Model (Compare Files, etc)
+
+        private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
 		{
 			if (sli1.Size == 0 && !sli1.IsReparsePoint
 			                   && sli2.Size == 0 && !sli2.IsReparsePoint)

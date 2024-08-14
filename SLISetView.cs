@@ -9,7 +9,7 @@ namespace SList
 	public class SLISetView
 	{
 		public List<SLItem> Items { get; private set; }
-		private ListView LvControl { get; set; }
+		public ListView LvControl { get; set; }
 		public SLISetViewItemComparer Comparer { get; set; }
 		private SLISet m_parent;
 		private ISmartListUi m_ui;
@@ -198,7 +198,22 @@ namespace SList
 			return LvControl.SelectedIndices[0];
 		}
 
-		public SLItem SelectedItem()
+        public List<SLItem> SelectedItems()
+        {
+            if (LvControl.SelectedIndices.Count == 0)
+                return null;
+
+            List<SLItem> items = new List<SLItem>();
+
+            foreach (int i in LvControl.SelectedIndices)
+            {
+                items.Add(Items[i]);
+            }
+
+			return items;
+        }
+
+        public SLItem SelectedItem()
 		{
 			if (LvControl.SelectedIndices.Count == 0)
 				return null;

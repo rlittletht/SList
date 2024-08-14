@@ -79,9 +79,12 @@ namespace SList
 		public SLISet SlisCur => m_rgslis[m_islisCur];
         public SLISet SlisOther => m_rgslis[m_islisCur == s_ilvSource ? s_ilvDest : s_ilvSource];
 
-		#region AppHost
+        public SLISet SourceSet => m_rgslis[s_ilvSource];
+        public SLISet DestinationSet => m_rgslis[s_ilvDest];
 
-		private SmartList m_model;
+#region AppHost
+
+        private SmartList m_model;
 		private Button button1;
 		private RadioButton radioButton1;
 		private RadioButton radioButton2;
@@ -109,6 +112,8 @@ namespace SList
         private MenuItem menuItem12;
         private MenuItem menuItem13;
         private MenuItem menuItem14;
+        private Button button3;
+        private Button button4;
         private SmartListSettings m_settings;
 
 		public SListApp()
@@ -333,6 +338,8 @@ namespace SList
             this.components = new System.ComponentModel.Container();
             this.m_cxtListView = new System.Windows.Forms.ContextMenu();
             this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItem12 = new System.Windows.Forms.MenuItem();
+            this.menuItem13 = new System.Windows.Forms.MenuItem();
             this.menuItem6 = new System.Windows.Forms.MenuItem();
             this.menuItem7 = new System.Windows.Forms.MenuItem();
             this.menuItem8 = new System.Windows.Forms.MenuItem();
@@ -343,6 +350,7 @@ namespace SList
             this.menuItem3 = new System.Windows.Forms.MenuItem();
             this.menuItem4 = new System.Windows.Forms.MenuItem();
             this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.menuItem14 = new System.Windows.Forms.MenuItem();
             this.m_ebSearchPath = new System.Windows.Forms.TextBox();
             this.m_pbSearch = new System.Windows.Forms.Button();
             this.m_lblSearch = new System.Windows.Forms.Label();
@@ -401,9 +409,8 @@ namespace SList
             this.m_pbPreviousDupe = new System.Windows.Forms.Button();
             this.m_pbPreviousChecked = new System.Windows.Forms.Button();
             this.m_pbNextChecked = new System.Windows.Forms.Button();
-            this.menuItem12 = new System.Windows.Forms.MenuItem();
-            this.menuItem13 = new System.Windows.Forms.MenuItem();
-            this.menuItem14 = new System.Windows.Forms.MenuItem();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
@@ -430,6 +437,18 @@ namespace SList
             this.menuItem1.Index = 0;
             this.menuItem1.Text = "Execute";
             this.menuItem1.Click += new System.EventHandler(this.DoExecuteSelectedItem);
+            // 
+            // menuItem12
+            // 
+            this.menuItem12.Index = 1;
+            this.menuItem12.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem13});
+            this.menuItem12.Text = "Launch Path";
+            // 
+            // menuItem13
+            // 
+            this.menuItem13.Index = 0;
+            this.menuItem13.Text = "Placeholder";
             // 
             // menuItem6
             // 
@@ -490,6 +509,12 @@ namespace SList
             this.menuItem5.Index = 7;
             this.menuItem5.Text = "Select next duplicate";
             this.menuItem5.Click += new System.EventHandler(this.DoSelectNextDupe);
+            // 
+            // menuItem14
+            // 
+            this.menuItem14.Index = 8;
+            this.menuItem14.Text = "Show related...";
+            this.menuItem14.Click += new System.EventHandler(this.ShowRelated);
             // 
             // m_ebSearchPath
             // 
@@ -805,6 +830,7 @@ namespace SList
             this.m_lv.UseCompatibleStateImageBehavior = false;
             this.m_lv.VirtualMode = true;
             this.m_lv.Visible = false;
+            this.m_lv.QueryContinueDrag += new System.Windows.Forms.QueryContinueDragEventHandler(this.OnQueryContinueDrag);
             this.m_lv.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseDown);
             this.m_lv.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseMove);
             this.m_lv.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseUp);
@@ -1089,29 +1115,35 @@ namespace SList
             this.m_pbNextChecked.Text = "Next Checked";
             this.m_pbNextChecked.Click += new System.EventHandler(this.DoSelectNextChecked);
             // 
-            // menuItem12
+            // button3
             // 
-            this.menuItem12.Index = 1;
-            this.menuItem12.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem13});
-            this.menuItem12.Text = "Launch Path";
+            this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.button3.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.button3.Location = new System.Drawing.Point(807, 14);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(147, 39);
+            this.button3.TabIndex = 65;
+            this.button3.Text = "Save State";
+            this.button3.Click += new System.EventHandler(this.SaveState);
             // 
-            // menuItem13
+            // button4
             // 
-            this.menuItem13.Index = 0;
-            this.menuItem13.Text = "Placeholder";
-            // 
-            // menuItem14
-            // 
-            this.menuItem14.Index = 8;
-            this.menuItem14.Text = "Show related...";
-            this.menuItem14.Click += new System.EventHandler(this.ShowRelated);
+            this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.button4.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.button4.Location = new System.Drawing.Point(645, 14);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(147, 39);
+            this.button4.TabIndex = 66;
+            this.button4.Text = "Load State";
+            this.button4.Click += new System.EventHandler(this.LoadState);
             // 
             // SListApp
             // 
             this.AllowDrop = true;
             this.AutoScaleBaseSize = new System.Drawing.Size(8, 19);
             this.ClientSize = new System.Drawing.Size(1399, 1169);
+            this.Controls.Add(this.button4);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.m_pbNextChecked);
             this.Controls.Add(this.m_pbPreviousChecked);
             this.Controls.Add(this.m_pbPreviousDupe);
@@ -1164,7 +1196,7 @@ namespace SList
             this.Controls.Add(this.m_ebSearchPath);
             this.Controls.Add(this.m_lv);
             this.Name = "SListApp";
-            this.Text = "SListApp";
+            this.Text = "Load ";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EH_OnFormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
@@ -1417,15 +1449,25 @@ namespace SList
 			m_model.SaveFileListToFile(SlisCur);
 		}
 
-		#endregion
 
-		#region EventHandlers
+        private void LoadState(object sender, EventArgs e)
+        {
+            m_model.LoadStateFromFile();
+        }
 
-		/*----------------------------------------------------------------------------
+        private void SaveState(object sender, EventArgs e)
+        {
+            m_model.SaveStateToFile(SourceSet, DestinationSet);
+        }
+        #endregion
+
+        #region EventHandlers
+
+        /*----------------------------------------------------------------------------
 			%%Function: EH_OnFormClosing
 			%%Qualified: SList.SListApp.EH_OnFormClosing
 		----------------------------------------------------------------------------*/
-		private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
+        private void EH_OnFormClosing(object sender, FormClosedEventArgs e)
 		{
 			SyncSettingsWithUi();
 			m_settings.Save();
@@ -1776,6 +1818,16 @@ namespace SList
 			return m_settings.DestFilesListDefault;
 		}
 
+        public string GetStateDefaultName()
+        {
+            return m_settings.StateDefault;
+        }
+
+        public void SetStateDefaultName(string name)
+        {
+            m_settings.StateDefault = name;
+        }
+
 		/*----------------------------------------------------------------------------
 			%%Function: SetFileListDefaultName
 			%%Qualified: SList.SListApp.SetFileListDefaultName
@@ -1867,16 +1919,31 @@ namespace SList
 
                         if (sli != null)
                         {
-                            DataObject dataObject = new DataObject(DataFormats.FileDrop, new string[] { sli.FullPath });
+                            // get the collection of items
+                            List<SLItem> items = set.View.SelectedItems();
 
-                            DragDropEffects dropEffect = view.DoDragDrop(dataObject, DragDropEffects.Copy);
-
-                            if (dropEffect == DragDropEffects.Copy)
+                            if (items.Count > 0)
                             {
-                                int index = set.View.GetItemIndex(sli);
+                                List<string> files = new List<string>();
 
-                                set.View.Check(index, false);
+                                foreach (SLItem item in items)
+                                {
+                                    files.Add(item.FullPath);
+                                }
+
+                                DataObject dataObject = new DataObject(DataFormats.FileDrop, files.ToArray());
+
+                                DragDropEffects dropEffect = view.DoDragDrop(dataObject, DragDropEffects.Copy);
+
+                                if (dropEffect == DragDropEffects.Copy)
+                                {
+                                    int index = set.View.GetItemIndex(sli);
+
+                                    set.View.Check(index, false);
+                                }
                             }
+
+                            dragBoxFromMouseDown = Rectangle.Empty;
                         }
                     }
                 }
@@ -1911,6 +1978,28 @@ namespace SList
                 MessageBox.Show($"Found {matches.Count} possible duplicates: {string.Join(",", paths)}");
             }
         }
+
+        private void OnQueryContinueDrag(object sender, QueryContinueDragEventArgs e)
+        {
+
+        }
+
+        public void ReplaceDestination(SLISet set)
+        {
+            SLISet cur = m_rgslis[s_ilvDest];
+
+            cur.View.Clear();
+            cur.ReplaceFromSet(set);
+        }
+
+        public void ReplaceSource(SLISet set)
+        {
+            SLISet cur = m_rgslis[s_ilvSource];
+
+            cur.View.Clear();
+            cur.ReplaceFromSet(set);
+        }
+
     }
 }
 
