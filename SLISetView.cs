@@ -139,7 +139,22 @@ namespace SList
 			set => LvControl.Visible = value;
 		}
 
-		int GetItemIndex(SLItem sli)
+        public SLItem GetItemAt(int x, int y)
+        {
+            ListViewItem item = LvControl.GetItemAt(x, y);
+
+            if (item == null)
+                return null;
+
+            return item.Tag as SLItem;
+        }
+
+        public int GetItemIndexAt(int x, int y)
+        {
+            return GetItemIndex(GetItemAt(x, y));
+        }
+
+        public int GetItemIndex(SLItem sli)
 		{
 			for (int i = 0; i < Items.Count; i++)
 				if (Items[i] == sli)

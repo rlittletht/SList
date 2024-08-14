@@ -22,6 +22,7 @@ namespace SList
 		{
 			FileListType = fileList;
 			View = new SLISetView(lv, this, ui);
+            lv.Tag = this;
 			m_items = new Dictionary<string, SLItem>();
 			m_plLvComparerStack = new List<IComparer>();
 		}
@@ -46,6 +47,25 @@ namespace SList
 			SmartList.AddSliToListView(sli, View);
 		}
 
+        public List<SLItem> FindMatchesByName(SLItem item)
+        {
+            List<SLItem> items = new List<SLItem>();
+
+            foreach (SLItem comp in m_items.Values)
+            {
+                if (string.Compare(item.Name, comp.Name, StringComparison.CurrentCultureIgnoreCase) == 0)
+                {
+                    items.Add(comp);
+                    if (items.Count > 5)
+                    {
+                        MessageBox.Show($"There are more than 5 items matching {item.Name}. Quitting");
+                        return items;
+                    }
+                }
+            }
+
+            return items;
+        }
 		private List<IComparer> m_plLvComparerStack;
 
 		public void PauseListViewUpdate(bool fClear)

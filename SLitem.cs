@@ -16,6 +16,8 @@ namespace SList
 		public string Name { get; private set; }
 		public Int64 Size { get; private set; }
 		public string Path { get; private set; }
+		public string FullPath => System.IO.Path.Combine(Path, Name);
+
 		public bool IsMarked { get; set; }
 		public string Extension => System.IO.Path.GetExtension(Name);
 		public bool Checked { get; set; }
