@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.IO;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -323,7 +324,7 @@ namespace SList
 				return n;
 		}
 
-		public void EnsureSha256()
+		public void EnsureSha256(ref bool fComputedSha)
 		{
 			if (m_rgbSha256 != null)
 				return;
@@ -340,17 +341,18 @@ namespace SList
 						fileStream.Position = 0;
 						m_rgbSha256 = sha.ComputeHash(fileStream);
 						fileStream.Close();
-					}
+                        fComputedSha = true;
+                    }
 				}
 				catch { }
 			}
 		}
 
 		public bool HasSha256 => m_rgbSha256 != null;
-		public bool FCanCompareSha256(SLItem item)
+		public bool FCanCompareSha256(SLItem item, ref bool fComputedSha)
 		{
-			EnsureSha256();
-			item.EnsureSha256();
+			EnsureSha256(ref fComputedSha);
+			item.EnsureSha256(ref fComputedSha);
 
 			return HasSha256 && item.HasSha256;
 		}

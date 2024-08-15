@@ -22,7 +22,8 @@ namespace SList
 		void UpdateProgressBar(ProgressBarType barType, long i, OnProgressUpdateDelegate del);
 		bool FCompareFilesChecked();
 		void SetStatusText(string text);
-		void SetCount(int count);
+        void SetMessageText(string text);
+        void SetCount(int count);
 		void AddIgnoreListItem(string text);
 		void ShowListView(SListApp.FileList fileList);
 		SLISet GetSliSet(SListApp.FileList fileList);

@@ -556,7 +556,7 @@ namespace SList
 
         #region Core Model (Compare Files, etc)
 
-        private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum)
+        private bool FCompareFiles(SLItem sli1, SLItem sli2, ref int min, ref int max, ref int sum, ref int nRealCompare)
 		{
 			if (sli1.Size == 0 && !sli1.IsReparsePoint
 			                   && sli2.Size == 0 && !sli2.IsReparsePoint)
@@ -567,14 +567,22 @@ namespace SList
 			if (sli1.CannotOpen || sli2.CannotOpen)
 				return false;
 
-			if (sli1.FCanCompareSha256(sli2))
-				return sli1.IsEqualSha256(sli2);
+            bool fComputedSha = false;
 
-			int nStart = Environment.TickCount;
+            if (sli1.FCanCompareSha256(sli2, ref fComputedSha))
+            {
+                if (fComputedSha)
+                    nRealCompare++;
+                return sli1.IsEqualSha256(sli2);
+            }
+
+            int nStart = Environment.TickCount;
 			int nEnd;
 
 			FileStream bs1 = null;
 			FileStream bs2 = null;
+
+            nRealCompare++;
 
 			try
 			{
@@ -738,6 +746,7 @@ namespace SList
 				slisSrc.View.BeginUpdate();
 				slisSrc.View.Items.Clear();
 
+                int cRealCompared = 0;
 				int i = 0;
 				int iMac = rgsli.Length;
 
@@ -767,7 +776,7 @@ namespace SList
 							if (m_ui.FCompareFilesChecked())
 							{
 								c++;
-								if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum))
+								if (FCompareFiles(rgsli[i], rgsli[iDupe], ref min, ref max, ref sum, ref cRealCompared))
 								{
 									if (rgsli[i].IsMarked == false && !rgsli[i].IsDestOnly)
 										AddSliToListView(rgsli[i], slisSrc.View, true);
@@ -808,9 +817,9 @@ namespace SList
 				m_ui.HideProgressBar(ProgressBarType.Current);
 				m_ui.HideProgressBar(ProgressBarType.Overall);
 				if (m_ui.FCompareFilesChecked())
-					m_ui.SetStatusText("Search complete.  Duplicates filtered by file compare.");
+					m_ui.SetMessageText($"Search complete.  Duplicates filtered by file compare. {cRealCompared} slow comparisons done.");
 				else
-					m_ui.SetStatusText("Search complete.  Duplicates filtered by size and name.");
+					m_ui.SetMessageText("Search complete.  Duplicates filtered by size and name.");
 
 				slisSrc.View.EndUpdate();
 				m_ui.SetCount(m_ui.SlisCur.View.Items.Count);

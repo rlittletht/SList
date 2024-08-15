@@ -47,6 +47,10 @@ namespace SList
 			LvControl.Columns[3].Text = "Location";
 			LvControl.Columns[3].Width = 512;
 
+            LvControl.Columns.Add(new ColumnHeader());
+            LvControl.Columns[4].Text = "HasCRC";
+            LvControl.Columns[4].Width = 64;
+
 			LvControl.FullRowSelect = true;
 			LvControl.MultiSelect = true;
 			LvControl.View = System.Windows.Forms.View.Details;
@@ -93,8 +97,10 @@ namespace SList
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 			lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
+            lvi.SubItems.Add(new ListViewItem.ListViewSubItem());
 
 			lvi.Tag = sli;
+            lvi.SubItems[4].Text = sli.HasSha256 ? "Yes" : "";
 			lvi.SubItems[3].Text = sli.Path;
 			lvi.SubItems[2].Text = sli.Size.ToString("###,###,###");
 			lvi.SubItems[1].Text = Path.GetExtension(sli.Name);
