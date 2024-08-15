@@ -673,7 +673,7 @@ namespace SList
 					}
 				}
 			}
-			catch (Exception e)
+			catch
 			{
 				if (bs1 == null)
 					sli1.CannotOpen = true;
@@ -686,10 +686,10 @@ namespace SList
 					bs2.Close();
 
 				return false;
-				MessageBox.Show(
-					$"failed to compare {sli1.Path}\\{sli1.Name} with {sli2.Path}\\{sli2.Name}. If this matters, write the name down so you can deal with it manually. Otherwise, we're going to assume they match\n\n{e.Message}",
-					"FAILED TO COMPARE");
-				return true;
+//				MessageBox.Show(
+//					$"failed to compare {sli1.Path}\\{sli1.Name} with {sli2.Path}\\{sli2.Name}. If this matters, write the name down so you can deal with it manually. Otherwise, we're going to assume they match\n\n{e.Message}",
+//					"FAILED TO COMPARE");
+//				return true;
 			}
 		}
 
