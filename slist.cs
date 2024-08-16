@@ -362,6 +362,7 @@ namespace SList
             this.m_cbCompareFiles = new System.Windows.Forms.CheckBox();
             this.m_stb = new System.Windows.Forms.StatusBar();
             this.m_stbpMainStatus = new System.Windows.Forms.StatusBarPanel();
+            this.m_stbpMessage = new System.Windows.Forms.StatusBarPanel();
             this.m_stbpFilterStatus = new System.Windows.Forms.StatusBarPanel();
             this.m_stbpSearch = new System.Windows.Forms.StatusBarPanel();
             this.m_stbpCount = new System.Windows.Forms.StatusBarPanel();
@@ -412,13 +413,12 @@ namespace SList
             this.m_pbNextChecked = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
-            this.m_stbpMessage = new System.Windows.Forms.StatusBarPanel();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMessage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpCount)).BeginInit();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMessage)).BeginInit();
             this.SuspendLayout();
             // 
             // m_cxtListView
@@ -631,6 +631,11 @@ namespace SList
             this.m_stbpMainStatus.Name = "m_stbpMainStatus";
             this.m_stbpMainStatus.Width = 200;
             // 
+            // m_stbpMessage
+            // 
+            this.m_stbpMessage.Name = "m_stbpMessage";
+            this.m_stbpMessage.Width = 300;
+            // 
             // m_stbpFilterStatus
             // 
             this.m_stbpFilterStatus.Name = "m_stbpFilterStatus";
@@ -833,6 +838,7 @@ namespace SList
             this.m_lv.VirtualMode = true;
             this.m_lv.Visible = false;
             this.m_lv.QueryContinueDrag += new System.Windows.Forms.QueryContinueDragEventHandler(this.OnQueryContinueDrag);
+            this.m_lv.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.OnMouseDoubleClick);
             this.m_lv.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseDown);
             this.m_lv.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseMove);
             this.m_lv.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnViewMouseUp);
@@ -1139,11 +1145,6 @@ namespace SList
             this.button4.Text = "Load State";
             this.button4.Click += new System.EventHandler(this.LoadState);
             // 
-            // m_stbpMessage
-            // 
-            this.m_stbpMessage.Name = "m_stbpMessage";
-            this.m_stbpMessage.Width = 300;
-            // 
             // SListApp
             // 
             this.AllowDrop = true;
@@ -1206,12 +1207,12 @@ namespace SList
             this.Text = "Load ";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EH_OnFormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpMainStatus)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMessage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpFilterStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpSearch)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_stbpCount)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_stbpMessage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -2009,6 +2010,15 @@ namespace SList
             cur.ReplaceFromSet(set);
         }
 
+        private void OnMouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            SLItem sli = ViewCur.SelectedItem();
+
+            if (sli != null)
+            {
+                m_model.LaunchSli(sli);
+            }
+        }
     }
 }
 
