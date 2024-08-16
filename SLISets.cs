@@ -12,6 +12,8 @@ namespace SList
 
         public SLISets(SLISet source, SLISet destination)
         {
+            source.FilesListItemEnumerator = null;
+            destination.FilesListItemEnumerator = null;
             Sets = new List<SLISet>(new [] {source, destination});
         }
 
