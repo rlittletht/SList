@@ -1943,7 +1943,7 @@ namespace SList
 
                                 DataObject dataObject = new DataObject(DataFormats.FileDrop, files.ToArray());
 
-                                DragDropEffects dropEffect = view.DoDragDrop(dataObject, DragDropEffects.Copy);
+                                DragDropEffects dropEffect = this.DoDragDrop(dataObject, DragDropEffects.Copy);
 
                                 if (dropEffect == DragDropEffects.Copy)
                                 {
